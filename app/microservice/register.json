@@ -1,0 +1,45 @@
+{
+	"name": "#(service.name)",
+	"tags": ["gfw"],
+	"endpoints": [{
+		"path": "/area",
+		"method": "GET",
+		"authenticated": true,
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v1/area"
+		}
+	},{
+		"path": "/area/:id",
+		"method": "GET",
+		"authenticated": true,
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v1/area/:id"
+		}
+	},{
+		"path": "/area",
+		"method": "POST",
+		"authenticated": true,
+		"redirect": {
+			"method": "POST",
+			"path": "/api/v1/area"
+		}
+	},{
+		"path": "/area/:id",
+		"method": "PATCH",
+		"authenticated": true,
+		"redirect": {
+			"method": "PATCH",
+			"path": "/api/v1/area/:id"
+		}
+	},{
+		"path": "/area/:id",
+		"method": "DELETE",
+		"authenticated": true,
+		"redirect": {
+			"method": "DELETE",
+			"path": "/api/v1/area/:id"
+		}
+	}]
+}

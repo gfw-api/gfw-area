@@ -1,0 +1,18 @@
+base:
+  build: .
+  ports:
+    - "4100:4100"
+  container_name: gfw-area
+  environment:
+    PORT: 4100
+    NODE_PATH: app/src
+
+mongo:
+  image: mongo
+  container_name: gfw-area-mongo
+  command: --smallfiles
+  ports:
+    - "27017"
+  volumes:
+    - $HOME/docker/data/gfw-area-api:/data/db
+  restart: always

@@ -1,0 +1,19 @@
+develop:
+  extends:
+    file: base.yml
+    service: base
+  ports:
+    - "35739:35729"
+  environment:
+    CT_URL: http://mymachine:9000 
+    LOCAL_URL: http://mymachine:4100
+    CT_TOKEN: null
+  command: develop
+  volumes:
+    - ./app:/opt/gfw-area/app
+  links: 
+    - mongo
+mongo:
+  extends:
+    file: base.yml
+    service: mongo
