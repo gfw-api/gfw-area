@@ -5,7 +5,7 @@ var JSONAPISerializer = require('jsonapi-serializer').Serializer;
 
 var areaSerializer = new JSONAPISerializer('area', {
   attributes: [
-    'name', 'geostore', 'wdpaid', 'user'
+    'name', 'geostore', 'wdpaid', 'userId', 'createdAt'
   ],
   resource: {
     attributes: ['type', 'content']
