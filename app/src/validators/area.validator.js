@@ -17,7 +17,7 @@ class AreaValidator {
     }
 
     static async update(ctx, next) {
-        logger.debug('Validating body for update user');
+        logger.debug('Validating body for update area');
         ctx.checkBody('name').optional().len(2, 100);
         ctx.checkBody('geostore').optional().isHexadecimal();
         ctx.checkBody('wdpaid').optional().isInt();

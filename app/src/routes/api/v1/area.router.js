@@ -99,7 +99,7 @@ async function checkPermission(ctx, next) {
 }
 
 router.post('/', loggedUserToState, AreaValidator.create, AreaRouter.save);
-router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.create, AreaRouter.update);
+router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
 router.get('/:id', loggedUserToState, AreaRouter.get);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouter.delete);
