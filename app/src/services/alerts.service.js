@@ -33,7 +33,7 @@ class AlertService {
     }
 
     static groupPoints(data, precissionBbox) {
-        logger.debug('Group points', ' and preccisionbbox ', precissionBbox);
+        logger.debug('Group points', data, ' and preccisionbbox ', precissionBbox);
         const result = {};
         if (data) {
             for (let i = 0, length = data.length; i < length; i++) {
