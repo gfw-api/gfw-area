@@ -6,6 +6,7 @@ const ErrorSerializer = require('serializers/error.serializer');
 const AreaSerializer = require('serializers/area.serializer');
 const AreaModel = require('models/area.model');
 const AreaValidator = require('validators/area.validator');
+const AlertsService = require('services/alerts.service');
 
 const router = new Router({
     prefix: '/area',
@@ -67,6 +68,20 @@ class AreaRouter {
         ctx.statusCode = 204;
     }
 
+    static async getAlertsOfArea(ctx){
+        logger.info(`Obtaining alerts of area with id ${ctx.params.id}`);
+        ctx.assert(ctx.query.precissionPoints, 400, 'precissionPoints is required');
+        ctx.assert(ctx.query.precissionBBOX, 400, 'precissionBBOX is required');
+        const result = await AreaModel.findOne({ _id: ctx.params.id });
+        if (!result) {
+            ctx.throw(404, 'Area not found');
+            return;
+        }
+        
+        let response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX);
+        ctx.body = response;
+    }
+
 }
 
 
@@ -102,6 +117,7 @@ router.post('/', loggedUserToState, AreaValidator.create, AreaRouter.save);
 router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
 router.get('/:id', loggedUserToState, AreaRouter.get);
+router.get('/:id/alerts', loggedUserToState, AreaRouter.getAlertsOfArea);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouter.delete);
 
 module.exports = router;

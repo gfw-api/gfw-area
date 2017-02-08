@@ -56,6 +56,8 @@
     "koa-router": "^7.0.1",
     "koa-validate": "^1.0.7",
     "mongoose": "^4.8.1",
+    "mustache": "^2.3.0",
+    "ngeohash": "^0.6.0",
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
     "simple-sql-parser": "git+https://github.com/rrequero/simpleSqlParser.git#between"

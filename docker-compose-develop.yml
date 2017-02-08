@@ -6,8 +6,9 @@ develop:
     - "35739:35729"
   environment:
     CT_URL: http://mymachine:9000 
-    LOCAL_URL: http://mymachine:4100
+    LOCAL_URL: http://mymachine:4200
     CT_TOKEN: null
+    GLAD_DATASET: f8662607-02cc-4bfb-9bb3-06b25c9ecade
   command: develop
   volumes:
     - ./app:/opt/gfw-area/app

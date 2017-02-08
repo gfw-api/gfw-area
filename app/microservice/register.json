@@ -41,5 +41,13 @@
 			"method": "DELETE",
 			"path": "/api/v1/area/:id"
 		}
+	}, {
+		"path": "/area/:id/alerts",
+		"method": "GET",
+		"authenticated": true,
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v1/area/:id/alerts"
+		}
 	}]
 }

@@ -1,7 +1,7 @@
 base:
   build: .
   ports:
-    - "4100:4100"
+    - "4200:4100"
   container_name: gfw-area
   environment:
     PORT: 4100
