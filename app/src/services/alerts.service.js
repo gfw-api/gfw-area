@@ -82,10 +82,10 @@ class AlertService {
                        
                     response.push({
                         geohash: keys[i],
-                        points: groups[keys[i]].points,
+                        count: groups[keys[i]].points.reduce((a, b) => a.count + b.count),
                         url,
                         bbox: groups[keys[i]].bbox,
-                        query: groups[keys[i]].query
+                        // query: groups[keys[i]].query
                     });
                 } catch (err) {
                     logger.error('Error obtaining image to key ', keys[i], err);
