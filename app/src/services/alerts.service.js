@@ -79,7 +79,7 @@ class AlertService {
                     });
                     let layergroupid = JSON.parse(result).layergroupid;
                     let url = `http://wri-01.cartodb.com/api/v1/map/static/bbox/${layergroupid}/${groups[keys[i]].bbox.join(', ')}/700/450.png`;
-                    logger.info(groups[keys[i]].points);
+                    logger.info('sum', (groups[keys[i]].points || []).reduce((a, b) => a.count + b.count));
                     response.push({
                         geohash: keys[i],
                         count: (groups[keys[i]].points || []).reduce((a, b) => a.count + b.count),
