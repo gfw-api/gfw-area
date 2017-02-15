@@ -95,8 +95,29 @@ class AlertService {
         return response;
     }
 
+    static async getGeostoreByWdpa(wdpaid) {
+        logger.debug('Obtaining geostore of wdpaid ', wdpaid);
+        try {
+            const result = await ctRegisterMicroservice.requestToMicroservice({
+                    uri: `/geostore/wdpa/${wdpaid}`,
+                    method: 'GET',
+                    json: true
+                });
+            return result.data.id;
+        } catch(err) {
+            if (err.statusCode === 404) {
+                throw new Error('Wdpa not found');
+            }
+        }
+        
+    }
+
     static async groupAlerts(area, precissionPoint, precissionBbox)  {
         logger.info('Generating groups with area', area);
+        let geostore = area.geostore;
+        if (!area.geostore){
+            geostore = await AlertService.getGeostoreByWdpa(area.wdpaid);
+        }
         const gladDataset = config.get('gladDataset');
         let uri = `/query/${gladDataset}?sql=select count(*) as count from data group by ST_GeoHash(the_geom_point, ${precissionPoint})&geostore=${area.geostore}`;
         try {
