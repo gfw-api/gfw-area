@@ -78,8 +78,8 @@ class AlertService {
                         }
                     });
                     let layergroupid = JSON.parse(result).layergroupid;
-                    let url = `http://wri-01.cartodb.com/api/v1/map/static/bbox/${layergroupid}/${groups[keys[i]].bbox.join(', ')}/700/450.png`;
-                    
+                    let url = `http://wri-01.cartodb.com/api/v1/map/static/bbox/${layergroupid}/${groups[keys[i]].bbox.join(', ')}/700/700.png`;
+
                     response.push({
                         geohash: keys[i],
                         count: groups[keys[i]].points ? groups[keys[i]].points.reduce((a, b) => ({count: a.count + b.count})).count : 0,
@@ -109,7 +109,7 @@ class AlertService {
                 throw new Error('Wdpa not found');
             }
         }
-        
+
     }
 
     static async groupAlerts(area, precissionPoint, precissionBbox)  {
