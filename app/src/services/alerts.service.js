@@ -82,6 +82,7 @@ class AlertService {
 
                     response.push({
                         geohash: keys[i],
+                        points: groups[keys[i]].points,
                         count: groups[keys[i]].points ? groups[keys[i]].points.reduce((a, b) => ({count: a.count + b.count})).count : 0,
                         url,
                         bbox: groups[keys[i]].bbox,
