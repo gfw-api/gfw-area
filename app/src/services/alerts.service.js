@@ -99,7 +99,7 @@ class AlertService {
                         if(p.type === 'glad'){
                             countGlad += p.count;
                         } else {
-                            countViirs += p.viirs;
+                            countViirs += p.count;
                         }
                     });
                     response.push({
