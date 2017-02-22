@@ -180,6 +180,8 @@ class AlertService {
         try {
             const viirs = await AlertService.getViirs(area, precissionPoint);
             const glad = await AlertService.getGlad(area, precissionPoint);
+            logger.debug('Virrs data', viirs, viirs.data);
+            logger.debug('Glad data', glad, glad.data);
             const groups = AlertService.groupPoints(viirs ? viirs.data: [], glad ? glad.data: [], precissionBbox);
             const response = await AlertService.obtainImages(groups);
             return response;
