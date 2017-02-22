@@ -7,5 +7,6 @@
         "port": "MONGO_PORT_27017_TCP_PORT"
     },
     "gladDataset": "GLAD_DATASET",
-    "viirsDataset": "VIIRS_DATASET"
+    "viirsDataset": "VIIRS_DATASET",
+    "viirsDatasetTableName": "VIIRS_DATASET_TABLENAME"
 }

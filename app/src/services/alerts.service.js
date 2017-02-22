@@ -138,7 +138,8 @@ class AlertService {
     static async getViirs(area, precissionPoint) {
         logger.debug('Obtaining data of viirs');
         const viirsDataset = config.get('viirsDataset');
-        let uri = `/query/${viirsDataset}?sql=select count(*) as count, ST_GeoHash(the_geom, ${precissionPoint}) as geohash from data group by ST_GeoHash(the_geom_point, ${precissionPoint})&geostore=${area.geostore}`;
+        const table = config.get('viirsDatasetTableName');
+        let uri = `/query/${viirsDataset}?sql=select count(*) as count, ST_GeoHash(the_geom, ${precissionPoint}) as geohash from ${table} group by ST_GeoHash(the_geom_point, ${precissionPoint})&geostore=${area.geostore}`;
         try {
             const result = await ctRegisterMicroservice.requestToMicroservice({
                 uri,
