@@ -15,5 +15,6 @@
         "host": "192.168.1.109",
         "port": 32780
     },
-    "gladDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade"
+    "gladDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade",
+    "viirsDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade"
 }

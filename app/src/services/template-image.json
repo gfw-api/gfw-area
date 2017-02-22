@@ -11,7 +11,7 @@
     "type": "mapnik",
     "options": {
       "cartocss_version": "2.1.1",
-      "cartocss": "#layer{marker-file:url(https://s3.amazonaws.com/com.cartodb.users-assets.production/production/wri-01/assets/20170209154345GladSquare.svg);marker-fill-opacity:1;marker-line-color:transparent;marker-line-width:0;marker-line-opacity:1;marker-placement:point;marker-type:ellipse;marker-width:14;marker-fill:#dc6699;marker-allow-overlap:false} ",
+      "cartocss": "#layer{marker-file:url(https://s3.amazonaws.com/com.cartodb.users-assets.production/production/wri-01/assets/20170209154345GladSquare.svg);marker-fill-opacity:1;marker-line-color:transparent;marker-line-width:0;marker-line-opacity:1;marker-placement:point;marker-type:ellipse;marker-width:14;marker-fill:#dc6699;marker-allow-overlap:false}#layer[type=\"viirs\"]{marker-fill: #FF0000}",
       "sql": "{{{query}}}"
     }
   }]
