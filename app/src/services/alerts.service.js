@@ -95,7 +95,7 @@ class AlertService {
                     let url = `http://wri-01.cartodb.com/api/v1/map/static/bbox/${layergroupid}/${groups[keys[i]].bbox.join(', ')}/700/700.png`;
                     const countViirs = 0;
                     const countGlad = 0;
-                    groups[keys[i]].point.map((p) => {
+                    groups[keys[i]].points.map((p) => {
                         if(p.type === 'glad'){
                             countGlad += p.count;
                         } else {
