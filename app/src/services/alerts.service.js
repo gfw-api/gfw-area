@@ -44,7 +44,7 @@ class AlertService {
                         points: []
                     };
                 }
-                dataGlad[i].type = 'viirs';
+                dataViirs[i].type = 'viirs';
                 result[substring].points.push(dataViirs[i]);
             }
         }
