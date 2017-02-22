@@ -63,7 +63,6 @@ class AlertService {
         let keys = Object.keys(result);
         for (let i = 0, length = keys.length; i < length; i++) {
             result[keys[i]].geojson = AlertService.convert2Geojson(result[keys[i]].points);
-            logger.debug(result[keys[i]].geojson);
             const bbox = geohash.decode_bbox(keys[i]);
             // long, lat (lower) long, lat upper
             result[keys[i]].bbox = [bbox[1], bbox[0],bbox[3],bbox[2]];
@@ -84,6 +83,7 @@ class AlertService {
             let keys = Object.keys(groups);
             for (let i = 0, length = keys.length; i < length; i++) {
                 try {
+                    logger.debug(groups[keys[i]].template);
                     let result = await request({
                         url: 'https://wri-01.cartodb.com/api/v1/map',
                         method: 'POST',
