@@ -9,6 +9,8 @@ develop:
     LOCAL_URL: http://mymachine:4200
     CT_TOKEN: null
     GLAD_DATASET: f8662607-02cc-4bfb-9bb3-06b25c9ecade
+    VIIRS_DATASET: 20cc5eca-8c63-4c41-8e8e-134dcf1e6d76
+    VIIRS_DATASET_TABLENAME: vnp14imgtdl_nrt_global_7d
   command: develop
   volumes:
     - ./app:/opt/gfw-area/app
