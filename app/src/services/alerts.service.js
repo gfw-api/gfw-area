@@ -6,7 +6,7 @@ const Mustache = require('mustache');
 const templateImage = require('./template-image.json');
 const request = require('request-promise');
 
-const POINTS = `WITH data AS (SELECT '{{{geojson}}}'::json AS fc) SELECT  ST_TRANSFORM(ST_SETSRID(ST_AsText(ST_GeomFromGeoJSON(feat->>'geometry')), 4326),3857) AS the_geom_webmercator, (feat->'properties'->'count')::text::INTEGER as count, (feat->'properties'->'type')::text as type FROM (  SELECT json_array_elements(fc->'features') AS feat  FROM data) AS f`;
+const POINTS = `WITH data AS (SELECT '{{{geojson}}}'::json AS fc) SELECT  ST_TRANSFORM(ST_SETSRID(ST_AsText(ST_GeomFromGeoJSON(feat->>'geometry')), 4326),3857) AS the_geom_webmercator, (feat->'properties'->>'count')::INTEGER as count, (feat->'properties'->>'type')::text as type FROM (  SELECT json_array_elements(fc->'features') AS feat  FROM data) AS f`;
 
 class AlertService {
 
@@ -83,7 +83,6 @@ class AlertService {
             let keys = Object.keys(groups);
             for (let i = 0, length = keys.length; i < length; i++) {
                 try {
-                    logger.debug(groups[keys[i]].template);
                     let result = await request({
                         url: 'https://wri-01.cartodb.com/api/v1/map',
                         method: 'POST',
