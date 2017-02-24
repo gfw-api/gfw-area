@@ -139,7 +139,7 @@ class AlertService {
         logger.debug('Obtaining data of viirs');
         const viirsDataset = config.get('viirsDataset');
         const table = config.get('viirsDatasetTableName');
-        let uri = `/query/${viirsDataset}?sql=select count(*) as count, ST_GeoHash(the_geom, ${precissionPoint}) as geohash from ${table} group by ST_GeoHash(the_geom, ${precissionPoint})&geostore=${area.geostore}`;
+        let uri = `/query/${viirsDataset}?sql=select count(*) as count, ST_GeoHash(the_geom, ${precissionPoint}) as geohash from ${table} where acq_date > '2017-01-01' group by ST_GeoHash(the_geom, ${precissionPoint})&geostore=${area.geostore}`;
         try {
             const result = await ctRegisterMicroservice.requestToMicroservice({
                 uri,
@@ -156,7 +156,7 @@ class AlertService {
     static async getGlad(area, precissionPoint) {
         logger.debug('Obtaining data of glad');
         const gladDataset = config.get('gladDataset');
-        let uri = `/query/${gladDataset}?sql=select count(*) as count from data group by ST_GeoHash(the_geom_point, ${precissionPoint})&geostore=${area.geostore}`;
+        let uri = `/query/${gladDataset}?sql=select count(*) as count from data where year > 2016 group by ST_GeoHash(the_geom_point, ${precissionPoint})&geostore=${area.geostore}`;
         try {
             const result = await ctRegisterMicroservice.requestToMicroservice({
                 uri,
