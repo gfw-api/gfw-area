@@ -174,7 +174,8 @@ class AlertService {
         logger.info('Generating groups with area', area);
         let geostore = area.geostore;
         if (!area.geostore){
-            geostore = await AlertService.getGeostoreByWdpa(area.wdpaid);
+            area.geostore = await AlertService.getGeostoreByWdpa(area.wdpaid);
+            await area.save();
         }
         
         try {
