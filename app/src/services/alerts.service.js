@@ -65,7 +65,7 @@ class AlertService {
             result[keys[i]].geojson = AlertService.convert2Geojson(result[keys[i]].points);
             const bbox = geohash.decode_bbox(keys[i]);
             // long, lat (lower) long, lat upper
-            result[keys[i]].bbox = [bbox[1], bbox[0],bbox[3],bbox[2]];
+            result[keys[i]].bbox = [bbox[1], bbox[0], bbox[3], bbox[2]];
             result[keys[i]].query = Mustache.render(POINTS, {
                 geojson: result[keys[i]].geojson
             });
@@ -81,39 +81,45 @@ class AlertService {
         const response = [];
         if (groups) {
             let keys = Object.keys(groups);
+            const promises = [];
             for (let i = 0, length = keys.length; i < length; i++) {
-                try {
-                    let result = await request({
-                        url: 'https://wri-01.cartodb.com/api/v1/map',
-                        method: 'POST',
-                        body: groups[keys[i]].template,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                promises.push(request({
+                    url: 'https://wri-01.cartodb.com/api/v1/map',
+                    method: 'POST',
+                    body: groups[keys[i]].template,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }));
+            }
+            try {
+                const results = await Promise.all(promises);
+                for (let j = 0, lengthPromises = keys.length; j < lengthPromises; j++) {
+                    let result = results[j];
                     let layergroupid = JSON.parse(result).layergroupid;
-                    let url = `http://wri-01.cartodb.com/api/v1/map/static/bbox/${layergroupid}/${groups[keys[i]].bbox.join(', ')}/700/700.png`;
+                    let url = `http://wri-01.cartodb.com/api/v1/map/static/bbox/${layergroupid}/${groups[keys[j]].bbox.join(', ')}/700/700.png`;
                     let countViirs = 0;
                     let countGlad = 0;
-                    groups[keys[i]].points.map((p) => {
-                        if(p.type === 'glad'){
+                    groups[keys[j]].points.map((p) => {
+                        if (p.type === 'glad') {
                             countGlad += p.count;
                         } else {
                             countViirs += p.count;
                         }
                     });
                     response.push({
-                        geohash: keys[i],
+                        geohash: keys[j],
                         countGlad,
                         countViirs,
                         url,
-                        bbox: groups[keys[i]].bbox,
+                        bbox: groups[keys[j]].bbox,
                         // query: groups[keys[i]].query
                     });
-                } catch (err) {
-                    logger.error('Error obtaining image to key ', keys[i], err);
                 }
+            } catch (err) {
+                logger.error('Error obtaining image to key ', keys[i], err);
             }
+
         }
         return response;
     }
@@ -122,12 +128,12 @@ class AlertService {
         logger.debug('Obtaining geostore of wdpaid ', wdpaid);
         try {
             const result = await ctRegisterMicroservice.requestToMicroservice({
-                    uri: `/geostore/wdpa/${wdpaid}`,
-                    method: 'GET',
-                    json: true
-                });
+                uri: `/geostore/wdpa/${wdpaid}`,
+                method: 'GET',
+                json: true
+            });
             return result.data.id;
-        } catch(err) {
+        } catch (err) {
             if (err.statusCode === 404) {
                 throw new Error('Wdpa not found');
             }
@@ -173,15 +179,15 @@ class AlertService {
     static async groupAlerts(area, precissionPoint, precissionBbox)  {
         logger.info('Generating groups with area', area);
         let geostore = area.geostore;
-        if (!area.geostore){
+        if (!area.geostore) {
             area.geostore = await AlertService.getGeostoreByWdpa(area.wdpaid);
             await area.save();
         }
-        
+
         try {
             const viirs = await AlertService.getViirs(area, precissionPoint);
             const glad = await AlertService.getGlad(area, precissionPoint);
-            const groups = AlertService.groupPoints(viirs ? viirs.data: [], glad ? glad.data: [], precissionBbox);
+            const groups = AlertService.groupPoints(viirs ? viirs.data : [], glad ? glad.data : [], precissionBbox);
             const response = await AlertService.obtainImages(groups);
             return response;
         } catch (err) {
