@@ -44,7 +44,7 @@
     "bluebird": "^3.4.7",
     "bunyan": "^1.8.5",
     "config": "^1.21.0",
-    "ct-register-microservice-node": "2.1.1",
+    "ct-register-microservice-node": "2.1.2",
     "json2csv": "^3.7.3",
     "jsonapi-serializer": "2.1.1",
     "kcors": "^2.1.1",
