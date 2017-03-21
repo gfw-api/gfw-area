@@ -2,7 +2,7 @@
 	"name": "#(service.name)",
 	"tags": ["gfw"],
 	"endpoints": [{
-		"path": "/area",
+		"path": "/v1/area",
 		"method": "GET",
 		"authenticated": true,
 		"redirect": {
@@ -10,7 +10,7 @@
 			"path": "/api/v1/area"
 		}
 	},{
-		"path": "/area/:id",
+		"path": "/v1/area/:id",
 		"method": "GET",
 		"authenticated": true,
 		"redirect": {
@@ -18,7 +18,7 @@
 			"path": "/api/v1/area/:id"
 		}
 	},{
-		"path": "/area",
+		"path": "/v1/area",
 		"method": "POST",
 		"authenticated": true,
 		"redirect": {
@@ -26,7 +26,7 @@
 			"path": "/api/v1/area"
 		}
 	},{
-		"path": "/area/:id",
+		"path": "/v1/area/:id",
 		"method": "PATCH",
 		"authenticated": true,
 		"redirect": {
@@ -34,7 +34,7 @@
 			"path": "/api/v1/area/:id"
 		}
 	},{
-		"path": "/area/:id",
+		"path": "/v1/area/:id",
 		"method": "DELETE",
 		"authenticated": true,
 		"redirect": {
@@ -42,7 +42,7 @@
 			"path": "/api/v1/area/:id"
 		}
 	}, {
-		"path": "/area/:id/alerts",
+		"path": "/v1/area/:id/alerts",
 		"method": "GET",
 		"authenticated": true,
 		"redirect": {
