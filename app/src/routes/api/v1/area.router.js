@@ -77,8 +77,12 @@ class AreaRouter {
             ctx.throw(404, 'Area not found');
             return;
         }
-        
-        let response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX);
+        let generateImages = true;
+        if (ctx.query.nogenerate) {
+            generateImages = false;
+        }
+
+        let response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages);
         ctx.body = response;
     }
 
