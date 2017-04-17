@@ -37,6 +37,7 @@
     "supertest": "^1.1.0"
   },
   "dependencies": {
+    "aws-sdk": "^2.18.0",
     "JSONStream": "^1.3.0",
     "babel-core": "^6.10.4",
     "babel-preset-es2015-node5": "^1.2.0",
@@ -45,7 +46,6 @@
     "bunyan": "^1.8.5",
     "config": "^1.21.0",
     "ct-register-microservice-node": "2.1.2",
-    "json2csv": "^3.7.3",
     "jsonapi-serializer": "2.1.1",
     "kcors": "^2.1.1",
     "koa": "^2.0.0",
@@ -60,6 +60,6 @@
     "ngeohash": "^0.6.0",
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
-    "simple-sql-parser": "git+https://github.com/rrequero/simpleSqlParser.git#between"
+    "uuid": "^3.0.1"
   }
 }

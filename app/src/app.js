@@ -1,4 +1,5 @@
 const Koa = require('koa');
+const path = require('path');
 const logger = require('logger');
 const koaLogger = require('koa-logger');
 const config = require('config');
@@ -15,7 +16,14 @@ const koaBody = require('koa-body')({
     multipart: true,
     jsonLimit: '50mb',
     formLimit: '50mb',
-    textLimit: '50mb'
+    textLimit: '50mb',
+    formidable: {
+        uploadDir: '/tmp',
+        onFileBegin: function(name, file) {
+            const folder = path.dirname(file.path);
+            file.path = path.join(folder, file.name);
+        }
+    }
 });
 
 let instance = null;
