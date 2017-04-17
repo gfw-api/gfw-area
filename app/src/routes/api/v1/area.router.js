@@ -29,7 +29,6 @@ class AreaRouter {
     static async save(ctx) {
         logger.info('Saving area');
         const image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
-        logger.debug('Areayurl', image);
         const area = await new AreaModel({
             name: ctx.request.body.fields.name,
             geostore: ctx.request.body.fields.geostore,
@@ -60,13 +59,12 @@ class AreaRouter {
         if (ctx.request.body.files && ctx.request.body.files.image) {
             area.image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
         }
-        logger.debug('area', area);
         await area.save();
         ctx.body = AreaSerializer.serialize(area);
     }
 
     static async delete(ctx){
-        logger.info(`Deleging area with id ${ctx.params.id}`);
+        logger.info(`Deleting area with id ${ctx.params.id}`);
         const result = await AreaModel.remove({ _id: ctx.params.id });
         if (!result || !result.result || result.result.ok === 0) {
             ctx.throw(404, 'Area not found');
