@@ -28,14 +28,14 @@ class AreaRouter {
 
     static async save(ctx) {
         logger.info('Saving area');
-        const imageUrl = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
-        logger.debug('Areayurl', imageUrl);
+        const image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
+        logger.debug('Areayurl', image);
         const area = await new AreaModel({
             name: ctx.request.body.fields.name,
             geostore: ctx.request.body.fields.geostore,
             wdpaid: ctx.request.body.fields.wdpaid,
             userId: ctx.state.loggedUser.id,
-            imageUrl
+            image
         }).save();
         ctx.body = AreaSerializer.serialize(area);
     }
@@ -58,7 +58,7 @@ class AreaRouter {
         }
 
         if (ctx.request.body.files && ctx.request.body.files.image) {
-            area.imageUrl = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
+            area.image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
         }
         logger.debug('area', area);
         await area.save();

@@ -8,7 +8,7 @@ const Area = new Schema({
     wdpaid: { type: Number, required: false, trim: true },
     userId: { type: String, required: true, trim: true },
     createdAt: { type: Date, required: true, default: Date.now },
-    imageUrl: { type: String, required: true, trim: true }
+    image: { type: String, required: true, trim: true }
 });
 
 
