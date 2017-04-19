@@ -7,7 +7,7 @@ const AreaSerializer = require('serializers/area.serializer');
 const AreaModel = require('models/area.model');
 const AreaValidator = require('validators/area.validator');
 const AlertsService = require('services/alerts.service');
-
+const s3Service = require('services/s3.service');
 const router = new Router({
     prefix: '/area',
 });
@@ -20,45 +20,51 @@ class AreaRouter {
         ctx.body = AreaSerializer.serialize(areas);
     }
 
-    static async get(ctx){
+    static async get(ctx) {
         logger.info(`Obtaining area of the user ${ctx.state.loggedUser.id} and areaId ${ctx.params.id}`);
         const areas = await AreaModel.find({ userId: ctx.state.loggedUser.id, _id: ctx.params.id });
         ctx.body = AreaSerializer.serialize(areas);
     }
 
-    static async save(ctx){
+    static async save(ctx) {
         logger.info('Saving area');
+        const image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
         const area = await new AreaModel({
-            name: ctx.request.body.name,
-            geostore: ctx.request.body.geostore,
-            wdpaid: ctx.request.body.wdpaid,
-            userId: ctx.state.loggedUser.id
+            name: ctx.request.body.fields.name,
+            geostore: ctx.request.body.fields.geostore,
+            wdpaid: ctx.request.body.fields.wdpaid,
+            userId: ctx.state.loggedUser.id,
+            image
         }).save();
         ctx.body = AreaSerializer.serialize(area);
     }
 
-    static async update(ctx){
+    static async update(ctx) {
         logger.info(`Updating area with id ${ctx.params.id}`);
         const area = await AreaModel.findById(ctx.params.id);
-        if (ctx.request.body.name) {
-            area.name = ctx.request.body.name;
+        if (ctx.request.body.fields.name) {
+            area.name = ctx.request.body.fields.name;
         }
-        if (ctx.request.body.geostore) {
-            area.geostore = ctx.request.body.geostore;
+        if (ctx.request.body.fields.geostore) {
+            area.geostore = ctx.request.body.fields.geostore;
         }
-        if (ctx.request.body.wdpaid) {
-            area.geostore = ctx.request.body.wdpaid;
+        if (ctx.request.body.fields.wdpaid) {
+            area.geostore = ctx.request.body.fields.wdpaid;
         }
         if (!area.wdpaid && !area.geostore) {
             ctx.throw(400, 'Required geostore or wdpaid');
             return;
+        }
+
+        if (ctx.request.body.files && ctx.request.body.files.image) {
+            area.image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
         }
         await area.save();
         ctx.body = AreaSerializer.serialize(area);
     }
 
     static async delete(ctx){
-        logger.info(`Deleging area with id ${ctx.params.id}`);
+        logger.info(`Deleting area with id ${ctx.params.id}`);
         const result = await AreaModel.remove({ _id: ctx.params.id });
         if (!result || !result.result || result.result.ok === 0) {
             ctx.throw(404, 'Area not found');
@@ -77,8 +83,12 @@ class AreaRouter {
             ctx.throw(404, 'Area not found');
             return;
         }
-        
-        let response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX);
+        let generateImages = true;
+        if (ctx.query.nogenerate) {
+            generateImages = false;
+        }
+
+        let response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages);
         ctx.body = response;
     }
 
@@ -91,6 +101,9 @@ async function loggedUserToState(ctx, next) {
         delete ctx.query.loggedUser;
     } else if (ctx.request.body && ctx.request.body.loggedUser) {
         ctx.state.loggedUser = ctx.request.body.loggedUser;
+        delete ctx.request.body.loggedUser;
+    } else if (ctx.request.body.fields && ctx.request.body.fields.loggedUser) {
+        ctx.state.loggedUser = JSON.parse(ctx.request.body.fields.loggedUser);
         delete ctx.request.body.loggedUser;
     } else {
         ctx.throw(401, 'Not logged');

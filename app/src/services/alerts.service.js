@@ -76,28 +76,37 @@ class AlertService {
         return result;
     }
 
-    static async obtainImages(groups) {
+    static async obtainImages(groups, generateImages) {
         logger.debug('Obtaining images with gropus');
         const response = [];
         if (groups) {
             let keys = Object.keys(groups);
             const promises = [];
-            for (let i = 0, length = keys.length; i < length; i++) {
-                promises.push(request({
-                    url: 'https://wri-01.cartodb.com/api/v1/map',
-                    method: 'POST',
-                    body: groups[keys[i]].template,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }));
+            if (generateImages) {
+                for (let i = 0, length = keys.length; i < length; i++) {                    
+                    promises.push(request({
+                        url: 'https://wri-01.cartodb.com/api/v1/map',
+                        method: 'POST',
+                        body: groups[keys[i]].template,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }));
+                }
             }
             try {
-                const results = await Promise.all(promises);
+                let results = [];
+                if (generateImages) {
+                    results = await Promise.all(promises);
+                }
                 for (let j = 0, lengthPromises = keys.length; j < lengthPromises; j++) {
-                    let result = results[j];
-                    let layergroupid = JSON.parse(result).layergroupid;
-                    let url = `http://wri-01.cartodb.com/api/v1/map/static/bbox/${layergroupid}/${groups[keys[j]].bbox.join(', ')}/700/700.png`;
+                    
+                    let url = null;
+                    if (generateImages) {
+                        let result = results[j];
+                        let layergroupid = result ? JSON.parse(result).layergroupid : ''
+                        url = `http://wri-01.cartodb.com/api/v1/map/static/bbox/${layergroupid}/${groups[keys[j]].bbox.join(', ')}/700/700.png`;
+                    }
                     let countViirs = 0;
                     let countGlad = 0;
                     groups[keys[j]].points.map((p) => {
@@ -176,7 +185,7 @@ class AlertService {
         }
     }
 
-    static async groupAlerts(area, precissionPoint, precissionBbox)  {
+    static async groupAlerts(area, precissionPoint, precissionBbox, generateImages) {
         logger.info('Generating groups with area', area);
         let geostore = area.geostore;
         if (!area.geostore) {
@@ -187,8 +196,8 @@ class AlertService {
         try {
             const viirs = await AlertService.getViirs(area, precissionPoint);
             const glad = await AlertService.getGlad(area, precissionPoint);
-            const groups = AlertService.groupPoints(viirs ? viirs.data : [], glad ? glad.data : [], precissionBbox);
-            const response = await AlertService.obtainImages(groups);
+            const groups = AlertService.groupPoints(viirs ? viirs.data : [], glad ? glad.data : [], precissionBbox);            
+            const response = await AlertService.obtainImages(groups, generateImages);
             return response;
         } catch (err) {
             logger.error(err);

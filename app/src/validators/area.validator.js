@@ -6,7 +6,8 @@ class AreaValidator {
         logger.debug('Validating body for create area');
         ctx.checkBody('name').notEmpty().len(2, 100);
         ctx.checkBody('geostore').optional().isHexadecimal();
-        ctx.checkBody('wdpaid').optional().isInt();
+        ctx.checkBody('wdpaid').optional().isInt().toInt();
+        ctx.checkFile('image').notEmpty();
 
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
@@ -29,6 +30,7 @@ class AreaValidator {
         }
         await next();
     }
+    
 }
 
 module.exports = AreaValidator;

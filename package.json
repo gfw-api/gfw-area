@@ -1,13 +1,13 @@
 {
   "name": "gfw-areas",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "CT_URL=http://mymachine:9000 LOCAL_URL=http://mymachine:3005 NODE_PATH=app/src PORT=3005 node --harmony ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js",
-    "start": "NODE_PATH=app/src node --harmony app/index.js",
-    "test": "NODE_PATH=app/src node --harmony ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js e2eTest",
-    "test-watch": "NODE_PATH=app/src CT_URL=http://tower.test node --harmony ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js e2eTest-watch"
+    "dev": "CT_URL=http://mymachine:9000 LOCAL_URL=http://mymachine:3005 NODE_PATH=app/src PORT=3005 node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js",
+    "start": "NODE_PATH=app/src node app/index.js",
+    "test": "NODE_PATH=app/src node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js e2eTest",
+    "test-watch": "NODE_PATH=app/src CT_URL=http://tower.test node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js e2eTest-watch"
   },
   "keywords": [],
   "author": "",
@@ -37,6 +37,7 @@
     "supertest": "^1.1.0"
   },
   "dependencies": {
+    "aws-sdk": "^2.18.0",
     "JSONStream": "^1.3.0",
     "babel-core": "^6.10.4",
     "babel-preset-es2015-node5": "^1.2.0",
@@ -44,8 +45,7 @@
     "bluebird": "^3.4.7",
     "bunyan": "^1.8.5",
     "config": "^1.21.0",
-    "ct-register-microservice-node": "^2.0.1",
-    "json2csv": "^3.7.3",
+    "ct-register-microservice-node": "2.1.2",
     "jsonapi-serializer": "2.1.1",
     "kcors": "^2.1.1",
     "koa": "^2.0.0",
@@ -60,6 +60,6 @@
     "ngeohash": "^0.6.0",
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
-    "simple-sql-parser": "git+https://github.com/rrequero/simpleSqlParser.git#between"
+    "uuid": "^3.0.1"
   }
 }

@@ -6,5 +6,11 @@
         "dirLogFile": null
     },
     "service": {
+    },
+    "s3":{
+        "accessKeyId": null,
+        "secretAccessKey": null,
+        "bucket": null,
+        "folder": "areas-staging"
     }
 }
