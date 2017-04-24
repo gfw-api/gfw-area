@@ -4,7 +4,7 @@ const ErrorSerializer = require('serializers/error.serializer');
 class AreaValidator {
     static async create(ctx, next) {
         logger.debug('Validating body for create area');
-        ctx.checkBody('name').notEmpty().len(2, 100);
+        ctx.checkBody('name').notEmpty().len(1, 100);
         ctx.checkBody('geostore').optional().isHexadecimal();
         ctx.checkBody('wdpaid').optional().isInt().toInt();
         ctx.checkFile('image').notEmpty();
