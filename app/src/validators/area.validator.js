@@ -8,6 +8,7 @@ class AreaValidator {
         ctx.checkBody('geostore').optional().isHexadecimal();
         ctx.checkBody('wdpaid').optional().isInt().toInt();
         ctx.checkFile('image').notEmpty();
+        ctx.checkFile('datasets').notEmpty();
 
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
@@ -30,7 +31,7 @@ class AreaValidator {
         }
         await next();
     }
-    
+
 }
 
 module.exports = AreaValidator;

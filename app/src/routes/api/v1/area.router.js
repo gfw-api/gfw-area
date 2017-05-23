@@ -34,6 +34,7 @@ class AreaRouter {
             geostore: ctx.request.body.fields.geostore,
             wdpaid: ctx.request.body.fields.wdpaid,
             userId: ctx.state.loggedUser.id,
+            datasets: JSON.parse(ctx.request.body.fields.datasets),
             image
         }).save();
         ctx.body = AreaSerializer.serialize(area);
@@ -55,10 +56,14 @@ class AreaRouter {
             ctx.throw(400, 'Required geostore or wdpaid');
             return;
         }
-
+        if (ctx.request.body.fields.datasets) {
+            area.datasets = JSON.parse(ctx.request.body.fields.datasets);
+        }
         if (ctx.request.body.files && ctx.request.body.files.image) {
             area.image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
         }
+        area.updatedDate = Date.now;
+
         await area.save();
         ctx.body = AreaSerializer.serialize(area);
     }
