@@ -28,16 +28,20 @@ class AreaRouter {
 
     static async save(ctx) {
         logger.info('Saving area');
-        let image = null;
+        let image = '';
         if (ctx.request.body.files && ctx.request.body.files.image) {
             image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
+        }
+        let datasets = [];
+        if (ctx.request.body.fields.datasets) {
+            datasets = JSON.parse(ctx.request.body.fields.datasets);
         }
         const area = await new AreaModel({
             name: ctx.request.body.fields.name,
             geostore: ctx.request.body.fields.geostore,
             wdpaid: ctx.request.body.fields.wdpaid,
             userId: ctx.state.loggedUser.id,
-            datasets: JSON.parse(ctx.request.body.fields.datasets),
+            datasets,
             image
         }).save();
         ctx.body = AreaSerializer.serialize(area);
