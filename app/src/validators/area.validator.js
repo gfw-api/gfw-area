@@ -7,7 +7,6 @@ class AreaValidator {
         ctx.checkBody('name').notEmpty().len(1, 100);
         ctx.checkBody('geostore').optional().isHexadecimal();
         ctx.checkBody('wdpaid').optional().isInt().toInt();
-        ctx.checkFile('image').notEmpty();
         ctx.checkFile('datasets').optional().toJson();
 
         if (ctx.errors) {

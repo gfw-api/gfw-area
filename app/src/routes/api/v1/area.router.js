@@ -28,7 +28,10 @@ class AreaRouter {
 
     static async save(ctx) {
         logger.info('Saving area');
-        const image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
+        let image = null;
+        if (ctx.request.body.files && ctx.request.body.files.image) {
+            image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
+        }
         const area = await new AreaModel({
             name: ctx.request.body.fields.name,
             geostore: ctx.request.body.fields.geostore,
