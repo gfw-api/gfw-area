@@ -22,7 +22,6 @@ installed on your machine.
 git clone https://github.com/Vizzuality/gfw-area-api.git
 cd gfw-area-api
 ./area.sh develop
-```text
 
 You can now access the microservice through the CT gateway.
 

@@ -7,7 +7,7 @@ class AreaValidator {
         ctx.checkBody('name').notEmpty().len(1, 100);
         ctx.checkBody('geostore').optional().isHexadecimal();
         ctx.checkBody('wdpaid').optional().isInt().toInt();
-        ctx.checkFile('image').notEmpty();
+        ctx.checkBody('datasets').optional().toJson();
 
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
@@ -22,6 +22,7 @@ class AreaValidator {
         ctx.checkBody('name').optional().len(2, 100);
         ctx.checkBody('geostore').optional().isHexadecimal();
         ctx.checkBody('wdpaid').optional().isInt();
+        ctx.checkBody('datasets').optional().toJson();
 
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
@@ -30,7 +31,7 @@ class AreaValidator {
         }
         await next();
     }
-    
+
 }
 
 module.exports = AreaValidator;
