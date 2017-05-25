@@ -7,7 +7,7 @@ const Area = new Schema({
     geostore: { type: String, required: false, trim: true },
     wdpaid: { type: Number, required: false, trim: true },
     userId: { type: String, required: true, trim: true },
-    datasets: { type: Array, required: true, default: [] },
+    datasets: { type: Array, required: false, default: [] },
     createdAt: { type: Date, required: true, default: Date.now },
     image: { type: String, required: false, trim: true }
 });
