@@ -6,8 +6,9 @@ const Dataset = new Schema({
     slug: { type: String, required: true, trim: true },
     active: { type: Boolean, required: true, default: false },
     startDate: { type: String, required: true, trim: true },
-    endDate: { type: String, required: false, trim: true, default: Date.now }
-})
+    endDate: { type: String, required: true, trim: true }
+});
+
 const Area = new Schema({
     name: { type: String, required: true, trim: true },
     geostore: { type: String, required: false, trim: true },

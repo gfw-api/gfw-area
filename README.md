@@ -46,6 +46,12 @@ geostore: <String>
 wdpaid: <Number>
 createdAt: <Date>
 userId: <String>
+datasets: JSON.stringify([{
+    slug: 'viirs',
+    active: false,
+    startDate: '20150101',
+    endDate: '20170101'
+}])
 
 ```
 
@@ -58,10 +64,10 @@ geostore or wdpaid are required. Only one.
 GET: /area -> Return all areas of the user logged
 GET: /area/:id -> Return area with the same id. Check if the area is owned of the logged user
 POST: /area -> Create an area and associate to the user. With body:
-{
-    "name": "my-area",
-    "geostore": "2a23af251"
-}
+
+#form data
+name: "my-area"
+geostore: "2a23af251"
 
 PATCH: /area/:id -> Update the area with the same id. Check if the area is owned of the logged user
 DELETE: /area/:id -> Delete the area with the same id. Check if the area is owned of the logged user
