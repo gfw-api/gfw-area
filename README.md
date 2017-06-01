@@ -48,6 +48,7 @@ createdAt: <Date>
 userId: <String>
 datasets: JSON.stringify([{
     slug: 'viirs',
+    name: 'VIIRS',
     active: false,
     startDate: '20150101',
     endDate: '20170101'
