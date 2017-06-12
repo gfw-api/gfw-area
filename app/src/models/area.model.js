@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 const Dataset = new Schema({
     slug: { type: String, required: true, trim: true },
     name: { type: String, required: false, trim: true },
+    cache: { type: Boolean, required: true, default: true },
     active: { type: Boolean, required: true, default: false },
     startDate: { type: String, required: true, trim: true },
     endDate: { type: String, required: true, trim: true }
