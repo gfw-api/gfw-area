@@ -8,7 +8,8 @@ const Dataset = new Schema({
     cache: { type: Boolean, required: true, default: true },
     active: { type: Boolean, required: true, default: false },
     startDate: { type: String, required: true, trim: true },
-    endDate: { type: String, required: true, trim: true }
+    endDate: { type: String, required: true, trim: true },
+    lastUpdate: { type: Number, required: false },
 });
 
 const Area = new Schema({
