@@ -33,14 +33,30 @@ class AreaRouter {
             image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
         }
         let datasets = [];
-        if (ctx.request.body.fields.datasets) {
-            datasets = JSON.parse(ctx.request.body.fields.datasets);
+        if (ctx.request.body.fields) {
+            ctx.request.body = ctx.request.body.fields
+        }
+        if (ctx.request.body.datasets) {
+            datasets = JSON.parse(ctx.request.fields.datasets);
+        }
+        const use = {};
+        if (ctx.request.body.use) {
+            use.id = ctx.request.body.use ? ctx.request.body.use.id : null;
+            use.name = ctx.request.body.use ? ctx.request.body.use.name : null;
+        }
+        const iso = {};
+        if (ctx.request.body.iso) {
+            iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
+            iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
         const area = await new AreaModel({
-            name: ctx.request.body.fields.name,
-            geostore: ctx.request.body.fields.geostore,
-            wdpaid: ctx.request.body.fields.wdpaid,
+            name: ctx.request.body.name,
+            application: ctx.request.body.application || 'gfw',
+            geostore: ctx.request.body.geostore,
+            wdpaid: ctx.request.body.wdpaid,
             userId: ctx.state.loggedUser.id,
+            use: use,
+            iso: iso,
             datasets,
             image
         }).save();
