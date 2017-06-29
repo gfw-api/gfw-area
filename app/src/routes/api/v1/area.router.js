@@ -27,7 +27,11 @@ class AreaRouter {
             filters.userId = ctx.state.loggedUser.id;
         }
         const areas = await AreaModel.find(filters);
-        ctx.body = AreaSerializer.serialize(areas);
+        if (!areas || areas.length === 0) {
+            ctx.throw(404, 'Area not found');
+            return;
+        }
+        ctx.body = AreaSerializer.serialize(areas[0]);
     }
 
     static async save(ctx) {
