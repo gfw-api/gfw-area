@@ -22,7 +22,11 @@ class AreaRouter {
 
     static async get(ctx) {
         logger.info(`Obtaining area of the user ${ctx.state.loggedUser.id} and areaId ${ctx.params.id}`);
-        const areas = await AreaModel.find({ userId: ctx.state.loggedUser.id, _id: ctx.params.id });
+        const filters = { _id: ctx.params.id };
+        if (ctx.state.loggedUser.id !== 'microservice') {
+            filters.userId = ctx.state.loggedUser.id;
+        }
+        const areas = await AreaModel.find(filters);
         ctx.body = AreaSerializer.serialize(areas);
     }
 
