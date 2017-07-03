@@ -45,7 +45,7 @@ class AreaRouter {
             ctx.request.body = ctx.request.body.fields
         }
         if (ctx.request.body.datasets) {
-            datasets = JSON.parse(ctx.request.fields.datasets);
+            datasets = JSON.parse(ctx.request.body.datasets);
         }
         const use = {};
         if (ctx.request.body.use) {
@@ -74,24 +74,39 @@ class AreaRouter {
     static async update(ctx) {
         logger.info(`Updating area with id ${ctx.params.id}`);
         const area = await AreaModel.findById(ctx.params.id);
-        if (ctx.request.body.fields.name) {
-            area.name = ctx.request.body.fields.name;
+        const files = ctx.request.body.files;
+        if (ctx.request.body.fields) {
+            ctx.request.body = ctx.request.body.fields
         }
-        if (ctx.request.body.fields.geostore) {
-            area.geostore = ctx.request.body.fields.geostore;
+        if (ctx.request.body.application || !area.application) {
+            area.application = ctx.request.body.application || 'gfw';
         }
-        if (ctx.request.body.fields.wdpaid) {
-            area.geostore = ctx.request.body.fields.wdpaid;
+        if (ctx.request.body.name) {
+            area.name = ctx.request.body.name;
         }
-        if (!area.wdpaid && !area.geostore) {
-            ctx.throw(400, 'Required geostore or wdpaid');
-            return;
+        if (ctx.request.body.geostore) {
+            area.geostore = ctx.request.body.geostore;
         }
-        if (ctx.request.body.fields.datasets) {
-            area.datasets = JSON.parse(ctx.request.body.fields.datasets);
+        if (ctx.request.body.wdpaid) {
+            area.wdpaid = ctx.request.body.wdpaid;
         }
-        if (ctx.request.body.files && ctx.request.body.files.image) {
-            area.image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
+        const use = {};
+        if (ctx.request.body.use) {
+            use.id = ctx.request.body.use ? ctx.request.body.use.id : null;
+            use.name = ctx.request.body.use ? ctx.request.body.use.name : null;
+        }
+        area.use = use;
+        const iso = {};
+        if (ctx.request.body.iso) {
+            iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
+            iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
+        }
+        area.iso = iso;
+        if (ctx.request.body.datasets) {
+            datasets = JSON.parse(ctx.request.body.datasets);
+        }
+        if (files && files.image) {
+            area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
         area.updatedDate = Date.now;
 
