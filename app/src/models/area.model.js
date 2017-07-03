@@ -14,7 +14,7 @@ const Dataset = new Schema({
 
 const Area = new Schema({
     name: { type: String, required: true, trim: true },
-    application: { type: String, required: true, trim: true },
+    application: { type: String, required: true, trim: true, default: 'gfw' },
     geostore: { type: String, required: false, trim: true },
     wdpaid: { type: Number, required: false, trim: true },
     userId: { type: String, required: true, trim: true },

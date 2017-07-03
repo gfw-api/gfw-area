@@ -3,7 +3,7 @@ develop:
     file: base.yml
     service: base
   ports:
-    - "35739:35729"
+    - "35789:35729"
   environment:
     CT_URL: http://mymachine:9000 
     LOCAL_URL: http://mymachine:4200
