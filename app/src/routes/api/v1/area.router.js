@@ -103,7 +103,7 @@ class AreaRouter {
         }
         area.iso = iso;
         if (ctx.request.body.datasets) {
-            datasets = JSON.parse(ctx.request.body.datasets);
+            area.datasets = JSON.parse(ctx.request.body.datasets);
         }
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
