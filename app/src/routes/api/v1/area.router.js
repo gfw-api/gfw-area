@@ -139,6 +139,7 @@ class AreaRouter {
 
     static async delete(ctx){
         logger.info(`Deleting area with id ${ctx.params.id}`);
+        const userId = ctx.state.loggedUser.id;
         const result = await AreaModel.remove({ _id: ctx.params.id });
         if (!result || !result.result || result.result.ok === 0) {
             ctx.throw(404, 'Area not found');
