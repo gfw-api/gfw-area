@@ -209,7 +209,7 @@ async function checkPermission(ctx, next) {
         ctx.throw(404, 'Area not found');
         return;
     }
-    if (area.userId !== ctx.state.loggedUser.id) {
+    if (area.userId !== ctx.state.loggedUser.id && area.userId !== ctx.request.body.userId) {
         ctx.throw(403, 'Not authorized');
         return;
     }

@@ -4,9 +4,9 @@ const ctRegisterMicroservice = require('ct-register-microservice-node');
 class TeamService {
 
     static async getTeamByUserId(userId) {
-        logger.info('Get team by user id');
+        logger.info('Get team by user id', userId);
         const team = await ctRegisterMicroservice.requestToMicroservice({
-            uri: '/teams/user/' + userId,
+            uri: '/v1/teams/user/' + userId,
             method: 'GET',
             json: true
         });
@@ -16,7 +16,7 @@ class TeamService {
     static async patchTeamById(teamId, body) {
         logger.info('Get team by user id');
         const team = await ctRegisterMicroservice.requestToMicroservice({
-            uri: '/teams/' + teamId,
+            uri: '/v1/teams/' + teamId,
             method: 'PATCH',
             body,
             json: true
