@@ -1,12 +1,10 @@
 const Router = require('koa-router');
 const logger = require('logger');
-const ctRegisterMicroservice = require('ct-register-microservice-node');
-const Promise = require('bluebird');
-const ErrorSerializer = require('serializers/error.serializer');
 const AreaSerializer = require('serializers/area.serializer');
 const AreaModel = require('models/area.model');
 const AreaValidator = require('validators/area.validator');
 const AlertsService = require('services/alerts.service');
+const TeamService = require('services/team.service');
 const s3Service = require('services/s3.service');
 const router = new Router({
     prefix: '/area',
@@ -14,7 +12,7 @@ const router = new Router({
 
 class AreaRouter {
 
-    static async getAll(ctx){
+    static async getAll(ctx) {
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
         const areas = await AreaModel.find({ userId: ctx.state.loggedUser.id });
         ctx.body = AreaSerializer.serialize(areas);
@@ -32,6 +30,28 @@ class AreaRouter {
             return;
         }
         ctx.body = AreaSerializer.serialize(areas[0]);
+    }
+
+    static async getFWAreas(ctx) {
+        logger.info('Obtaining all user areas + fw team areas', ctx.state.loggedUser.id);
+        const userId = ctx.state.loggedUser.id;
+        let team = null;
+        try {
+            team = await TeamService.getTeamByUserId(userId);
+        } catch (e) {
+            logger.error(e);
+            ctx.throw(500, 'Error while retrieving user team');
+        }
+        const teamAreas = team && Array.isArray(team.areas) ? team.areas : [];
+        const query = {
+            $or: [
+                { userId },
+                { _id: { $in: teamAreas } }
+            ]
+        };
+
+        const areas = await AreaModel.find(query);
+        ctx.body = AreaSerializer.serialize(areas);
     }
 
     static async save(ctx) {
@@ -108,6 +128,9 @@ class AreaRouter {
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
+        if (ctx.request.body.templateId) {
+            area.templateId = ctx.request.body.templateId;
+        }
         area.updatedDate = Date.now;
 
         await area.save();
@@ -120,6 +143,22 @@ class AreaRouter {
         if (!result || !result.result || result.result.ok === 0) {
             ctx.throw(404, 'Area not found');
             return;
+        }
+        let team = null;
+        try {
+            team = await TeamService.getTeamByUserId(userId);
+        } catch (e) {
+            logger.error(e);
+            ctx.throw(500, 'Team retrieval failed.');
+        }
+        if (team && team.areas.includes(ctx.params.id)) {
+            const areas = team.areas.filter(area => area !== ctx.params.id);
+            try {
+                await TeamService.patchTeamById(team.id, { areas });
+            } catch (e) {
+                logger.error(e);
+                ctx.throw(500, 'Team patch failed.');
+            }
         }
         ctx.body = '';
         ctx.statusCode = 204;
@@ -180,6 +219,7 @@ async function checkPermission(ctx, next) {
 router.post('/', loggedUserToState, AreaValidator.create, AreaRouter.save);
 router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
+router.get('/fw', loggedUserToState, AreaRouter.getFWAreas);
 router.get('/:id', loggedUserToState, AreaRouter.get);
 router.get('/:id/alerts', loggedUserToState, AreaRouter.getAlertsOfArea);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouter.delete);
