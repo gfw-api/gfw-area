@@ -44,6 +44,7 @@ class AreaValidator {
         ctx.checkBody('datasets').optional().isJSON();
         ctx.checkBody('iso').optional().check(iso => AreaValidator.isObject(iso), 'must be an object');
         ctx.checkBody('use').optional().check(use => AreaValidator.isObject(use), 'must be an object');
+        ctx.checkBody('templateId').optional().notEmpty();
 
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
