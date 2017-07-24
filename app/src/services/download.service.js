@@ -7,7 +7,7 @@ const tmp = require('tmp');
 const fs = require('fs');
 const zipFolder = require('zip-folder');
 const request = require('request');
-const CONCURRENCY = 50;
+const CONCURRENCY = 30;
 
 class DownloadService {
 
