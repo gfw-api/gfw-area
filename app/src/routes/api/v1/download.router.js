@@ -2,6 +2,7 @@ const Router = require('koa-router');
 const logger = require('logger');
 const send = require('koa-send');
 const fs = require('fs');
+const DownloadValidator = require('validators/download.validator');
 const DownloadService = require('services/download.service');
 
 const router = new Router({
@@ -11,9 +12,8 @@ const router = new Router({
 class DownloadRouter {
 
     static async downloadTiles(ctx) {
-        ctx.assert(ctx.query.layerUrl, 400, 'layerUrl query param required');
         logger.info(`Downloading tiles with minZoom ${ctx.params.minZoom}, maxZoom ${ctx.params.maxZoom}, geostoreId: ${ctx.params.geostoreId} and layerUrl ${ctx.query.layerUrl}`);
-        const path = await DownloadService.getTilesZip(ctx.params.geostoreId, ctx.params.minZoom, ctx.params.maxZoom, ctx.query.layerUrl);
+        const path = await DownloadService.getTilesZip(ctx.params.geostoreId, parseInt(ctx.params.minZoom, 10), parseInt(ctx.params.maxZoom, 10), ctx.query.layerUrl);
         ctx.set('content-disposition', 'attachment; filename=download.zip');
         await send(ctx, path, { root: '/' });
         fs.unlinkSync(path);
@@ -21,6 +21,6 @@ class DownloadRouter {
 }
 
 
-router.get('/:geostoreId/:minZoom/:maxZoom', DownloadRouter.downloadTiles);
+router.get('/:geostoreId/:minZoom/:maxZoom', DownloadValidator.get, DownloadRouter.downloadTiles);
 
 module.exports = router;

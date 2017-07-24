@@ -29,7 +29,9 @@ class DownloadService {
         logger.debug('Calculating coordinates');
         const zooms = [];
         const tilesArray = [];
+        logger.debug(minZoom, maxZoom);
         for (let i = minZoom; i <= maxZoom; i++) {
+            logger.debug('asdfadfa');
             zooms.push(i);
         }
         logger.debug('zooms', zooms);
