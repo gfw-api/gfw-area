@@ -7,6 +7,7 @@ const tmp = require('tmp');
 const fs = require('fs');
 const zipFolder = require('zip-folder');
 const request = require('request');
+const CONCURRENCY = 50;
 
 class DownloadService {
 
@@ -114,7 +115,7 @@ class DownloadService {
         try {
             for (let i = 0, length = coordinates.length; i < length; i++) {
                 promises.push(DownloadService.downloadImage(layerUrl, coordinates[i][2], coordinates[i][0], coordinates[i][1], tmpobj.name));
-                if (promises.length === 20){
+                if (promises.length === CONCURRENCY){
                     await Promise.all(promises);
                     promises = [];
                 }
