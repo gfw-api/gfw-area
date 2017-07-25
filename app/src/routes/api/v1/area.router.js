@@ -128,7 +128,7 @@ class AreaRouter {
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
-        if (ctx.request.body.templateId) {
+        if (typeof ctx.request.body.templateId !== 'undefined') {
             area.templateId = ctx.request.body.templateId;
         }
         area.updatedDate = Date.now;
