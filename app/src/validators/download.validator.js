@@ -15,7 +15,7 @@ class DownloadValidator {
             ctx.status = 400;
             return;
         }
-        ctx.checkParams('maxZoom').gt(ctx.params.minZoom);
+        ctx.checkParams('maxZoom').ge(ctx.params.minZoom);
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationParamsErrors(ctx.errors);
             ctx.status = 400;
