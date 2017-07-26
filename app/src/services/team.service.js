@@ -6,7 +6,7 @@ class TeamService {
     static async getTeamByUserId(userId) {
         logger.info('Get team by user id', userId);
         const team = await ctRegisterMicroservice.requestToMicroservice({
-            uri: '/v1/teams/user/' + userId,
+            uri: '/teams/user/' + userId,
             method: 'GET',
             json: true
         });
@@ -16,7 +16,7 @@ class TeamService {
     static async patchTeamById(teamId, body) {
         logger.info('Get team by user id');
         const team = await ctRegisterMicroservice.requestToMicroservice({
-            uri: '/v1/teams/' + teamId,
+            uri: '/teams/' + teamId,
             method: 'PATCH',
             body,
             json: true
