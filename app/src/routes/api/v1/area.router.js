@@ -40,7 +40,6 @@ class AreaRouter {
             team = await TeamService.getTeamByUserId(userId);
         } catch (e) {
             logger.error(e);
-            ctx.throw(500, 'Error while retrieving user team');
         }
         const teamAreas = team && Array.isArray(team.areas) ? team.areas : [];
         const query = {
@@ -140,11 +139,6 @@ class AreaRouter {
     static async delete(ctx){
         logger.info(`Deleting area with id ${ctx.params.id}`);
         const userId = ctx.state.loggedUser.id;
-        const result = await AreaModel.remove({ _id: ctx.params.id });
-        if (!result || !result.result || result.result.ok === 0) {
-            ctx.throw(404, 'Area not found');
-            return;
-        }
         let team = null;
         try {
             team = await TeamService.getTeamByUserId(userId);
@@ -160,6 +154,11 @@ class AreaRouter {
                 logger.error(e);
                 ctx.throw(500, 'Team patch failed.');
             }
+        }
+        const result = await AreaModel.remove({ _id: ctx.params.id });
+        if (!result || !result.result || result.result.ok === 0) {
+            ctx.throw(404, 'Area not found');
+            return;
         }
         ctx.body = '';
         ctx.statusCode = 204;
