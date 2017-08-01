@@ -11,6 +11,9 @@ class ErrorSerializer {
         case 'query':
             message = 'Invalid query parameter';
             break;
+        case 'param':
+            message = 'Invalid query parameter';
+            break;
         default:
             message = '';
 
@@ -25,11 +28,11 @@ class ErrorSerializer {
         };
     }
 
-    static serializeValidationBodyErrors(data) {
+    static serializeValidationParamsErrors(data) {
         const errors = [];
         if (data) {
             for (let i = 0, length = data.length; i < length; i++) {
-                errors.push(ErrorSerializer.serializeValidationError(data[i], 'body'));
+                errors.push(ErrorSerializer.serializeValidationError(data[i], 'param'));
             }
         }
         return {

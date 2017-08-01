@@ -10,12 +10,20 @@
 			"path": "/api/v1/area"
 		}
 	},{
-		"path": "/v1/area/:id",
-		"method": "GET",
-		"authenticated": true,
-		"redirect": {
-			"method": "GET",
-			"path": "/api/v1/area/:id"
+        "path": "/v1/area/fw",
+        "method": "GET",
+        "authenticated": true,
+        "redirect": {
+          "method": "GET",
+          "path": "/api/v1/area/fw"
+        }
+      },{
+          "path": "/v1/area/:id",
+          "method": "GET",
+          "authenticated": true,
+          "redirect": {
+              "method": "GET",
+              "path": "/api/v1/area/:id"
 		}
 	},{
 		"path": "/v1/area",
@@ -48,6 +56,13 @@
 		"redirect": {
 			"method": "GET",
 			"path": "/api/v1/area/:id/alerts"
+		}
+	},{
+		"path": "/v1/download-tiles/:geostoreId/:minZoom/:maxZoom",
+		"method": "GET",
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v1/download-tiles/:geostoreId/:minZoom/:maxZoom"
 		}
 	}]
 }
