@@ -5,7 +5,9 @@ prod:
   env_file:
     - prod.env
   command: start
-  dns: ${DNS_SERVER}
+  dns: 
+    - ${DNS_SERVER}
+    - 8.8.8.8
   restart: always
   log_driver: "syslog"
   log_opt:
