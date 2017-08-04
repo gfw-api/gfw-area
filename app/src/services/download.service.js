@@ -130,6 +130,7 @@ class DownloadService {
             
         }
         await DownloadService.zipFolder(tmpobj.name, `${tmpDownload.name}/download.zip`);
+        logger.info('Removing file ', tmpobj.name);
         await DownloadService.removeFolder(tmpobj.name);
         return `${tmpDownload.name}/download.zip`;
     }
