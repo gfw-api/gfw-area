@@ -1,5 +1,5 @@
 prod:
-  image: vizzuality/gfw-area:1.1.0${STAGING}
+  image: vizzuality/gfw-area:1.1.1${STAGING}
   ports:
     - "4100"
   env_file:
