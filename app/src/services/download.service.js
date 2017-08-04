@@ -130,7 +130,7 @@ class DownloadService {
             
         }
         await DownloadService.zipFolder(tmpobj.name, `${tmpDownload.name}/download.zip`);
-        // await DownloadService.removeFolder(tmpobj.name);
+        await DownloadService.removeFolder(tmpobj.name);
         return `${tmpDownload.name}/download.zip`;
     }
 
