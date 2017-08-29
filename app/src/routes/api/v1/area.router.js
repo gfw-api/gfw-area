@@ -14,7 +14,11 @@ class AreaRouter {
 
     static async getAll(ctx) {
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
-        const areas = await AreaModel.find({ userId: ctx.state.loggedUser.id });
+        const filter = { userId: ctx.state.loggedUser.id };
+        if (ctx.query.application) {
+            filter.application = ctx.query.application.split(',').map(el => el.trim());
+        }
+        const areas = await AreaModel.find(filter);
         ctx.body = AreaSerializer.serialize(areas);
     }
 
