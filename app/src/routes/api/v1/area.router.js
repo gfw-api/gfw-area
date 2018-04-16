@@ -57,6 +57,27 @@ class AreaRouter {
         ctx.body = AreaSerializer.serialize(areas);
     }
 
+    static async getFWAreasByUserId(ctx) {
+        const userId = ctx.params.userId;
+        logger.info('Obtaining all user areas + fw team areas', userId);
+        let team = null;
+        try {
+            team = await TeamService.getTeamByUserId(userId);
+        } catch (e) {
+            logger.error(e);
+        }
+        const teamAreas = team && Array.isArray(team.areas) ? team.areas : [];
+        const query = {
+            $or: [
+                { userId },
+                { _id: { $in: teamAreas } }
+            ]
+        };
+
+        const areas = await AreaModel.find(query);
+        ctx.body = AreaSerializer.serialize(areas);
+    }
+
     static async save(ctx) {
         logger.info('Saving area');
         let image = '';
@@ -206,6 +227,13 @@ async function loggedUserToState(ctx, next) {
     await next();
 }
 
+async function isMicroservice(ctx, next) {
+    if (ctx.state.loggedUser.id !== 'microservice'){
+        ctx.throw(403, 'Not authorized');
+    }
+    await next();
+}
+
 async function checkPermission(ctx, next) {
     ctx.assert(ctx.params.id, 400, 'Id required');
     let area = await AreaModel.findById(ctx.params.id);
@@ -224,6 +252,7 @@ router.post('/', loggedUserToState, AreaValidator.create, AreaRouter.save);
 router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
 router.get('/fw', loggedUserToState, AreaRouter.getFWAreas);
+router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouter.getFWAreasByUserId);
 router.get('/:id', loggedUserToState, AreaRouter.get);
 router.get('/:id/alerts', loggedUserToState, AreaRouter.getAlertsOfArea);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouter.delete);

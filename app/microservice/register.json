@@ -18,6 +18,14 @@
           "path": "/api/v1/area/fw"
         }
       },{
+        "path": "/v1/area/fw/:userId",
+        "method": "GET",
+        "authenticated": true,
+        "redirect": {
+          "method": "GET",
+          "path": "/api/v1/area/fw/:userId"
+        }
+      },{
           "path": "/v1/area/:id",
           "method": "GET",
           "authenticated": true,
