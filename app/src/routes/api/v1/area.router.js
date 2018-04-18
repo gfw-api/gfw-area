@@ -78,7 +78,11 @@ class AreaRouter {
         ctx.body = AreaSerializer.serialize(areas);
     }
 
-    static async save(ctx) {
+    static async saveByUserId(ctx) {
+        save(ctx, ctx.params.userId);
+    }
+
+    static async save(ctx, userId) {
         logger.info('Saving area');
         let image = '';
         if (ctx.request.body.files && ctx.request.body.files.image) {
@@ -106,7 +110,7 @@ class AreaRouter {
             application: ctx.request.body.application || 'gfw',
             geostore: ctx.request.body.geostore,
             wdpaid: ctx.request.body.wdpaid,
-            userId: ctx.state.loggedUser.id,
+            userId: userId || ctx.state.loggedUser.id,
             use: use,
             iso: iso,
             datasets,
@@ -252,6 +256,7 @@ router.post('/', loggedUserToState, AreaValidator.create, AreaRouter.save);
 router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
 router.get('/fw', loggedUserToState, AreaRouter.getFWAreas);
+router.post('/fw/:userId', loggedUserToState, AreaValidator.create, AreaRouter.saveByUserId);
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouter.getFWAreasByUserId);
 router.get('/:id', loggedUserToState, AreaRouter.get);
 router.get('/:id/alerts', loggedUserToState, AreaRouter.getAlertsOfArea);

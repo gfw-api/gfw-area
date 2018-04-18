@@ -42,6 +42,14 @@
 			"path": "/api/v1/area"
 		}
 	},{
+		"path": "/v1/area/fw/:userId",
+		"method": "POST",
+		"authenticated": true,
+		"redirect": {
+			"method": "POST",
+			"path": "/api/v1/area/fw/:userId"
+		}
+	},{
 		"path": "/v1/area/:id",
 		"method": "PATCH",
 		"authenticated": true,
