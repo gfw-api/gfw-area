@@ -79,7 +79,7 @@ class AreaRouter {
     }
 
     static async saveByUserId(ctx) {
-        save(ctx, ctx.params.userId);
+        await AreaRouter.save(ctx, ctx.params.userId);
     }
 
     static async save(ctx, userId) {
