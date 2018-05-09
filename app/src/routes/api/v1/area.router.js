@@ -79,10 +79,10 @@ class AreaRouter {
     }
 
     static async saveByUserId(ctx) {
-        await AreaRouter.save(ctx, ctx.params.userId);
+        await AreaRouter.saveArea(ctx, ctx.params.userId);
     }
 
-    static async save(ctx, userId) {
+    static async saveArea(ctx, userId) {
         logger.info('Saving area');
         let image = '';
         if (ctx.request.body.files && ctx.request.body.files.image) {
@@ -117,6 +117,10 @@ class AreaRouter {
             image
         }).save();
         ctx.body = AreaSerializer.serialize(area);
+    }
+
+    static async save(ctx, userId) {
+        await AreaRouter.saveArea(ctx, ctx.state.loggedUser.id);
     }
 
     static async update(ctx) {
