@@ -189,7 +189,7 @@ class AreaRouter {
             }
         }
         const result = await AreaModel.remove({ _id: ctx.params.id });
-        if (!result || !result.result || result.result.ok === 0) {
+        if (!result || result.ok === 0) {
             ctx.throw(404, 'Area not found');
             return;
         }
