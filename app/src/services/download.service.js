@@ -56,7 +56,7 @@ class DownloadService {
 
     }
 
-    static async downloadImage(layerUrl, z, x, y, tempDir) {
+    static async downloadImage(layerUrl, z, x, y, tempDir, useExtension) {
         logger.debug('Downloading image ', layerUrl.replace('{z}', z).replace('{x}', x).replace('{y}', y));
         let url = layerUrl.replace('{z}', z).replace('{x}', x).replace('{y}', y);
 
@@ -65,10 +65,12 @@ class DownloadService {
                 .on('response', function (res) {
                     let filename = `${z}x${x}x${y}`;
 
-                    if (res.headers['content-type'] === 'image/png') {
-                        filename += '.png';
-                    } else {
-                        filename += '.jpg';
+                    if (useExtension) {
+                        if (res.headers['content-type'] === 'image/png') {
+                            filename += '.png';
+                        } else {
+                            filename += '.jpg';
+                        }
                     }
                     var fws = fs.createWriteStream(`${tempDir}/${filename}`);
                     // setup piping
@@ -109,14 +111,14 @@ class DownloadService {
         });
     }
 
-    static async downloadAndZipCoordinates(coordinates, layerUrl) {
+    static async downloadAndZipCoordinates(coordinates, layerUrl, useExtension) {
         logger.debug('Downloading coordinates', coordinates);
         var tmpobj = tmp.dirSync();
         var tmpDownload = tmp.dirSync();
         let promises = [];
         try {
             for (let i = 0, length = coordinates.length; i < length; i++) {
-                promises.push(DownloadService.downloadImage(layerUrl, coordinates[i][2], coordinates[i][0], coordinates[i][1], tmpobj.name));
+                promises.push(DownloadService.downloadImage(layerUrl, coordinates[i][2], coordinates[i][0], coordinates[i][1], tmpobj.name, useExtension));
                 if (promises.length === CONCURRENCY){
                     await Promise.all(promises);
                     promises = [];
@@ -127,7 +129,7 @@ class DownloadService {
                 promises = null;
             }
         } catch(err){
-            
+
         }
         await DownloadService.zipFolder(tmpobj.name, `${tmpDownload.name}/download.zip`);
         logger.info('Removing file ', tmpobj.name);
@@ -135,11 +137,11 @@ class DownloadService {
         return `${tmpDownload.name}/download.zip`;
     }
 
-    static async getTilesZip(geostoreId, minZoom, maxZoom, layerUrl) {
+    static async getTilesZip(geostoreId, minZoom, maxZoom, layerUrl, useExtension = true) {
         let bbox = await DownloadService.getBBox(geostoreId);
         const coordinates = DownloadService.calculateCoordinates(bbox, minZoom, maxZoom);
         logger.debug('Coordinates', coordinates);
-        return await DownloadService.downloadAndZipCoordinates(coordinates, layerUrl);
+        return await DownloadService.downloadAndZipCoordinates(coordinates, layerUrl, useExtension);
     }
 }
 
