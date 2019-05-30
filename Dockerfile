@@ -25,6 +25,13 @@ RUN chown $USER:$USER /opt/$NAME
 
 # Tell Docker we are going to use this ports
 EXPOSE 4100
+
+
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait /wait
+RUN chmod +x /wait
+
+CMD /wait
+
 USER $USER
 
 ENTRYPOINT ["./entrypoint.sh"]
