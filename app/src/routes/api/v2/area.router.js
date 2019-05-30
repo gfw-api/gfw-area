@@ -1,8 +1,8 @@
 const Router = require('koa-router');
 const logger = require('logger');
-const AreaSerializer = require('serializers/area.serializer');
-const AreaModel = require('models/area.model');
-const AreaValidator = require('validators/area.validator');
+const AreaSerializer = require('serializers/area.serializerV2');
+const AreaModel = require('models/area.modelV2');
+const AreaValidator = require('validators/area.validatorV2');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const s3Service = require('services/s3.service');
@@ -10,7 +10,7 @@ const router = new Router({
     prefix: '/area',
 });
 
-class AreaRouter {
+class AreaRouterV2 {
 
     static async getAll(ctx) {
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
@@ -57,27 +57,6 @@ class AreaRouter {
         ctx.body = AreaSerializer.serialize(areas);
     }
 
-    static async getAois(ctx) {
-        logger.info('Obtaining all user areas + fw team areas', ctx.state.loggedUser.id);
-        const userId = ctx.state.loggedUser.id;
-        let team = null;
-        try {
-            team = await TeamService.getTeamByUserId(userId);
-        } catch (e) {
-            logger.error(e);
-        }
-        const teamAreas = team && Array.isArray(team.areas) ? team.areas : [];
-        const query = {
-            $or: [
-                { userId },
-                { _id: { $in: teamAreas } }
-            ]
-        };
-
-        const areas = await AreaModel.find(query);
-        ctx.body = AreaSerializer.serialize(areas);
-    }
-
     static async getFWAreasByUserId(ctx) {
         const userId = ctx.params.userId;
         logger.info('Obtaining all user areas + fw team areas', userId);
@@ -99,29 +78,8 @@ class AreaRouter {
         ctx.body = AreaSerializer.serialize(areas);
     }
 
-    static async getAoisByUserId(ctx) {
-        const userId = ctx.params.userId;
-        logger.info('Obtaining all user areas + fw team areas', userId);
-        let team = null;
-        try {
-            team = await TeamService.getTeamByUserId(userId);
-        } catch (e) {
-            logger.error(e);
-        }
-        const teamAreas = team && Array.isArray(team.areas) ? team.areas : [];
-        const query = {
-            $or: [
-                { userId },
-                { _id: { $in: teamAreas } }
-            ]
-        };
-
-        const areas = await AreaModel.find(query);
-        ctx.body = AreaSerializer.serialize(areas);
-    }
-
     static async saveByUserId(ctx) {
-        await AreaRouter.saveArea(ctx, ctx.params.userId);
+        await AreaRouterV2.saveArea(ctx, ctx.params.userId);
     }
 
     static async saveArea(ctx, userId) {
@@ -147,6 +105,10 @@ class AreaRouter {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
             iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
+        const tags = [];
+        if (ctx.request.body.tags) {
+            tags = JSON.parse(ctx.request.body.tags);
+        }
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
@@ -156,13 +118,14 @@ class AreaRouter {
             use: use,
             iso: iso,
             datasets,
-            image
+            image,
+            tags
         }).save();
         ctx.body = AreaSerializer.serialize(area);
     }
 
     static async save(ctx, userId) {
-        await AreaRouter.saveArea(ctx, ctx.state.loggedUser.id);
+        await AreaRouterV2.saveArea(ctx, ctx.state.loggedUser.id);
     }
 
     static async update(ctx) {
@@ -198,6 +161,9 @@ class AreaRouter {
         area.iso = iso;
         if (ctx.request.body.datasets) {
             area.datasets = JSON.parse(ctx.request.body.datasets);
+        }
+        if (ctx.request.body.tags) {
+            area.tags = JSON.parse(ctx.request.body.tags);
         }
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
@@ -298,21 +264,14 @@ async function checkPermission(ctx, next) {
     await next();
 }
 
-router.post('/', loggedUserToState, AreaValidator.create, AreaRouter.save);
-router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouter.update);
-router.get('/', loggedUserToState, AreaRouter.getAll);
-router.get('/fw', loggedUserToState, AreaRouter.getFWAreas);
-router.post('/fw/:userId', loggedUserToState, AreaValidator.create, AreaRouter.saveByUserId);
-router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouter.getFWAreasByUserId);
-router.get('/:id', loggedUserToState, AreaRouter.get);
-router.get('/:id/alerts', loggedUserToState, AreaRouter.getAlertsOfArea);
-router.delete('/:id', loggedUserToState, checkPermission, AreaRouter.delete);
-
-router.post('/aoi/:userId', loggedUserToState, AreaValidator.create, AreaRouter.saveAoiByUserId);
-router.get('/aoi/:userId', loggedUserToState, isMicroservice, AreaRouter.getAoisByUserId);
-
-router.get('/aoi/:userId/area/:id', loggedUserToState, isMicroservice, AreaRouter.getAoisByUserId);
-router.patch('/aoi/:userId/area/:id', loggedUserToState, isMicroservice, AreaRouter.getAoisByUserId);
-router.delete('/aoi/:userId/area/:id', loggedUserToState, isMicroservice, AreaRouter.getAoisByUserId);
+router.get('/', loggedUserToState, AreaRouterV2.getAll);
+router.post('/', loggedUserToState, AreaValidator.create, AreaRouterV2.save);
+router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouterV2.update);
+router.get('/:id', loggedUserToState, AreaRouterV2.get);
+router.delete('/:id', loggedUserToState, checkPermission, AreaRouterV2.delete);
+router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
+router.get('/fw', loggedUserToState, AreaRouterV2.getFWAreas);
+router.post('/fw/:userId', loggedUserToState, AreaValidator.create, AreaRouterV2.saveByUserId);
+router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouterV2.getFWAreasByUserId);
 
 module.exports = router;
