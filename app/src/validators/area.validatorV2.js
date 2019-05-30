@@ -27,6 +27,7 @@ class AreaValidatorV2 {
         ctx.checkBody('iso').optional().check(iso => AreaValidatorV2.isObject(iso), 'must be an object');
         ctx.checkBody('use').optional().check(use => AreaValidatorV2.isObject(use), 'must be an object');
         ctx.checkBody('tags').optional().isJSON();
+        ctx.checkBody('status').optional().check(status => AreaValidatorV2.notEmptyString(status), 'can not be empty');
 
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
@@ -47,6 +48,7 @@ class AreaValidatorV2 {
         ctx.checkBody('use').optional().check(use => AreaValidatorV2.isObject(use), 'must be an object');
         ctx.checkBody('templateId').optional();
         ctx.checkBody('tags').optional().isJSON();
+        ctx.checkBody('status').optional().check(status => AreaValidatorV2.notEmptyString(status), 'can not be empty');
         
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);

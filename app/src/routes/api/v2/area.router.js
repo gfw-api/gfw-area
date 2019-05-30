@@ -119,7 +119,8 @@ class AreaRouterV2 {
             iso: iso,
             datasets,
             image,
-            tags
+            tags,
+            status: 'pending'
         }).save();
         ctx.body = AreaSerializer.serialize(area);
     }
@@ -164,6 +165,9 @@ class AreaRouterV2 {
         }
         if (ctx.request.body.tags) {
             area.tags = JSON.parse(ctx.request.body.tags);
+        }
+        if (ctx.request.body.status) {
+            area.status = JSON.parse(ctx.request.body.status);
         }
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);

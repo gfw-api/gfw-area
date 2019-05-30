@@ -32,7 +32,8 @@ const Area = new Schema({
     createdAt: { type: Date, required: true, default: Date.now },
     image: { type: String, required: false, trim: true },
     templateId: { type: String, trim: true, required: false },
-    tags: { type: Array, trim: true, required: false }
+    tags: { type: Array, trim: true, required: false },
+    status: { type: String, trim: true, required: true, default: 'pending' }
 });
 
 
