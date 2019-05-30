@@ -4,7 +4,8 @@
     },
     "mongodb": {
         "host": "MONGO_PORT_27017_TCP_ADDR",
-        "port": "MONGO_PORT_27017_TCP_PORT"
+        "port": "MONGO_PORT_27017_TCP_PORT",
+        "database": "MONGO_PORT_27017_TCP_DATABASE"
     },
     "gladDataset": "GLAD_DATASET",
     "viirsDataset": "VIIRS_DATASET",
