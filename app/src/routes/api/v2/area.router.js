@@ -164,7 +164,7 @@ class AreaRouterV2 {
             area.datasets = JSON.parse(ctx.request.body.datasets);
         }
         if (ctx.request.body.tags) {
-            area.tags = JSON.parse(ctx.request.body.tags);
+            area.tags = ctx.request.body.tags;
         }
         if (ctx.request.body.status) {
             area.status = JSON.parse(ctx.request.body.status);
