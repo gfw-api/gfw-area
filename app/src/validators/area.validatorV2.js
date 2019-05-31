@@ -17,6 +17,13 @@ class AreaValidatorV2 {
         return false;
     }
 
+    static isArray(property) {
+        if (property instanceof Array) {
+            return true;
+        }
+        return false;
+    }
+
     static async create(ctx, next) {
         logger.debug('Validating body for create area');
         ctx.checkBody('name').notEmpty().len(1, 100);
@@ -26,7 +33,7 @@ class AreaValidatorV2 {
         ctx.checkBody('datasets').optional().isJSON();
         ctx.checkBody('iso').optional().check(iso => AreaValidatorV2.isObject(iso), 'must be an object');
         ctx.checkBody('use').optional().check(use => AreaValidatorV2.isObject(use), 'must be an object');
-        ctx.checkBody('tags').optional().isJSON();
+        ctx.checkBody('tags').optional().check(tags => AreaValidatorV2.isArray(tags), 'must be an array');
         ctx.checkBody('status').optional().check(status => AreaValidatorV2.notEmptyString(status), 'can not be empty');
 
         if (ctx.errors) {
@@ -47,7 +54,7 @@ class AreaValidatorV2 {
         ctx.checkBody('iso').optional().check(iso => AreaValidatorV2.isObject(iso), 'must be an object');
         ctx.checkBody('use').optional().check(use => AreaValidatorV2.isObject(use), 'must be an object');
         ctx.checkBody('templateId').optional();
-        ctx.checkBody('tags').optional().isJSON();
+        ctx.checkBody('tags').optional().check(tags => AreaValidatorV2.isArray(tags), 'must be an array');
         ctx.checkBody('status').optional().check(status => AreaValidatorV2.notEmptyString(status), 'can not be empty');
         
         if (ctx.errors) {

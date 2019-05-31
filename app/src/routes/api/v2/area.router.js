@@ -1,8 +1,8 @@
 const Router = require('koa-router');
 const logger = require('logger');
-const AreaSerializer = require('serializers/area.serializerV2');
+const AreaSerializerV2 = require('serializers/area.serializerV2');
 const AreaModel = require('models/area.modelV2');
-const AreaValidator = require('validators/area.validatorV2');
+const AreaValidatorV2 = require('validators/area.validatorV2');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const s3Service = require('services/s3.service');
@@ -19,7 +19,7 @@ class AreaRouterV2 {
             filter.application = ctx.query.application.split(',').map(el => el.trim());
         }
         const areas = await AreaModel.find(filter);
-        ctx.body = AreaSerializer.serialize(areas);
+        ctx.body = AreaSerializerV2.serialize(areas);
     }
 
     static async get(ctx) {
@@ -33,7 +33,7 @@ class AreaRouterV2 {
             ctx.throw(404, 'Area not found');
             return;
         }
-        ctx.body = AreaSerializer.serialize(areas[0]);
+        ctx.body = AreaSerializerV2.serialize(areas[0]);
     }
 
     static async getFWAreas(ctx) {
@@ -54,7 +54,7 @@ class AreaRouterV2 {
         };
 
         const areas = await AreaModel.find(query);
-        ctx.body = AreaSerializer.serialize(areas);
+        ctx.body = AreaSerializerV2.serialize(areas);
     }
 
     static async getFWAreasByUserId(ctx) {
@@ -75,7 +75,7 @@ class AreaRouterV2 {
         };
 
         const areas = await AreaModel.find(query);
-        ctx.body = AreaSerializer.serialize(areas);
+        ctx.body = AreaSerializerV2.serialize(areas);
     }
 
     static async saveByUserId(ctx) {
@@ -105,9 +105,9 @@ class AreaRouterV2 {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
             iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
-        const tags = [];
+        let tags = [];
         if (ctx.request.body.tags) {
-            tags = JSON.parse(ctx.request.body.tags);
+            tags = ctx.request.body.tags;
         }
         const area = await new AreaModel({
             name: ctx.request.body.name,
@@ -122,7 +122,7 @@ class AreaRouterV2 {
             tags,
             status: 'pending'
         }).save();
-        ctx.body = AreaSerializer.serialize(area);
+        ctx.body = AreaSerializerV2.serialize(area);
     }
 
     static async save(ctx, userId) {
@@ -178,7 +178,7 @@ class AreaRouterV2 {
         area.updatedDate = Date.now;
 
         await area.save();
-        ctx.body = AreaSerializer.serialize(area);
+        ctx.body = AreaSerializerV2.serialize(area);
     }
 
     static async delete(ctx){
@@ -269,13 +269,13 @@ async function checkPermission(ctx, next) {
 }
 
 router.get('/', loggedUserToState, AreaRouterV2.getAll);
-router.post('/', loggedUserToState, AreaValidator.create, AreaRouterV2.save);
-router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouterV2.update);
+router.post('/', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.save);
+router.patch('/:id', loggedUserToState, checkPermission, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouterV2.delete);
 router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
 router.get('/fw', loggedUserToState, AreaRouterV2.getFWAreas);
-router.post('/fw/:userId', loggedUserToState, AreaValidator.create, AreaRouterV2.saveByUserId);
+router.post('/fw/:userId', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.saveByUserId);
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouterV2.getFWAreasByUserId);
 
 module.exports = router;

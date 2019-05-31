@@ -3,7 +3,7 @@
 var logger = require('logger');
 var JSONAPISerializer = require('jsonapi-serializer').Serializer;
 
-var areaSerializer = new JSONAPISerializer('area', {
+var areaSerializer = new JSONAPISerializer('areaV2', {
     attributes: [
         'name',
         'application',
