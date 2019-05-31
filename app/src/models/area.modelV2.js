@@ -37,4 +37,4 @@ const Area = new Schema({
 });
 
 
-module.exports = mongoose.model('AreaV2', Area);
+module.exports = mongoose.model('area', Area);
