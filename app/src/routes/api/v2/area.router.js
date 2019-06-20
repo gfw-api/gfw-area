@@ -125,9 +125,9 @@ class AreaRouterV2 {
         if (ctx.request.body.tags) {
             tags = ctx.request.body.tags;
         }
-        let public = false;
+        let public_status = false;
         if (ctx.request.body.public) {
-            public = ctx.request.body.public;
+            public_status = ctx.request.body.public;
         }
         const area = await new AreaModel({
             name: ctx.request.body.name,
@@ -141,7 +141,7 @@ class AreaRouterV2 {
             image,
             tags,
             status: 'pending',
-            public
+            public: public_status 
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
     }

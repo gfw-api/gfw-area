@@ -33,7 +33,8 @@ const Area = new Schema({
     image: { type: String, required: false, trim: true },
     templateId: { type: String, trim: true, required: false },
     tags: { type: Array, trim: true, required: true, default: [] },
-    status: { type: String, trim: true, required: true, default: 'pending' }
+    status: { type: String, trim: true, required: true, default: 'pending' },
+    public: { type: Boolean, trim: true, required: true, default: false }
 });
 
 
