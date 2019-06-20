@@ -125,6 +125,10 @@ class AreaRouterV2 {
         if (ctx.request.body.tags) {
             tags = ctx.request.body.tags;
         }
+        let public = false;
+        if (ctx.request.body.public) {
+            public = ctx.request.body.public;
+        }
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
@@ -136,7 +140,8 @@ class AreaRouterV2 {
             datasets,
             image,
             tags,
-            status: 'pending'
+            status: 'pending',
+            public
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
     }
@@ -183,6 +188,9 @@ class AreaRouterV2 {
         }
         if (ctx.request.body.status) {
             area.status = JSON.parse(ctx.request.body.status);
+        }
+        if (ctx.request.body.public) {
+            area.public = ctx.request.body.public;
         }
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
