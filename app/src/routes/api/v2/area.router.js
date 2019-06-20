@@ -22,6 +22,22 @@ class AreaRouterV2 {
         ctx.body = AreaSerializerV2.serialize(areas);
     }
 
+    static async updateByGeostore(ctx) {
+        const geostores = ctx.request.body.geostores || [];
+        const update_params = ctx.request.body.update_params || {};
+        logger.info('Updating geostores: ', geostores);
+        logger.info('Updating with params: ', update_params);
+
+        // validate update json
+        update_params.updatedDate = Date.now;
+
+        const area = await AreaModel.updateMany(
+            { geostore: { $in: geostores } },
+            { $set: update_params }
+         );
+        logger.info('Updated! ', area);
+    }
+
     static async get(ctx) {
         logger.info(`Obtaining area of the user ${ctx.state.loggedUser.id} and areaId ${ctx.params.id}`);
         const filters = { _id: ctx.params.id };
@@ -130,7 +146,6 @@ class AreaRouterV2 {
     }
 
     static async update(ctx) {
-        logger.info(`Updating area with id ${ctx.params.id}`);
         const area = await AreaModel.findById(ctx.params.id);
         const files = ctx.request.body.files;
         if (ctx.request.body.fields) {
@@ -277,5 +292,6 @@ router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
 router.get('/fw', loggedUserToState, AreaRouterV2.getFWAreas);
 router.post('/fw/:userId', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.saveByUserId);
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouterV2.getFWAreasByUserId);
+router.post('/update', AreaRouterV2.updateByGeostore);
 
 module.exports = router;

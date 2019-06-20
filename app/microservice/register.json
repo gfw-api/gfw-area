@@ -58,6 +58,14 @@
 			"path": "/api/v2/area/:id"
 		}
 	},{
+		"path": "/v2/area/update",
+		"method": "POST",
+		"authenticated": true,
+		"redirect": {
+			"method": "POST",
+			"path": "/api/v2/area/update"
+		}
+	},{
 		"path": "/v2/area/:id",
 		"method": "DELETE",
 		"authenticated": true,
