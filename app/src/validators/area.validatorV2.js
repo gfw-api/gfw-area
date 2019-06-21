@@ -26,13 +26,11 @@ class AreaValidatorV2 {
 
     static isArray(property) {
         if (property instanceof Array) {
-            // const invalid = property.filter(str =>
-            //     typeof str !== String ||
-            //     !str.match(/^[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF_ ]*/g)
-            // );
-            // if(invalid.length === 0) return true;
-            // else return false;
-            return true;
+            const invalid = property.filter(str => {
+                const regex = RegExp(/^[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF_ ]*$/i);
+                return (typeof str !== 'string' || !regex.test(str))
+            });
+            return (invalid.length === 0);
         }
         return false;
     }

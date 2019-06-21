@@ -1,5 +1,6 @@
 'use strict';
 const mongoose = require('mongoose');
+const mongooseHistory = require('mongoose-history')
 const Schema = mongoose.Schema;
 
 const Dataset = new Schema({
@@ -37,5 +38,6 @@ const Area = new Schema({
     public: { type: Boolean, trim: true, required: true, default: false }
 });
 
+Area.plugin(mongooseHistory);
 
 module.exports = mongoose.model('area', Area);
