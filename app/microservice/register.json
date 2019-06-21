@@ -66,6 +66,14 @@
 			"path": "/api/v2/area/update"
 		}
 	},{
+		"path": "/v2/area/fw/:id",
+		"method": "DELETE",
+		"authenticated": true,
+		"redirect": {
+			"method": "DELETE",
+			"path": "/api/v2/area/fw/:id"
+		}
+	},{
 		"path": "/v2/area/:id",
 		"method": "DELETE",
 		"authenticated": true,

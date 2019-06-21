@@ -206,6 +206,17 @@ class AreaRouterV2 {
 
     static async delete(ctx){
         logger.info(`Deleting area with id ${ctx.params.id}`);
+        const result = await AreaModel.remove({ _id: ctx.params.id });
+        if (!result || result.ok === 0) {
+            ctx.throw(404, 'Area not found');
+            return;
+        }
+        ctx.body = '';
+        ctx.statusCode = 204;
+    }
+
+    static async teamDelete(ctx){
+        logger.info(`Deleting area with id ${ctx.params.id}`);
         const userId = ctx.state.loggedUser.id;
         let team = null;
         try {
@@ -300,6 +311,7 @@ router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
 router.get('/fw', loggedUserToState, AreaRouterV2.getFWAreas);
 router.post('/fw/:userId', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.saveByUserId);
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouterV2.getFWAreasByUserId);
+router.delete('/fw/:id', loggedUserToState, checkPermission, AreaRouterV2.teamDelete);
 router.post('/update', AreaRouterV2.updateByGeostore);
 
 module.exports = router;
