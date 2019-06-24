@@ -211,33 +211,24 @@ class AreaRouterV2 {
             ctx.throw(404, 'Area not found');
             return;
         }
-        ctx.body = '';
-        ctx.statusCode = 204;
-    }
-
-    static async teamDelete(ctx){
-        logger.info(`Deleting area with id ${ctx.params.id}`);
+        logger.info(`Area ${ctx.params.id} deleted successfully`)
+        
         const userId = ctx.state.loggedUser.id;
         let team = null;
         try {
             team = await TeamService.getTeamByUserId(userId);
         } catch (e) {
             logger.error(e);
-            ctx.throw(500, 'Team retrieval failed.');
         }
         if (team && team.areas.includes(ctx.params.id)) {
             const areas = team.areas.filter(area => area !== ctx.params.id);
             try {
                 await TeamService.patchTeamById(team.id, { areas });
+                logger.info('Team patched successful.');
+
             } catch (e) {
                 logger.error(e);
-                ctx.throw(500, 'Team patch failed.');
             }
-        }
-        const result = await AreaModel.deleteOne({ _id: ctx.params.id });
-        if (!result || result.ok === 0) {
-            ctx.throw(404, 'Area not found');
-            return;
         }
         ctx.body = '';
         ctx.statusCode = 204;
@@ -311,7 +302,6 @@ router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
 router.get('/fw', loggedUserToState, AreaRouterV2.getFWAreas);
 router.post('/fw/:userId', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.saveByUserId);
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouterV2.getFWAreasByUserId);
-router.delete('/fw/:id', loggedUserToState, checkPermission, AreaRouterV2.teamDelete);
 router.post('/update', AreaRouterV2.updateByGeostore);
 
 module.exports = router;
