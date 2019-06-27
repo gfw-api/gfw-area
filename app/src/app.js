@@ -88,6 +88,6 @@ const onDbReady = function (err) {
     logger.info('Server started in ', process.env.PORT);
 };
 
-mongoose.connect(mongoUri, onDbReady);
+mongoose.connect(mongoUri, () => { setTimeout(onDbReady, 1000) });
 
 module.exports = instance;
