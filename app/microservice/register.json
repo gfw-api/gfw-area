@@ -28,7 +28,7 @@
       },{
           "path": "/v2/area/:id",
           "method": "GET",
-          "authenticated": true,
+          "authenticated": false,
           "redirect": {
               "method": "GET",
               "path": "/api/v2/area/:id"

@@ -39,15 +39,30 @@ class AreaRouterV2 {
     }
 
     static async get(ctx) {
-        logger.info(`Obtaining area of the user ${ctx.state.loggedUser.id} and areaId ${ctx.params.id}`);
         const filters = { _id: ctx.params.id };
-        if (ctx.state.loggedUser.id !== 'microservice') {
-            filters.userId = ctx.state.loggedUser.id;
+        let areas = {};
+        if (ctx.state.loggedUser && ctx.state.loggedUser.id) {
+            logger.info(`Obtaining area of the user ${ctx.state.loggedUser.id} and areaId ${ctx.params.id}`);
+            if (ctx.state.loggedUser.id !== 'microservice') {
+                filters.userId = ctx.state.loggedUser.id;
+            }
+            areas = await AreaModel.find(filters);
+            if (!areas || areas.length === 0) {
+                ctx.throw(404, 'Area not found');
+                return;
+            }
         }
-        const areas = await AreaModel.find(filters);
-        if (!areas || areas.length === 0) {
-            ctx.throw(404, 'Area not found');
-            return;
+        else {
+            logger.info(`Obtaining area with areaId ${ctx.params.id}`);
+            areas = await AreaModel.find(filters);
+            if (!areas || areas.length === 0) {
+                ctx.throw(404, 'Area not found');
+                return;
+            }
+            if (!areas[0].public) {
+                ctx.throw(403, 'Area not public');
+                return;
+            }
         }
         ctx.body = AreaSerializerV2.serialize(areas[0]);
     }
@@ -254,7 +269,6 @@ class AreaRouterV2 {
 
 }
 
-
 async function loggedUserToState(ctx, next) {
     if (ctx.query && ctx.query.loggedUser){
         ctx.state.loggedUser = JSON.parse(ctx.query.loggedUser);
@@ -266,7 +280,7 @@ async function loggedUserToState(ctx, next) {
         ctx.state.loggedUser = JSON.parse(ctx.request.body.fields.loggedUser);
         delete ctx.request.body.loggedUser;
     } else {
-        ctx.throw(401, 'Not logged');
+        ctx.state.loggedUser = null;
         return;
     }
     await next();
