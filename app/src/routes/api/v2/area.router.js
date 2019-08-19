@@ -48,8 +48,7 @@ class AreaRouterV2 {
             return;
         }
         else if (areas[0].public === false && areas[0].userId !== user) {
-            ctx.body = 'Area private';
-            ctx.statusCode = 204;
+            ctx.throw(401, 'Area private');
             return;
             
         }
