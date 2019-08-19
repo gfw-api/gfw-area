@@ -40,30 +40,17 @@ class AreaRouterV2 {
 
     static async get(ctx) {
         const filters = { _id: ctx.params.id };
-        let areas = {};
-        if (ctx.state.loggedUser && ctx.state.loggedUser.id) {
-            logger.info(`Obtaining area of the user ${ctx.state.loggedUser.id} and areaId ${ctx.params.id}`);
-            if (ctx.state.loggedUser.id !== 'microservice') {
-                filters.userId = ctx.state.loggedUser.id;
-            }
-            areas = await AreaModel.find(filters);
-            if (!areas || areas.length === 0) {
-                ctx.throw(404, 'Area not found');
-                return;
-            }
+        const user = ctx.state.loggedUser && ctx.state.loggedUser.id || null;
+        logger.info(`Obtaining area with areaId ${ctx.params.id}`);
+        const areas = await AreaModel.find(filters);
+        if (!areas || areas.length === 0) {
+            ctx.throw(404, 'Area not found');
+            return;
         }
-        else {
-            logger.info(`Obtaining area with areaId ${ctx.params.id}`);
-            areas = await AreaModel.find(filters);
-            if (!areas || areas.length === 0) {
-                ctx.throw(404, 'Area not found');
-                return;
-            }
-            if (!areas[0].public) {
-                ctx.throw(403, 'Area not public');
-                return;
-            }
-        }
+        else if (areas[0].public === false && areas[0].userId !== user) {
+            ctx.throw(204, 'Area not public');
+            return;
+        };
         ctx.body = AreaSerializerV2.serialize(areas[0]);
     }
 
