@@ -36,7 +36,7 @@ const Area = new Schema({
     tags: { type: Array, trim: true, required: true, default: [] },
     status: { type: String, trim: true, required: true, default: 'pending' },
     public: { type: Boolean, trim: true, required: true, default: false },
-    firesAlerts: { type: Boolean, trim: true, required: true, default: false },
+    fireAlerts: { type: Boolean, trim: true, required: true, default: false },
     deforestationAlerts: { type: Boolean, trim: true, required: true, default: false },
     monthlySummary: { type: Boolean, trim: true, required: true, default: false }
 });
