@@ -40,31 +40,21 @@ class AreaRouterV2 {
 
     static async get(ctx) {
         const filters = { _id: ctx.params.id };
-        let areas = {};
-        if (ctx.state.loggedUser && ctx.state.loggedUser.id) {
-            logger.info(`Obtaining area of the user ${ctx.state.loggedUser.id} and areaId ${ctx.params.id}`);
-            if (ctx.state.loggedUser.id !== 'microservice') {
-                filters.userId = ctx.state.loggedUser.id;
-            }
-            areas = await AreaModel.find(filters);
-            if (!areas || areas.length === 0) {
-                ctx.throw(404, 'Area not found');
-                return;
-            }
+        const user = ctx.state.loggedUser && ctx.state.loggedUser.id || null;
+        logger.info(`Obtaining area with areaId ${ctx.params.id}`);
+        const areas = await AreaModel.find(filters);
+        if (!areas || areas.length === 0) {
+            ctx.throw(404, 'Area not found');
+            return;
+        }
+        else if (areas[0].public === false && areas[0].userId !== user) {
+            ctx.throw(401, 'Area private');
+            return;
+            
         }
         else {
-            logger.info(`Obtaining area with areaId ${ctx.params.id}`);
-            areas = await AreaModel.find(filters);
-            if (!areas || areas.length === 0) {
-                ctx.throw(404, 'Area not found');
-                return;
-            }
-            if (!areas[0].public) {
-                ctx.throw(403, 'Area not public');
-                return;
-            }
-        }
-        ctx.body = AreaSerializerV2.serialize(areas[0]);
+            ctx.body = AreaSerializerV2.serialize(areas[0]);
+        };
     }
 
     static async getFWAreas(ctx) {
@@ -144,6 +134,18 @@ class AreaRouterV2 {
         if (ctx.request.body.public) {
             public_status = ctx.request.body.public;
         }
+        let fire_alert_sub = false;
+        if (ctx.request.body.fireAlerts) {
+            fire_alert_sub = ctx.request.body.fireAlerts;
+        }
+        let defor_alert_sub = false;
+        if (ctx.request.body.deforestationAlerts) {
+            defor_alert_sub = ctx.request.body.deforestationAlerts;
+        }
+        let summary_sub = false;
+        if (ctx.request.body.monthlySummary) {
+            summary_sub = ctx.request.body.monthlySummary;
+        }
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
@@ -156,7 +158,10 @@ class AreaRouterV2 {
             image,
             tags,
             status: 'pending',
-            public: public_status 
+            public: public_status ,
+            fireAlerts: fire_alert_sub, 
+            deforestationAlerts: defor_alert_sub, 
+            monthlySummary: summary_sub
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
     }
@@ -206,6 +211,15 @@ class AreaRouterV2 {
         }
         if (ctx.request.body.public) {
             area.public = ctx.request.body.public;
+        }
+        if (ctx.request.body.fireAlerts) {
+            area.fireAlerts = ctx.request.body.fireAlerts;
+        }
+        if (ctx.request.body.deforestationAlerts) {
+            area.deforestationAlerts = ctx.request.body.deforestationAlerts;
+        }
+        if (ctx.request.body.monthlySummary) {
+            area.monthlySummary = ctx.request.body.monthlySummary;
         }
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
