@@ -69,6 +69,9 @@ class AreaValidatorV2 {
         ctx.checkBody('tags').optional().check(tags => AreaValidatorV2.isArray(tags), 'must be an array of valid strings');
         ctx.checkBody('status').optional().check(status => AreaValidatorV2.notEmptyString(status), 'can not be empty');
         ctx.checkBody('public').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
+        ctx.checkBody('fireAlerts').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
+        ctx.checkBody('deforestationAlerts').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
+        ctx.checkBody('monthlySummary').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
         
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
