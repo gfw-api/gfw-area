@@ -48,10 +48,14 @@ class AreaRouterV2 {
             return;
         }
         else if (areas[0].public === false && areas[0].userId !== user) {
-            ctx.throw(204, 'Area not public');
+            ctx.body = 'Area private';
+            ctx.statusCode = 204;
             return;
+            
+        }
+        else {
+            ctx.body = AreaSerializerV2.serialize(areas[0]);
         };
-        ctx.body = AreaSerializerV2.serialize(areas[0]);
     }
 
     static async getFWAreas(ctx) {
@@ -131,6 +135,18 @@ class AreaRouterV2 {
         if (ctx.request.body.public) {
             public_status = ctx.request.body.public;
         }
+        let fire_alert_sub = false;
+        if (ctx.request.body.fireAlerts) {
+            fire_alert_sub = ctx.request.body.fireAlerts;
+        }
+        let defor_alert_sub = false;
+        if (ctx.request.body.deforestationAlerts) {
+            defor_alert_sub = ctx.request.body.deforestationAlerts;
+        }
+        let summary_sub = false;
+        if (ctx.request.body.monthlySummary) {
+            summary_sub = ctx.request.body.monthlySummary;
+        }
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
@@ -143,7 +159,10 @@ class AreaRouterV2 {
             image,
             tags,
             status: 'pending',
-            public: public_status 
+            public: public_status ,
+            fireAlerts: fire_alert_sub, 
+            deforestationAlerts: defor_alert_sub, 
+            monthlySummary: summary_sub
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
     }
@@ -193,6 +212,15 @@ class AreaRouterV2 {
         }
         if (ctx.request.body.public) {
             area.public = ctx.request.body.public;
+        }
+        if (ctx.request.body.fireAlerts) {
+            area.fireAlerts = ctx.request.body.fireAlerts;
+        }
+        if (ctx.request.body.deforestationAlerts) {
+            area.deforestationAlerts = ctx.request.body.deforestationAlerts;
+        }
+        if (ctx.request.body.monthlySummary) {
+            area.monthlySummary = ctx.request.body.monthlySummary;
         }
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
