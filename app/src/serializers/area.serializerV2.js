@@ -18,7 +18,10 @@ var areaSerializer = new JSONAPISerializer('area', {
         'templateId',
         'tags',
         'status',
-        'public'
+        'public',
+        'fireAlerts',
+        'deforestationAlerts',
+        'monthlySummary',
     ],
     resource: {
         attributes: ['type', 'content']
