@@ -47,13 +47,22 @@ class AreaRouterV2 {
             ctx.throw(404, 'Area not found');
             return;
         }
-        else if (areas[0].public === false && areas[0].userId !== user) {
+        let area = areas[0];
+        if (area.public === false && area.userId !== user) {
             ctx.throw(401, 'Area private');
             return;
-            
+        }
+        else if (area.public === true && area.userId !== user) {
+            area.tags = null;
+            area.userId = null;
+            area.datasets = null;
+            area.monthlySummary = null;
+            area.deforestationAlerts = null;
+            area.fireAlerts = null;
+            ctx.body = AreaSerializerV2.serialize(area);
         }
         else {
-            ctx.body = AreaSerializerV2.serialize(areas[0]);
+            ctx.body = AreaSerializerV2.serialize(area);
         };
     }
 
