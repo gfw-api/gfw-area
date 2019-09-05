@@ -1,6 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
+  namespace: gfw
   labels:
     name: {name}
   name: {name}
@@ -8,8 +9,6 @@ spec:
   revisionHistoryLimit: 2
   template:
     metadata:
-      annotations:
-        chaos.alpha.kubernetes.io/enabled: "true"
       labels:
         name: {name}
     spec:
