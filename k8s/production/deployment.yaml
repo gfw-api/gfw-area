@@ -31,7 +31,7 @@ spec:
           - name: NODE_PATH
             value: app/src
           - name: LOCAL_URL
-            value: http://{name}.default.svc.cluster.local:4100
+            value: http://{name}.gfw.svc.cluster.local:4100
           - name: GLAD_DATASET
             value: e663eb09-04de-4f39-b871-35c6c2ed10b5
           - name: VIIRS_DATASET
