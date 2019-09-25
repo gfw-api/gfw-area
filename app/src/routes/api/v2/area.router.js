@@ -183,7 +183,7 @@ class AreaRouterV2 {
         const area = await AreaModel.findById(ctx.params.id);
         const files = ctx.request.body.files;
         if (ctx.request.body.fields) {
-            body = ctx.request.body.fields
+            ctx.request.body = ctx.request.body.fields
         }
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
