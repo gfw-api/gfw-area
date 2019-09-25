@@ -181,57 +181,56 @@ class AreaRouterV2 {
 
     static async update(ctx) {
         const area = await AreaModel.findById(ctx.params.id);
-        const body = ctx.request.body || {};
-        const files = body.files;
-        if (body.fields) {
-            body = body.fields
+        const files = ctx.request.body.files;
+        if (ctx.request.body.fields) {
+            ctx.request.body = ctx.request.body.fields
         }
-        if (body.application || !area.application) {
-            area.application = body.application || 'gfw';
+        if (ctx.request.body.application || !area.application) {
+            area.application = ctx.request.body.application || 'gfw';
         }
-        if (body.name) {
-            area.name = body.name;
+        if (ctx.request.body.name) {
+            area.name = ctx.request.body.name;
         }
-        if (body.geostore) {
-            area.geostore = body.geostore;
+        if (ctx.request.body.geostore) {
+            area.geostore = ctx.request.body.geostore;
         }
-        if (body.wdpaid) {
-            area.wdpaid = body.wdpaid;
+        if (ctx.request.body.wdpaid) {
+            area.wdpaid = ctx.request.body.wdpaid;
         }
         const use = {};
-        if (body.use) {
-            use.id = body.use ? body.use.id : null;
-            use.name = body.use ? body.use.name : null;
+        if (ctx.request.body.use) {
+            use.id = ctx.request.body.use ? ctx.request.body.use.id : null;
+            use.name = ctx.request.body.use ? ctx.request.body.use.name : null;
         }
         area.use = use;
         const iso = {};
-        if (body.iso) {
-            iso.country = body.iso ? body.iso.country : null;
-            iso.region =  body.iso ? body.iso.region : null;
+        if (ctx.request.body.iso) {
+            iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
+            iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
         area.iso = iso;
-        if (body.datasets) {
-            area.datasets = JSON.parse(body.datasets);
+        if (ctx.request.body.datasets) {
+            area.datasets = JSON.parse(ctx.request.body.datasets);
         }
-        if (body.tags) {
-            area.tags = body.tags;
+        if (ctx.request.body.tags) {
+            area.tags = ctx.request.body.tags;
         }
-        if (body.status) {
-            area.status = JSON.parse(body.status);
+        if (ctx.request.body.status) {
+            area.status = JSON.parse(ctx.request.body.status);
         }
-        if (body.public) {
-            area.public = body.public;
+        if (ctx.request.body.public) {
+            area.public = ctx.request.body.public;
         }
-        const update_keys = body && Object.keys(body);
-        area.public = update_keys.includes('public') ? body.public : area.public;
-        area.fireAlerts = update_keys.includes('fireAlerts') ? body.fireAlerts : area.fireAlerts;
-        area.deforestationAlerts = update_keys.includes('deforestationAlerts') ? body.deforestationAlerts : area.deforestationAlerts;
-        area.monthlySummary = update_keys.includes('monthlySummary') ? body.monthlySummary : area.monthlySummary;
+        const update_keys = ctx.request.body && Object.keys(ctx.request.body);
+        area.public = update_keys.includes('public') ? ctx.request.body.public : area.public;
+        area.fireAlerts = update_keys.includes('fireAlerts') ? ctx.request.body.fireAlerts : area.fireAlerts;
+        area.deforestationAlerts = update_keys.includes('deforestationAlerts') ? ctx.request.body.deforestationAlerts : area.deforestationAlerts;
+        area.monthlySummary = update_keys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
-        if (typeof body.templateId !== 'undefined') {
-            area.templateId = body.templateId;
+        if (typeof ctx.request.body.templateId !== 'undefined') {
+            area.templateId = ctx.request.body.templateId;
         }
         area.updatedDate = Date.now;
 
