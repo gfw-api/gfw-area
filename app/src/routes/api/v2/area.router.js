@@ -181,7 +181,7 @@ class AreaRouterV2 {
 
     static async update(ctx) {
         const area = await AreaModel.findById(ctx.params.id);
-        const body = ctx.request.body || {};
+        let body = ctx.request.body || {};
         const files = body.files;
         if (body.fields) {
             body = body.fields
