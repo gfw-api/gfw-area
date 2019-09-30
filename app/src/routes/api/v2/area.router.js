@@ -151,9 +151,9 @@ class AreaRouterV2 {
         if (ctx.request.body.deforestationAlerts) {
             defor_alert_sub = ctx.request.body.deforestationAlerts;
         }
-        let blob_url = false;
-        if (ctx.request.body.blob_url) {
-            blob_url = ctx.request.body.blob_url;
+        let webhook_url = false;
+        if (ctx.request.body.webhook_url) {
+            webhook_url = ctx.request.body.webhook_url;
         }
         let summary_sub = false;
         if (ctx.request.body.monthlySummary) {
@@ -174,7 +174,7 @@ class AreaRouterV2 {
             public: public_status ,
             fireAlerts: fire_alert_sub, 
             deforestationAlerts: defor_alert_sub,
-            blobUrl: blob_url, 
+            webhookUrl: webhook_url, 
             monthlySummary: summary_sub
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
@@ -228,7 +228,7 @@ class AreaRouterV2 {
         }
         const update_keys = ctx.request.body && Object.keys(ctx.request.body);
         area.public = update_keys.includes('public') ? ctx.request.body.public : area.public;
-        area.blobUrl = update_keys.includes('blobUrl') ? ctx.request.body.blobUrl : area.blobUrl;
+        area.webhookUrl = update_keys.includes('webhookUrl') ? ctx.request.body.webhookUrl : area.webhookUrl;
         area.fireAlerts = update_keys.includes('fireAlerts') ? ctx.request.body.fireAlerts : area.fireAlerts;
         area.deforestationAlerts = update_keys.includes('deforestationAlerts') ? ctx.request.body.deforestationAlerts : area.deforestationAlerts;
         area.monthlySummary = update_keys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
