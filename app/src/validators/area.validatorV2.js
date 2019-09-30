@@ -72,7 +72,7 @@ class AreaValidatorV2 {
         ctx.checkBody('public').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
         ctx.checkBody('fireAlerts').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
         ctx.checkBody('deforestationAlerts').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
-        ctx.checkBody('webhookUrl').optional().check(webhookUrl => AreaValidatorV2.notEmptyString(status), 'cannot be empty');
+        ctx.checkBody('webhookUrl').optional().check(webhookUrl => AreaValidatorV2.notEmptyString(webhookUrl), 'cannot be empty');
         ctx.checkBody('monthlySummary').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
         
         if (ctx.errors) {
