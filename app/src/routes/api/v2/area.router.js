@@ -151,9 +151,9 @@ class AreaRouterV2 {
         if (ctx.request.body.deforestationAlerts) {
             defor_alert_sub = ctx.request.body.deforestationAlerts;
         }
-        let webhook_url = false;
-        if (ctx.request.body.webhook_url) {
-            webhook_url = ctx.request.body.webhook_url;
+        let webhook_url = '';
+        if (ctx.request.body.webhookUrl) {
+            webhook_url = ctx.request.body.webhookUrl;
         }
         let summary_sub = false;
         if (ctx.request.body.monthlySummary) {
