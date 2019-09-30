@@ -21,6 +21,7 @@ var areaSerializer = new JSONAPISerializer('area', {
         'public',
         'fireAlerts',
         'deforestationAlerts',
+        'webhookUrl',
         'monthlySummary',
     ],
     resource: {

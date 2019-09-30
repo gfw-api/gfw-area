@@ -151,6 +151,10 @@ class AreaRouterV2 {
         if (ctx.request.body.deforestationAlerts) {
             defor_alert_sub = ctx.request.body.deforestationAlerts;
         }
+        let webhook_url = '';
+        if (ctx.request.body.webhookUrl) {
+            webhook_url = ctx.request.body.webhookUrl;
+        }
         let summary_sub = false;
         if (ctx.request.body.monthlySummary) {
             summary_sub = ctx.request.body.monthlySummary;
@@ -169,7 +173,8 @@ class AreaRouterV2 {
             status: 'pending',
             public: public_status ,
             fireAlerts: fire_alert_sub, 
-            deforestationAlerts: defor_alert_sub, 
+            deforestationAlerts: defor_alert_sub,
+            webhookUrl: webhook_url, 
             monthlySummary: summary_sub
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
@@ -223,6 +228,7 @@ class AreaRouterV2 {
         }
         const update_keys = ctx.request.body && Object.keys(ctx.request.body);
         area.public = update_keys.includes('public') ? ctx.request.body.public : area.public;
+        area.webhookUrl = update_keys.includes('webhookUrl') ? ctx.request.body.webhookUrl : area.webhookUrl;
         area.fireAlerts = update_keys.includes('fireAlerts') ? ctx.request.body.fireAlerts : area.fireAlerts;
         area.deforestationAlerts = update_keys.includes('deforestationAlerts') ? ctx.request.body.deforestationAlerts : area.deforestationAlerts;
         area.monthlySummary = update_keys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
