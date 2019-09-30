@@ -38,6 +38,7 @@ const Area = new Schema({
     public: { type: Boolean, trim: true, required: true, default: false },
     fireAlerts: { type: Boolean, trim: true, required: true, default: false },
     deforestationAlerts: { type: Boolean, trim: true, required: true, default: false },
+    blobUrl: { type: String, trim: true, required: true, default: false },
     monthlySummary: { type: Boolean, trim: true, required: true, default: false }
 });
 
