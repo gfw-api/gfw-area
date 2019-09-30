@@ -47,7 +47,7 @@ class AreaValidatorV2 {
         ctx.checkBody('tags').optional().check(tags => AreaValidatorV2.isArray(tags), 'must be an array of valid strings');
         ctx.checkBody('status').optional().check(status => AreaValidatorV2.notEmptyString(status), 'cannot be empty');
         ctx.checkBody('public').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
-        ctx.checkBody('blobUrl').optional().check(status => AreaValidatorV2.notEmptyString(status), 'cannot be empty');
+        ctx.checkBody('webhookUrl').optional().check(webhookUrl => AreaValidatorV2.notEmptyString(webhookUrl), 'cannot be empty');
 
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
