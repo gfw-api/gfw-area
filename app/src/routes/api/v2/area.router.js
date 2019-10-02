@@ -55,10 +55,11 @@ class AreaRouterV2 {
         else if (area.public === true && area.userId !== user) {
             area.tags = null;
             area.userId = null;
-            area.datasets = null;
             area.monthlySummary = null;
             area.deforestationAlerts = null;
             area.fireAlerts = null;
+            area.name = null;
+            area.webhookUrl = null;
             ctx.body = AreaSerializerV2.serialize(area);
         }
         else {
