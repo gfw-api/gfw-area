@@ -32,8 +32,8 @@ const Area = new Schema({
     admin: {
         _id: false,
         adm0: { type: String, required: false, trim: true },
-        adm1: { type: String, required: false, trim: true },
-        adm2: { type: String, required: false, trim: true }
+        adm1: { type: Number, required: false, trim: true },
+        adm2: { type: Number, required: false, trim: true }
     },
     datasets: [Dataset],
     createdAt: { type: Date, required: true, default: Date.now },
