@@ -29,6 +29,12 @@ const Area = new Schema({
         country: { type: String, required: false, trim: true },
         region: { type: String, required: false, trim: true }
     },
+    admin: {
+        _id: false,
+        adm0: { type: String, required: false, trim: true },
+        adm1: { type: Number, required: false, trim: true },
+        adm2: { type: Number, required: false, trim: true }
+    },
     datasets: [Dataset],
     createdAt: { type: Date, required: true, default: Date.now },
     image: { type: String, required: false, trim: true },

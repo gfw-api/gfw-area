@@ -55,10 +55,11 @@ class AreaRouterV2 {
         else if (area.public === true && area.userId !== user) {
             area.tags = null;
             area.userId = null;
-            area.datasets = null;
             area.monthlySummary = null;
             area.deforestationAlerts = null;
             area.fireAlerts = null;
+            area.name = null;
+            area.webhookUrl = null;
             ctx.body = AreaSerializerV2.serialize(area);
         }
         else {
@@ -135,6 +136,12 @@ class AreaRouterV2 {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
             iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
+        const admin = {};
+        if (ctx.request.body.admin) {
+            admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
+            admin.adm1 =  ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
+            admin.adm2 =  ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+        }
         let tags = [];
         if (ctx.request.body.tags) {
             tags = ctx.request.body.tags;
@@ -165,8 +172,9 @@ class AreaRouterV2 {
             geostore: ctx.request.body.geostore,
             wdpaid: ctx.request.body.wdpaid,
             userId: userId || ctx.state.loggedUser.id,
-            use: use,
-            iso: iso,
+            use,
+            iso,
+            admin,
             datasets,
             image,
             tags,
@@ -214,6 +222,13 @@ class AreaRouterV2 {
             iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
         area.iso = iso;
+        const admin = {};
+        if (ctx.request.body.admin) {
+            admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
+            admin.adm1 =  ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
+            admin.adm2 =  ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+        }
+        area.admin = admin
         if (ctx.request.body.datasets) {
             area.datasets = JSON.parse(ctx.request.body.datasets);
         }
