@@ -15,6 +15,7 @@ var areaSerializer = new JSONAPISerializer('area', {
         'datasets',
         'use',
         'iso',
+        'admin',
         'templateId',
         'tags',
         'status',

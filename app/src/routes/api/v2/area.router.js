@@ -136,6 +136,12 @@ class AreaRouterV2 {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
             iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
+        const admin = {};
+        if (ctx.request.body.admin) {
+            admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
+            admin.adm1 =  ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
+            admin.adm2 =  ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+        }
         let tags = [];
         if (ctx.request.body.tags) {
             tags = ctx.request.body.tags;
@@ -215,6 +221,13 @@ class AreaRouterV2 {
             iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
         area.iso = iso;
+        const admin = {};
+        if (ctx.request.body.admin) {
+            admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
+            admin.adm1 =  ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
+            admin.adm2 =  ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+        }
+        area.admin = admin
         if (ctx.request.body.datasets) {
             area.datasets = JSON.parse(ctx.request.body.datasets);
         }
