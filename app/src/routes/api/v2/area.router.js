@@ -267,7 +267,7 @@ class AreaRouterV2 {
         area.monthlySummary = update_keys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
         area.subscriptionId = update_keys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
         area.email = update_keys.includes('email') ? ctx.request.body.email : area.email;
-        area.lang = update_keys.includes('lang') ? ctx.request.body.lang : area.lang;
+        area.language = update_keys.includes('language') ? ctx.request.body.language : area.language;
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
