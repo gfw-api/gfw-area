@@ -45,7 +45,10 @@ const Area = new Schema({
     fireAlerts: { type: Boolean, trim: true, required: true, default: false },
     deforestationAlerts: { type: Boolean, trim: true, required: true, default: false },
     webhookUrl: { type: String, trim: true, required: false, default: '' },
-    monthlySummary: { type: Boolean, trim: true, required: true, default: false }
+    monthlySummary: { type: Boolean, trim: true, required: true, default: false },
+    subscriptionId: { type: String, trim: true, required: false, default: '' },
+    email: { type: String, trim: true, required: false, default: '' },
+    language: { type: String, trim: true, required: false, default: 'en' },
 });
 
 Area.plugin(mongooseHistory);
