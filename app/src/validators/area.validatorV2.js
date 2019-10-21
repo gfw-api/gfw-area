@@ -49,6 +49,10 @@ class AreaValidatorV2 {
         ctx.checkBody('status').optional().check(status => AreaValidatorV2.notEmptyString(status), 'must be a string - cannot be empty');
         ctx.checkBody('public').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
         ctx.checkBody('webhookUrl').optional().check(webhookUrl => AreaValidatorV2.notEmptyString(webhookUrl), 'must be a string - cannot be empty');
+        ctx.checkBody('monthlySummary').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
+        ctx.checkBody('subscriptionId').optional().check(sub => AreaValidatorV2.notEmptyString(sub), 'must be a string - cannot be empty');
+        ctx.checkBody('email').optional().check(email => AreaValidatorV2.notEmptyString(email), 'must be a string - cannot be empty');
+        ctx.checkBody('language').optional().check(lang => AreaValidatorV2.notEmptyString(lang), 'must be a string - cannot be empty');
 
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
@@ -76,6 +80,9 @@ class AreaValidatorV2 {
         ctx.checkBody('deforestationAlerts').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
         ctx.checkBody('webhookUrl').optional().check(webhookUrl => AreaValidatorV2.notEmptyString(webhookUrl), 'must be a string - cannot be empty');
         ctx.checkBody('monthlySummary').optional().check(pub => AreaValidatorV2.isBool(pub), 'must be boolean');
+        ctx.checkBody('subscriptionId').optional().check(sub => AreaValidatorV2.notEmptyString(sub), 'must be a string - cannot be empty');
+        ctx.checkBody('email').optional().check(email => AreaValidatorV2.notEmptyString(email), 'must be a string - cannot be empty');
+        ctx.checkBody('language').optional().check(lang => AreaValidatorV2.notEmptyString(lang), 'must be a string - cannot be empty');
         
         if (ctx.errors) {
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);

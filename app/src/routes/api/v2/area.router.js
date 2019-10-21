@@ -60,6 +60,9 @@ class AreaRouterV2 {
             area.fireAlerts = null;
             area.name = null;
             area.webhookUrl = null;
+            area.email = null;
+            area.language = null;
+            area.subscriptionId = null;
             ctx.body = AreaSerializerV2.serialize(area);
         }
         else {
@@ -166,6 +169,18 @@ class AreaRouterV2 {
         if (ctx.request.body.monthlySummary) {
             summary_sub = ctx.request.body.monthlySummary;
         }
+        let sub_id = '';
+        if (ctx.request.body.subscriptionId) {
+            sub_id = ctx.request.body.subscriptionId;
+        }
+        let email = '';
+        if (ctx.request.body.email) {
+            email = ctx.request.body.email;
+        }
+        let lang = '';
+        if (ctx.request.body.language) {
+            lang = ctx.request.body.language;
+        }
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
@@ -183,7 +198,10 @@ class AreaRouterV2 {
             fireAlerts: fire_alert_sub, 
             deforestationAlerts: defor_alert_sub,
             webhookUrl: webhook_url, 
-            monthlySummary: summary_sub
+            monthlySummary: summary_sub,
+            subscriptionId: sub_id,
+            lnaguage: lang,
+            email: email
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
     }
@@ -247,6 +265,9 @@ class AreaRouterV2 {
         area.fireAlerts = update_keys.includes('fireAlerts') ? ctx.request.body.fireAlerts : area.fireAlerts;
         area.deforestationAlerts = update_keys.includes('deforestationAlerts') ? ctx.request.body.deforestationAlerts : area.deforestationAlerts;
         area.monthlySummary = update_keys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
+        area.subscriptionId = update_keys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
+        area.email = update_keys.includes('email') ? ctx.request.body.email : area.email;
+        area.lang = update_keys.includes('lang') ? ctx.request.body.lang : area.lang;
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
