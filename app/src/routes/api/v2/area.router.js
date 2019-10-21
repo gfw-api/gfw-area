@@ -200,7 +200,7 @@ class AreaRouterV2 {
             webhookUrl: webhook_url, 
             monthlySummary: summary_sub,
             subscriptionId: sub_id,
-            lnaguage: lang,
+            language: lang,
             email: email
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
