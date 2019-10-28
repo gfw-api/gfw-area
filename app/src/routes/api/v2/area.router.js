@@ -40,8 +40,7 @@ class AreaRouterV2 {
             filter.status = ctx.query.status.trim();
         }
         if (ctx.query.public) {
-            const public_filter = ctx.query.public.trim().toLowerCase() == 'true' ? true : false;
-            filter.public = public_filter;
+            filter.public = ctx.query.public.trim().toLowerCase() == 'true' ? true : false;
         }
         const areas = await AreaModel.find(filter);
         const geostores =  areas.map(el => {return {id: el.id, geostore: el.geostore}});
