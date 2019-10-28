@@ -19,8 +19,33 @@ class AreaRouterV2 {
         if (ctx.query.application) {
             filter.application = ctx.query.application.split(',').map((el) => el.trim());
         }
+        if (ctx.query.status) {
+            filter.status = ctx.query.status.trim();
+        }
+        if (ctx.query.public) {
+            const public_filter = ctx.query.public.trim().toLowerCase() == 'true' ? true : false;
+            filter.public = public_filter;
+        }
         const areas = await AreaModel.find(filter);
         ctx.body = AreaSerializerV2.serialize(areas);
+    }
+
+    static async getExport(ctx) {
+        logger.info('Exporting areas of the user ', ctx.state.loggedUser.id);
+        const filter = { userId: ctx.state.loggedUser.id };
+        if (ctx.query.application) {
+            filter.application = ctx.query.application.split(',').map(el => el.trim());
+        }
+        if (ctx.query.status) {
+            filter.status = ctx.query.status.trim();
+        }
+        if (ctx.query.public) {
+            const public_filter = ctx.query.public.trim().toLowerCase() == 'true' ? true : false;
+            filter.public = public_filter;
+        }
+        const areas = await AreaModel.find(filter);
+        const geostores =  areas.map(el => {return {id: el.id, geostore: el.geostore}});
+        ctx.body = AreaSerializerV2.serialize(geostores);
     }
 
     static async updateByGeostore(ctx) {
@@ -369,6 +394,7 @@ async function checkPermission(ctx, next) {
 }
 
 router.get('/', loggedUserToState, AreaRouterV2.getAll);
+router.get('/export', loggedUserToState, AreaRouterV2.getExport);
 router.post('/', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.save);
 router.patch('/:id', loggedUserToState, checkPermission, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);

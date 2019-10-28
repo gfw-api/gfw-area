@@ -10,6 +10,14 @@
 			"path": "/api/v2/area"
 		}
 	},{
+		"path": "/v2/export",
+		"method": "GET",
+		"authenticated": true,
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v2/export"
+		}
+	},{
         "path": "/v2/area/fw",
         "method": "GET",
         "authenticated": true,
