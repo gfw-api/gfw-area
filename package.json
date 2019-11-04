@@ -57,7 +57,7 @@
     "koa-router": "^7.0.1",
     "koa-send": "^4.1.0",
     "koa-validate": "^1.0.7",
-    "mongoose": "^5.0.0",
+    "mongoose": "^5.7.5",
     "mongoose-history": "^0.8.0",
     "mustache": "^2.3.0",
     "ngeohash": "^0.6.0",
