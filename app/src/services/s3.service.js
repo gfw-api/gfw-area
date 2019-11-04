@@ -22,12 +22,10 @@ class S3Service {
     async uploadJson(data) {
         logger.info(`Uploading file json`);
         return new Promise((resolve, reject) => {
-            // bucket = gfw-pipelines/
-            // key = tiggers/emr/aoi/<yyyymmdd>
             const date = moment().format('YYYYMMDD');
             this.s3.upload({
-                Bucket: config.get('s3.bucket'),
-                Key: `${config.get('s3.folder')}/${date}.json`,
+                Bucket: config.get('aoiDataS3.bucket'),
+                Key: `${config.get('aoiDataS3.folder')}/${date}.json`,
                 Body: data,
                 ACL: 'public-read'
             }, (resp) => {
@@ -37,7 +35,7 @@ class S3Service {
                     return;
                 }
                 logger.debug('File uploaded successfully', resp);
-                resolve(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}/${date}.json`);
+                resolve(`https://aoiDataS3.amazonaws.com/${config.get('aoiDataS3.bucket')}/${config.get('aoiDataS3.folder')}/${date}.json`);
             });
         });
     }
