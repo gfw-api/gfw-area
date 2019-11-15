@@ -10,8 +10,15 @@
     "test-watch": "NODE_PATH=app/src CT_URL=http://tower.test node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js e2eTest-watch"
   },
   "keywords": [],
-  "author": "",
   "license": "ISC",
+  "engines": {
+    "node": "~12"
+  },
+  "author": {
+    "name": "Vizzuality",
+    "email": "hello@vizzuality.com",
+    "url": "http://vizzuality.com/"
+  },
   "devDependencies": {
     "assert": "^1.4.1",
     "babel-eslint": "^6.1.0",
