@@ -10,6 +10,7 @@ const ErrorSerializer = require('serializers/error.serializer');
 const mongoose = require('mongoose');
 const bluebird = require('bluebird');
 const validate = require('koa-validate');
+const sleep = require('sleep');
 
 const mongoUri = process.env.MONGO_URI || `mongodb://${config.get('mongodb.host')}:${config.get('mongodb.port')}/${config.get('mongodb.database')}`;
 
@@ -26,69 +27,89 @@ const koaBody = require('koa-body')({
         }
     }
 });
+const mongooseOptions = require('../../config/mongoose');
 
-let instance = null;
+let retries = 10;
 
-const onDbReady = (mongoConnectionError) => {
-    if (mongoConnectionError) {
-        logger.error(mongoConnectionError);
-        throw new Error(mongoConnectionError);
-    }
+async function init() {
+    return new Promise((resolve, reject) => {
+        async function onDbReady(mongoConnectionError) {
+            if (mongoConnectionError) {
+                if (retries >= 0) {
+                    // eslint-disable-next-line no-plusplus
+                    retries--;
+                    logger.error(`Failed to connect to MongoDB uri ${mongoUri}, retrying...`);
+                    sleep.sleep(5);
+                    mongoose.connect(mongoUri, mongooseOptions, onDbReady);
+                } else {
+                    logger.error('MongoURI', mongoUri);
+                    logger.error(mongoConnectionError);
+                    reject(new Error(mongoConnectionError));
+                }
 
-    const app = new Koa();
-    mongoose.Promise = bluebird;
-
-    app.use(convert(koaBody));
-
-    validate(app);
-
-    app.use(async (ctx, next) => {
-        try {
-            await next();
-        } catch (applicationError) {
-            let error = applicationError;
-            try {
-                error = JSON.parse(applicationError);
-            } catch (e) {
-                logger.error('Error parse');
+                return;
             }
-            ctx.status = error.status || 500;
-            logger.error(error);
-            ctx.body = ErrorSerializer.serializeError(ctx.status, error.message);
-            if (process.env.NODE_ENV === 'prod' && this.status === 500) {
-                ctx.body = 'Unexpected error';
-            }
-            ctx.response.type = 'application/vnd.api+json';
+
+            logger.info(`Connected to mongoDB`);
+
+            const app = new Koa();
+            mongoose.Promise = bluebird;
+
+            app.use(convert(koaBody));
+
+            validate(app);
+
+            app.use(async (ctx, next) => {
+                try {
+                    await next();
+                } catch (applicationError) {
+                    let error = applicationError;
+                    try {
+                        error = JSON.parse(applicationError);
+                    } catch (e) {
+                        logger.error('Error parse');
+                    }
+                    ctx.status = error.status || 500;
+                    logger.error(error);
+                    ctx.body = ErrorSerializer.serializeError(ctx.status, error.message);
+                    if (process.env.NODE_ENV === 'prod' && this.status === 500) {
+                        ctx.body = 'Unexpected error';
+                    }
+                    ctx.response.type = 'application/vnd.api+json';
+                }
+
+            });
+
+            app.use(koaLogger());
+
+            loader.loadRoutes(app);
+
+            const server = app.listen(process.env.PORT, () => {
+                ctRegisterMicroservice.register({
+                    info: require('../microservice/register.json'),
+                    swagger: require('../microservice/public-swagger.json'),
+                    mode: (process.env.CT_REGISTER_MODE && process.env.CT_REGISTER_MODE === 'auto') ? ctRegisterMicroservice.MODE_AUTOREGISTER : ctRegisterMicroservice.MODE_NORMAL,
+                    framework: ctRegisterMicroservice.KOA2,
+                    app,
+                    logger,
+                    name: config.get('service.name'),
+                    ctUrl: process.env.CT_URL,
+                    url: process.env.LOCAL_URL,
+                    token: process.env.CT_TOKEN,
+                    active: true,
+                }).then(() => {
+                    resolve({ app, server });
+                }, (err) => {
+                    logger.error(err);
+                    process.exit(1);
+                });
+            });
+            logger.info('Server started in ', process.env.PORT);
         }
 
+        logger.info(`Connecting to MongoDB URL ${mongoUri}`);
+        mongoose.connect(mongoUri, mongooseOptions, onDbReady);
     });
+}
 
-    app.use(koaLogger());
-
-    loader.loadRoutes(app);
-
-
-    instance = app.listen(process.env.PORT, () => {
-        ctRegisterMicroservice.register({
-            info: require('../microservice/register.json'),
-            swagger: require('../microservice/public-swagger.json'),
-            mode: (process.env.CT_REGISTER_MODE && process.env.CT_REGISTER_MODE === 'auto') ? ctRegisterMicroservice.MODE_AUTOREGISTER : ctRegisterMicroservice.MODE_NORMAL,
-            framework: ctRegisterMicroservice.KOA2,
-            app,
-            logger,
-            name: config.get('service.name'),
-            ctUrl: process.env.CT_URL,
-            url: process.env.LOCAL_URL,
-            token: process.env.CT_TOKEN,
-            active: true,
-        }).then(() => {}, (err) => {
-            logger.error(err);
-            process.exit(1);
-        });
-    });
-    logger.info('Server started in ', process.env.PORT);
-};
-
-mongoose.connect(mongoUri, () => { setTimeout(onDbReady, 1000); });
-
-module.exports = instance;
+module.exports = init;

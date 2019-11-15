@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "CT_URL=http://mymachine:9000 LOCAL_URL=http://mymachine:3005 NODE_PATH=app/src PORT=3005 node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js",
-    "start": "NODE_PATH=app/src node app/index.js",
-    "test": "NODE_PATH=app/src node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js e2eTest",
+    "start": "NODE_PATH=app/src node $NODE_DEBUG_OPTION app/index.js",
+    "test": "NODE_PATH=app/src node $NODE_DEBUG_OPTION ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js test",
+    "coverage": "NODE_PATH=app/src node $NODE_DEBUG_OPTION ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js nyc",
     "test-watch": "NODE_PATH=app/src CT_URL=http://tower.test node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js e2eTest-watch"
   },
   "keywords": [],
@@ -21,6 +22,8 @@
   },
   "devDependencies": {
     "assert": "^1.4.1",
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
     "eslint": "^6.6.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-plugin-import": "^2.18.2",
@@ -39,11 +42,9 @@
     "husky": ">=1",
     "lint-staged": ">=8",
     "load-grunt-tasks": "3.4.0",
-    "mocha": "^2.3.4",
-    "nock": "^9.0.2",
-    "should": "^8.2.0",
-    "superagent": "^3.3.1",
-    "supertest": "^1.1.0"
+    "mocha": "^6.1.4",
+    "nock": "^11.3.4",
+    "nyc": "^14.1.1"
   },
   "dependencies": {
     "@mapbox/tilebelt": "^1.0.1",
@@ -74,6 +75,7 @@
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
     "rimraf": "^2.6.1",
+    "sleep": "^6.1.0",
     "tmp": "0.0.31",
     "uuid": "^3.0.1",
     "zip-folder": "^1.0.0"
