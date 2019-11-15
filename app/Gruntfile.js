@@ -100,4 +100,6 @@ module.exports = (grunt) => {
 
     grunt.registerTask('default', 'serve');
 
+    grunt.loadNpmTasks('grunt-simple-nyc');
+
 };

@@ -39,6 +39,7 @@
     "grunt-express-server": "^0.5.4",
     "grunt-mocha-test": "^0.13.3",
     "grunt-notify": "^0.4.5",
+    "grunt-simple-nyc": "^3.0.1",
     "husky": "^3.0.9",
     "lint-staged": "^9.4.3",
     "load-grunt-tasks": "^5.1.0",

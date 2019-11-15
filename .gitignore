@@ -4,3 +4,6 @@ node_modules/
 npm-debug.log
 
 dev.env
+
+coverage
+.nyc_output
