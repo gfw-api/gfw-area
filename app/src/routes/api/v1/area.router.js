@@ -6,6 +6,7 @@ const AreaValidator = require('validators/area.validator');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const s3Service = require('services/s3.service');
+
 const router = new Router({
     prefix: '/area',
 });
@@ -16,7 +17,7 @@ class AreaRouter {
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
         const filter = { userId: ctx.state.loggedUser.id };
         if (ctx.query.application) {
-            filter.application = ctx.query.application.split(',').map(el => el.trim());
+            filter.application = ctx.query.application.split(',').map((el) => el.trim());
         }
         const areas = await AreaModel.find(filter);
         ctx.body = AreaSerializer.serialize(areas);
@@ -58,7 +59,7 @@ class AreaRouter {
     }
 
     static async getFWAreasByUserId(ctx) {
-        const userId = ctx.params.userId;
+        const { userId } = ctx.params;
         logger.info('Obtaining all user areas + fw team areas', userId);
         let team = null;
         try {
@@ -90,7 +91,7 @@ class AreaRouter {
         }
         let datasets = [];
         if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields
+            ctx.request.body = ctx.request.body.fields;
         }
         if (ctx.request.body.datasets) {
             datasets = JSON.parse(ctx.request.body.datasets);
@@ -103,7 +104,7 @@ class AreaRouter {
         const iso = {};
         if (ctx.request.body.iso) {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
-            iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
+            iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
         const area = await new AreaModel({
             name: ctx.request.body.name,
@@ -111,24 +112,24 @@ class AreaRouter {
             geostore: ctx.request.body.geostore,
             wdpaid: ctx.request.body.wdpaid,
             userId: userId || ctx.state.loggedUser.id,
-            use: use,
-            iso: iso,
+            use,
+            iso,
             datasets,
             image
         }).save();
         ctx.body = AreaSerializer.serialize(area);
     }
 
-    static async save(ctx, userId) {
+    static async save(ctx) {
         await AreaRouter.saveArea(ctx, ctx.state.loggedUser.id);
     }
 
     static async update(ctx) {
         logger.info(`Updating area with id ${ctx.params.id}`);
         const area = await AreaModel.findById(ctx.params.id);
-        const files = ctx.request.body.files;
+        const { files } = ctx.request.body;
         if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields
+            ctx.request.body = ctx.request.body.fields;
         }
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
@@ -151,7 +152,7 @@ class AreaRouter {
         const iso = {};
         if (ctx.request.body.iso) {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
-            iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
+            iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
         area.iso = iso;
         if (ctx.request.body.datasets) {
@@ -169,7 +170,7 @@ class AreaRouter {
         ctx.body = AreaSerializer.serialize(area);
     }
 
-    static async delete(ctx){
+    static async delete(ctx) {
         logger.info(`Deleting area with id ${ctx.params.id}`);
         const userId = ctx.state.loggedUser.id;
         let team = null;
@@ -180,7 +181,7 @@ class AreaRouter {
             ctx.throw(500, 'Team retrieval failed.');
         }
         if (team && team.areas.includes(ctx.params.id)) {
-            const areas = team.areas.filter(area => area !== ctx.params.id);
+            const areas = team.areas.filter((area) => area !== ctx.params.id);
             try {
                 await TeamService.patchTeamById(team.id, { areas });
             } catch (e) {
@@ -197,7 +198,7 @@ class AreaRouter {
         ctx.statusCode = 204;
     }
 
-    static async getAlertsOfArea(ctx){
+    static async getAlertsOfArea(ctx) {
         logger.info(`Obtaining alerts of area with id ${ctx.params.id}`);
         ctx.assert(ctx.query.precissionPoints, 400, 'precissionPoints is required');
         ctx.assert(ctx.query.precissionBBOX, 400, 'precissionBBOX is required');
@@ -211,7 +212,7 @@ class AreaRouter {
             generateImages = false;
         }
 
-        let response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages);
+        const response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages);
         ctx.body = response;
     }
 
@@ -219,7 +220,7 @@ class AreaRouter {
 
 
 async function loggedUserToState(ctx, next) {
-    if (ctx.query && ctx.query.loggedUser){
+    if (ctx.query && ctx.query.loggedUser) {
         ctx.state.loggedUser = JSON.parse(ctx.query.loggedUser);
         delete ctx.query.loggedUser;
     } else if (ctx.request.body && ctx.request.body.loggedUser) {
@@ -236,7 +237,7 @@ async function loggedUserToState(ctx, next) {
 }
 
 async function isMicroservice(ctx, next) {
-    if (ctx.state.loggedUser.id !== 'microservice'){
+    if (ctx.state.loggedUser.id !== 'microservice') {
         ctx.throw(403, 'Not authorized');
     }
     await next();
@@ -244,7 +245,7 @@ async function isMicroservice(ctx, next) {
 
 async function checkPermission(ctx, next) {
     ctx.assert(ctx.params.id, 400, 'Id required');
-    let area = await AreaModel.findById(ctx.params.id);
+    const area = await AreaModel.findById(ctx.params.id);
     if (!area) {
         ctx.throw(404, 'Area not found');
         return;

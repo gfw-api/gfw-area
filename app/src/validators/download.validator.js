@@ -5,7 +5,7 @@ class DownloadValidator {
 
     static async get(ctx, next) {
         logger.debug('Validating request to download layer');
-        ctx.checkParams('geostoreId').len(24,36);
+        ctx.checkParams('geostoreId').len(24, 36);
         ctx.checkParams('minZoom').gt(0).isNumeric().toInt();
         ctx.checkParams('maxZoom').lt(18).isNumeric().toInt();
         ctx.checkQuery('layerUrl');

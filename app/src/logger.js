@@ -1,6 +1,6 @@
-'use strict';
-var config = require('config');
-var bunyan = require('bunyan');
+
+const config = require('config');
+const bunyan = require('bunyan');
 /**
  * Create Logger
  */

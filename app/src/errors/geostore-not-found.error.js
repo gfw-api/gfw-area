@@ -1,11 +1,10 @@
-'use strict';
+class GeostoreNotFound extends Error {
 
-class GeostoreNotFound extends Error{
-
-    constructor(message){
+    constructor(message) {
         super(message);
         this.name = 'GeostoreNotFound';
         this.message = message;
     }
+
 }
 module.exports = GeostoreNotFound;

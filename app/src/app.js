@@ -10,7 +10,8 @@ const ErrorSerializer = require('serializers/error.serializer');
 const mongoose = require('mongoose');
 const bluebird = require('bluebird');
 const validate = require('koa-validate');
-const mongoUri = process.env.MONGO_URI || 'mongodb://' + config.get('mongodb.host') + ':' + config.get('mongodb.port') + '/' + config.get('mongodb.database');
+
+const mongoUri = process.env.MONGO_URI || `mongodb://${config.get('mongodb.host')}:${config.get('mongodb.port')}/${config.get('mongodb.database')}`;
 
 const koaBody = require('koa-body')({
     multipart: true,
@@ -19,7 +20,7 @@ const koaBody = require('koa-body')({
     textLimit: '50mb',
     formidable: {
         uploadDir: '/tmp',
-        onFileBegin: function(name, file) {
+        onFileBegin(name, file) {
             const folder = path.dirname(file.path);
             file.path = path.join(folder, file.name);
         }
@@ -28,10 +29,10 @@ const koaBody = require('koa-body')({
 
 let instance = null;
 
-const onDbReady = function (err) {
-    if (err) {
-        logger.error(err);
-        throw new Error(err);
+const onDbReady = (mongoConnectionError) => {
+    if (mongoConnectionError) {
+        logger.error(mongoConnectionError);
+        throw new Error(mongoConnectionError);
     }
 
     const app = new Koa();
@@ -41,13 +42,13 @@ const onDbReady = function (err) {
 
     validate(app);
 
-    app.use(async(ctx, next) => {
+    app.use(async (ctx, next) => {
         try {
             await next();
-        } catch (err) {
-            let error = err;
+        } catch (applicationError) {
+            let error = applicationError;
             try {
-                error = JSON.parse(err);
+                error = JSON.parse(applicationError);
             } catch (e) {
                 logger.error('Error parse');
             }
@@ -88,6 +89,6 @@ const onDbReady = function (err) {
     logger.info('Server started in ', process.env.PORT);
 };
 
-mongoose.connect(mongoUri, () => { setTimeout(onDbReady, 1000) });
+mongoose.connect(mongoUri, () => { setTimeout(onDbReady, 1000); });
 
 module.exports = instance;

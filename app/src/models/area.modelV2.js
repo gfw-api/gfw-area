@@ -1,7 +1,7 @@
-'use strict';
 const mongoose = require('mongoose');
-const mongooseHistory = require('mongoose-history')
-const Schema = mongoose.Schema;
+const mongooseHistory = require('mongoose-history');
+
+const { Schema } = mongoose;
 
 const Dataset = new Schema({
     slug: { type: String, required: true, trim: true },
@@ -15,7 +15,9 @@ const Dataset = new Schema({
 
 const Area = new Schema({
     name: { type: String, required: true, trim: true },
-    application: { type: String, required: true, trim: true, default: 'gfw' },
+    application: {
+        type: String, required: true, trim: true, default: 'gfw'
+    },
     geostore: { type: String, required: false, trim: true },
     wdpaid: { type: Number, required: false, trim: true },
     userId: { type: String, required: true, trim: true },
@@ -39,16 +41,36 @@ const Area = new Schema({
     createdAt: { type: Date, required: true, default: Date.now },
     image: { type: String, required: false, trim: true },
     templateId: { type: String, trim: true, required: false },
-    tags: { type: Array, trim: true, required: true, default: [] },
-    status: { type: String, trim: true, required: true, default: 'pending' },
-    public: { type: Boolean, trim: true, required: true, default: false },
-    fireAlerts: { type: Boolean, trim: true, required: true, default: false },
-    deforestationAlerts: { type: Boolean, trim: true, required: true, default: false },
-    webhookUrl: { type: String, trim: true, required: false, default: '' },
-    monthlySummary: { type: Boolean, trim: true, required: true, default: false },
-    subscriptionId: { type: String, trim: true, required: false, default: '' },
-    email: { type: String, trim: true, required: false, default: '' },
-    language: { type: String, trim: true, required: false, default: 'en' },
+    tags: {
+        type: Array, trim: true, required: true, default: []
+    },
+    status: {
+        type: String, trim: true, required: true, default: 'pending'
+    },
+    public: {
+        type: Boolean, trim: true, required: true, default: false
+    },
+    fireAlerts: {
+        type: Boolean, trim: true, required: true, default: false
+    },
+    deforestationAlerts: {
+        type: Boolean, trim: true, required: true, default: false
+    },
+    webhookUrl: {
+        type: String, trim: true, required: false, default: ''
+    },
+    monthlySummary: {
+        type: Boolean, trim: true, required: true, default: false
+    },
+    subscriptionId: {
+        type: String, trim: true, required: false, default: ''
+    },
+    email: {
+        type: String, trim: true, required: false, default: ''
+    },
+    language: {
+        type: String, trim: true, required: false, default: 'en'
+    },
 });
 
 Area.plugin(mongooseHistory);
