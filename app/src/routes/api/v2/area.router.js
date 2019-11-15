@@ -11,6 +11,21 @@ const router = new Router({
     prefix: '/area',
 });
 
+function getFilters(ctx) {
+    const filter = { userId: ctx.state.loggedUser.id };
+    if (ctx.query.application) {
+        filter.application = ctx.query.application.split(',').map((el) => el.trim());
+    }
+    if (ctx.query.status) {
+        filter.status = ctx.query.status.trim();
+    }
+    if (ctx.query.public) {
+        const publicFilter = ctx.query.public.trim().toLowerCase() === 'true';
+        filter.public = publicFilter;
+    }
+    return filter;
+}
+
 class AreaRouterV2 {
 
     static async getAll(ctx) {
@@ -19,8 +34,25 @@ class AreaRouterV2 {
         if (ctx.query.application) {
             filter.application = ctx.query.application.split(',').map((el) => el.trim());
         }
+        if (ctx.query.status) {
+            filter.status = ctx.query.status.trim();
+        }
+        if (ctx.query.public) {
+            filter.public = ctx.query.public.trim().toLowerCase() === 'true';
+        }
         const areas = await AreaModel.find(filter);
         ctx.body = AreaSerializerV2.serialize(areas);
+    }
+
+    static async getExport(ctx) {
+        logger.info('Exporting areas of the user ', ctx.state.loggedUser.id);
+        const filters = getFilters(ctx);
+        const areas = await AreaModel.find(filters);
+        if (areas && areas.length > 0) {
+            const geostores = areas.map((el) => ({ id: el.id, geostore: el.geostore }));
+            await s3Service.uploadJson(geostores);
+            ctx.body = AreaSerializerV2.serialize(geostores);
+        }
     }
 
     static async updateByGeostore(ctx) {
@@ -369,6 +401,7 @@ async function checkPermission(ctx, next) {
 }
 
 router.get('/', loggedUserToState, AreaRouterV2.getAll);
+router.get('/export', loggedUserToState, AreaRouterV2.getExport);
 router.post('/', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.save);
 router.patch('/:id', loggedUserToState, checkPermission, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);

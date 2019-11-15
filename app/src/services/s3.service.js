@@ -1,8 +1,7 @@
 const logger = require('logger');
 const AWS = require('aws-sdk');
-const fs = require('fs');
 const config = require('config');
-const uuidV4 = require('uuid/v4');
+const moment = require('moment');
 
 AWS.config.update({
     accessKeyId: config.get('s3.accessKeyId'),
@@ -20,30 +19,23 @@ class S3Service {
         return parts[parts.length - 1];
     }
 
-    async uploadFile(filePath, name) {
-        logger.info(`Uploading file ${filePath}`);
-        const ext = S3Service.getExtension(name);
+    async uploadJson(data) {
+        logger.info(`Uploading file json`);
         return new Promise((resolve, reject) => {
-            fs.readFile(filePath, (err, data) => {
-                if (err) {
-                    reject(err);
+            const date = moment().format('YYYYMMDD');
+            this.s3.upload({
+                Bucket: config.get('aoiDataS3.bucket'),
+                Key: `${config.get('aoiDataS3.folder')}/${date}.json`,
+                Body: data,
+                ACL: 'public-read'
+            }, (resp) => {
+                if (resp && resp.statusCode >= 300) {
+                    logger.error(resp);
+                    reject(resp);
+                    return;
                 }
-                const uuid = uuidV4();
-                const base64data = Buffer.from(data, 'binary');
-                this.s3.upload({
-                    Bucket: config.get('s3.bucket'),
-                    Key: `${config.get('s3.folder')}/${uuid}.${ext}`,
-                    Body: base64data,
-                    ACL: 'public-read'
-                }, (resp) => {
-                    if (resp && resp.statusCode >= 300) {
-                        logger.error(resp);
-                        reject(resp);
-                        return;
-                    }
-                    logger.debug('File uploaded successfully', resp);
-                    resolve(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}/${uuid}.${ext}`);
-                });
+                logger.debug('File uploaded successfully', resp);
+                resolve(`https://aoiDataS3.amazonaws.com/${config.get('aoiDataS3.bucket')}/${config.get('aoiDataS3.folder')}/${date}.json`);
             });
         });
     }

@@ -23,5 +23,11 @@
         "secretAccessKey": null,
         "bucket": null,
         "folder": "areas-dev"
+    },
+    "aoiDataS3":{
+        "accessKeyId": null,
+        "secretAccessKey": null,
+        "bucket": "gfw-pipelines",
+        "folder": "tiggers/emr/aoi"
     }
 }
