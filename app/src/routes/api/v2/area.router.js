@@ -6,6 +6,7 @@ const AreaValidatorV2 = require('validators/area.validatorV2');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const s3Service = require('services/s3.service');
+
 const router = new Router({
     prefix: '/area',
 });
@@ -16,7 +17,7 @@ class AreaRouterV2 {
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
         const filter = { userId: ctx.state.loggedUser.id };
         if (ctx.query.application) {
-            filter.application = ctx.query.application.split(',').map(el => el.trim());
+            filter.application = ctx.query.application.split(',').map((el) => el.trim());
         }
         const areas = await AreaModel.find(filter);
         ctx.body = AreaSerializerV2.serialize(areas);
@@ -24,35 +25,35 @@ class AreaRouterV2 {
 
     static async updateByGeostore(ctx) {
         const geostores = ctx.request.body.geostores || [];
-        const update_params = ctx.request.body.update_params || {};
+        const updateParams = ctx.request.body.update_params || {};
         logger.info('Updating geostores: ', geostores);
-        logger.info('Updating with params: ', update_params);
+        logger.info('Updating with params: ', updateParams);
 
         // validate update json
-        update_params.updatedDate = Date.now;
+        updateParams.updatedDate = Date.now;
 
         const area = await AreaModel.updateMany(
             { geostore: { $in: geostores } },
-            { $set: update_params }
-         );
+            { $set: updateParams }
+        );
         logger.info('Updated! ', area);
     }
 
     static async get(ctx) {
         const filters = { _id: ctx.params.id };
-        const user = ctx.state.loggedUser && ctx.state.loggedUser.id || null;
+        const user = (ctx.state.loggedUser && ctx.state.loggedUser.id) || null;
         logger.info(`Obtaining area with areaId ${ctx.params.id}`);
         const areas = await AreaModel.find(filters);
         if (!areas || areas.length === 0) {
             ctx.throw(404, 'Area not found');
             return;
         }
-        let area = areas[0];
+        const area = areas[0];
         if (area.public === false && area.userId !== user) {
             ctx.throw(401, 'Area private');
             return;
         }
-        else if (area.public === true && area.userId !== user) {
+        if (area.public === true && area.userId !== user) {
             area.tags = null;
             area.userId = null;
             area.monthlySummary = null;
@@ -64,10 +65,9 @@ class AreaRouterV2 {
             area.language = null;
             area.subscriptionId = null;
             ctx.body = AreaSerializerV2.serialize(area);
-        }
-        else {
+        } else {
             ctx.body = AreaSerializerV2.serialize(area);
-        };
+        }
     }
 
     static async getFWAreas(ctx) {
@@ -92,7 +92,7 @@ class AreaRouterV2 {
     }
 
     static async getFWAreasByUserId(ctx) {
-        const userId = ctx.params.userId;
+        const { userId } = ctx.params;
         logger.info('Obtaining all user areas + fw team areas', userId);
         let team = null;
         try {
@@ -124,7 +124,7 @@ class AreaRouterV2 {
         }
         let datasets = [];
         if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields
+            ctx.request.body = ctx.request.body.fields;
         }
         if (ctx.request.body.datasets) {
             datasets = JSON.parse(ctx.request.body.datasets);
@@ -137,41 +137,41 @@ class AreaRouterV2 {
         const iso = {};
         if (ctx.request.body.iso) {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
-            iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
+            iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
         const admin = {};
         if (ctx.request.body.admin) {
             admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
-            admin.adm1 =  ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
-            admin.adm2 =  ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+            admin.adm1 = ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
+            admin.adm2 = ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
         }
         let tags = [];
         if (ctx.request.body.tags) {
             tags = ctx.request.body.tags;
         }
-        let public_status = false;
+        let publicStatus = false;
         if (ctx.request.body.public) {
-            public_status = ctx.request.body.public;
+            publicStatus = ctx.request.body.public;
         }
-        let fire_alert_sub = false;
+        let fireAlertSub = false;
         if (ctx.request.body.fireAlerts) {
-            fire_alert_sub = ctx.request.body.fireAlerts;
+            fireAlertSub = ctx.request.body.fireAlerts;
         }
-        let defor_alert_sub = false;
+        let deforAlertSub = false;
         if (ctx.request.body.deforestationAlerts) {
-            defor_alert_sub = ctx.request.body.deforestationAlerts;
+            deforAlertSub = ctx.request.body.deforestationAlerts;
         }
-        let webhook_url = '';
+        let webhookUrl = '';
         if (ctx.request.body.webhookUrl) {
-            webhook_url = ctx.request.body.webhookUrl;
+            webhookUrl = ctx.request.body.webhookUrl;
         }
-        let summary_sub = false;
+        let summarySub = false;
         if (ctx.request.body.monthlySummary) {
-            summary_sub = ctx.request.body.monthlySummary;
+            summarySub = ctx.request.body.monthlySummary;
         }
-        let sub_id = '';
+        let subId = '';
         if (ctx.request.body.subscriptionId) {
-            sub_id = ctx.request.body.subscriptionId;
+            subId = ctx.request.body.subscriptionId;
         }
         let email = '';
         if (ctx.request.body.email) {
@@ -194,27 +194,27 @@ class AreaRouterV2 {
             image,
             tags,
             status: 'pending',
-            public: public_status ,
-            fireAlerts: fire_alert_sub, 
-            deforestationAlerts: defor_alert_sub,
-            webhookUrl: webhook_url, 
-            monthlySummary: summary_sub,
-            subscriptionId: sub_id,
+            public: publicStatus,
+            fireAlerts: fireAlertSub,
+            deforestationAlerts: deforAlertSub,
+            webhookUrl,
+            monthlySummary: summarySub,
+            subscriptionId: subId,
             language: lang,
-            email: email
+            email
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
     }
 
-    static async save(ctx, userId) {
+    static async save(ctx) {
         await AreaRouterV2.saveArea(ctx, ctx.state.loggedUser.id);
     }
 
     static async update(ctx) {
         const area = await AreaModel.findById(ctx.params.id);
-        const files = ctx.request.body.files;
+        const { files } = ctx.request.body;
         if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields
+            ctx.request.body = ctx.request.body.fields;
         }
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
@@ -237,16 +237,16 @@ class AreaRouterV2 {
         const iso = {};
         if (ctx.request.body.iso) {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
-            iso.region =  ctx.request.body.iso ? ctx.request.body.iso.region : null;
+            iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
         }
         area.iso = iso;
         const admin = {};
         if (ctx.request.body.admin) {
             admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
-            admin.adm1 =  ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
-            admin.adm2 =  ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+            admin.adm1 = ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
+            admin.adm2 = ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
         }
-        area.admin = admin
+        area.admin = admin;
         if (ctx.request.body.datasets) {
             area.datasets = JSON.parse(ctx.request.body.datasets);
         }
@@ -259,15 +259,15 @@ class AreaRouterV2 {
         if (ctx.request.body.public) {
             area.public = ctx.request.body.public;
         }
-        const update_keys = ctx.request.body && Object.keys(ctx.request.body);
-        area.public = update_keys.includes('public') ? ctx.request.body.public : area.public;
-        area.webhookUrl = update_keys.includes('webhookUrl') ? ctx.request.body.webhookUrl : area.webhookUrl;
-        area.fireAlerts = update_keys.includes('fireAlerts') ? ctx.request.body.fireAlerts : area.fireAlerts;
-        area.deforestationAlerts = update_keys.includes('deforestationAlerts') ? ctx.request.body.deforestationAlerts : area.deforestationAlerts;
-        area.monthlySummary = update_keys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
-        area.subscriptionId = update_keys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
-        area.email = update_keys.includes('email') ? ctx.request.body.email : area.email;
-        area.language = update_keys.includes('language') ? ctx.request.body.language : area.language;
+        const updateKeys = ctx.request.body && Object.keys(ctx.request.body);
+        area.public = updateKeys.includes('public') ? ctx.request.body.public : area.public;
+        area.webhookUrl = updateKeys.includes('webhookUrl') ? ctx.request.body.webhookUrl : area.webhookUrl;
+        area.fireAlerts = updateKeys.includes('fireAlerts') ? ctx.request.body.fireAlerts : area.fireAlerts;
+        area.deforestationAlerts = updateKeys.includes('deforestationAlerts') ? ctx.request.body.deforestationAlerts : area.deforestationAlerts;
+        area.monthlySummary = updateKeys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
+        area.subscriptionId = updateKeys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
+        area.email = updateKeys.includes('email') ? ctx.request.body.email : area.email;
+        area.language = updateKeys.includes('language') ? ctx.request.body.language : area.language;
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
@@ -280,15 +280,15 @@ class AreaRouterV2 {
         ctx.body = AreaSerializerV2.serialize(area);
     }
 
-    static async delete(ctx){
+    static async delete(ctx) {
         logger.info(`Deleting area with id ${ctx.params.id}`);
         const result = await AreaModel.deleteOne({ _id: ctx.params.id });
         if (!result || result.ok === 0) {
             ctx.throw(404, 'Area not found');
             return;
         }
-        logger.info(`Area ${ctx.params.id} deleted successfully`)
-        
+        logger.info(`Area ${ctx.params.id} deleted successfully`);
+
         const userId = ctx.state.loggedUser.id;
         let team = null;
         try {
@@ -297,7 +297,7 @@ class AreaRouterV2 {
             logger.error(e);
         }
         if (team && team.areas.includes(ctx.params.id)) {
-            const areas = team.areas.filter(area => area !== ctx.params.id);
+            const areas = team.areas.filter((area) => area !== ctx.params.id);
             try {
                 await TeamService.patchTeamById(team.id, { areas });
                 logger.info('Team patched successful.');
@@ -310,7 +310,7 @@ class AreaRouterV2 {
         ctx.statusCode = 204;
     }
 
-    static async getAlertsOfArea(ctx){
+    static async getAlertsOfArea(ctx) {
         logger.info(`Obtaining alerts of area with id ${ctx.params.id}`);
         ctx.assert(ctx.query.precissionPoints, 400, 'precissionPoints is required');
         ctx.assert(ctx.query.precissionBBOX, 400, 'precissionBBOX is required');
@@ -324,14 +324,14 @@ class AreaRouterV2 {
             generateImages = false;
         }
 
-        let response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages);
+        const response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages);
         ctx.body = response;
     }
 
 }
 
 async function loggedUserToState(ctx, next) {
-    if (ctx.query && ctx.query.loggedUser){
+    if (ctx.query && ctx.query.loggedUser) {
         ctx.state.loggedUser = JSON.parse(ctx.query.loggedUser);
         delete ctx.query.loggedUser;
     } else if (ctx.request.body && ctx.request.body.loggedUser) {
@@ -348,7 +348,7 @@ async function loggedUserToState(ctx, next) {
 }
 
 async function isMicroservice(ctx, next) {
-    if (ctx.state.loggedUser.id !== 'microservice'){
+    if (ctx.state.loggedUser.id !== 'microservice') {
         ctx.throw(403, 'Not authorized');
     }
     await next();
@@ -356,7 +356,7 @@ async function isMicroservice(ctx, next) {
 
 async function checkPermission(ctx, next) {
     ctx.assert(ctx.params.id, 400, 'Id required');
-    let area = await AreaModel.findById(ctx.params.id);
+    const area = await AreaModel.findById(ctx.params.id);
     if (!area) {
         ctx.throw(404, 'Area not found');
         return;

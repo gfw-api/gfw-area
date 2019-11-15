@@ -1,13 +1,16 @@
+/* eslint-disable import/no-dynamic-require */
 const fs = require('fs');
+
 const routersPath = `${__dirname}/routes`;
 const logger = require('logger');
 const mount = require('koa-mount');
+
 /**
  * Load routers
  */
-module.exports = (function () {
+module.exports = (() => {
 
-    const loadAPI = function (app, path, pathApi) {
+    const loadAPI = (app, path, pathApi) => {
         const routesFiles = fs.readdirSync(path);
         let existIndexRouter = false;
         routesFiles.forEach((file) => {
@@ -44,15 +47,14 @@ module.exports = (function () {
         }
     };
 
-    const loadRoutes = function (app) {
+    const loadRoutes = (app) => {
         logger.debug('Loading routes...');
         loadAPI(app, routersPath);
         logger.debug('Loaded routes correctly!');
     };
 
-
     return {
         loadRoutes
     };
 
-}());
+})();

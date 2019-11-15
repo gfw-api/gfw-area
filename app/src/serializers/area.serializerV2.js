@@ -1,9 +1,6 @@
-'use strict';
+const JSONAPISerializer = require('jsonapi-serializer').Serializer;
 
-var logger = require('logger');
-var JSONAPISerializer = require('jsonapi-serializer').Serializer;
-
-var areaSerializer = new JSONAPISerializer('area', {
+const areaSerializer = new JSONAPISerializer('area', {
     attributes: [
         'name',
         'application',
@@ -31,16 +28,18 @@ var areaSerializer = new JSONAPISerializer('area', {
     resource: {
         attributes: ['type', 'content']
     },
-    typeForAttribute: function (attribute) {
+    typeForAttribute(attribute) {
         return attribute;
     },
     keyForAttribute: 'camelCase'
 });
 
 class AreaSerializer {
+
     static serialize(data) {
         return areaSerializer.serialize(data);
     }
+
 }
 
 module.exports = AreaSerializer;

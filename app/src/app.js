@@ -2,92 +2,114 @@ const Koa = require('koa');
 const path = require('path');
 const logger = require('logger');
 const koaLogger = require('koa-logger');
+const koaBody = require('koa-body');
 const config = require('config');
 const loader = require('loader');
-const convert = require('koa-convert');
 const ctRegisterMicroservice = require('ct-register-microservice-node');
 const ErrorSerializer = require('serializers/error.serializer');
 const mongoose = require('mongoose');
-const bluebird = require('bluebird');
-const validate = require('koa-validate');
-const mongoUri = process.env.MONGO_URI || 'mongodb://' + config.get('mongodb.host') + ':' + config.get('mongodb.port') + '/' + config.get('mongodb.database');
+const koaValidate = require('koa-validate');
+const koaSimpleHealthCheck = require('koa-simple-healthcheck');
+const sleep = require('sleep');
 
-const koaBody = require('koa-body')({
+const mongoUri = process.env.MONGO_URI || `mongodb://${config.get('mongodb.host')}:${config.get('mongodb.port')}/${config.get('mongodb.database')}`;
+
+const koaBodyMiddleware = koaBody({
     multipart: true,
     jsonLimit: '50mb',
     formLimit: '50mb',
     textLimit: '50mb',
     formidable: {
         uploadDir: '/tmp',
-        onFileBegin: function(name, file) {
+        onFileBegin(name, file) {
             const folder = path.dirname(file.path);
             file.path = path.join(folder, file.name);
         }
     }
 });
 
-let instance = null;
+const mongooseOptions = require('../../config/mongoose');
 
-const onDbReady = function (err) {
+let retries = 10;
+
+const onDbReady = (err) => {
     if (err) {
-        logger.error(err);
-        throw new Error(err);
+        if (retries >= 0) {
+            retries--;
+            logger.error(`Failed to connect to MongoDB uri ${mongoUri} with error message "${err.message}", retrying...`);
+            sleep.sleep(5);
+            mongoose.connect(mongoUri, onDbReady);
+        } else {
+            logger.error('MongoURI', mongoUri);
+            logger.error(err);
+            throw new Error(err);
+        }
     }
 
-    const app = new Koa();
-    mongoose.Promise = bluebird;
-
-    app.use(convert(koaBody));
-
-    validate(app);
-
-    app.use(async(ctx, next) => {
-        try {
-            await next();
-        } catch (err) {
-            let error = err;
-            try {
-                error = JSON.parse(err);
-            } catch (e) {
-                logger.error('Error parse');
-            }
-            ctx.status = error.status || 500;
-            logger.error(error);
-            ctx.body = ErrorSerializer.serializeError(ctx.status, error.message);
-            if (process.env.NODE_ENV === 'prod' && this.status === 500) {
-                ctx.body = 'Unexpected error';
-            }
-            ctx.response.type = 'application/vnd.api+json';
-        }
-
-    });
-
-    app.use(koaLogger());
-
-    loader.loadRoutes(app);
-
-
-    instance = app.listen(process.env.PORT, () => {
-        ctRegisterMicroservice.register({
-            info: require('../microservice/register.json'),
-            swagger: require('../microservice/public-swagger.json'),
-            mode: (process.env.CT_REGISTER_MODE && process.env.CT_REGISTER_MODE === 'auto') ? ctRegisterMicroservice.MODE_AUTOREGISTER : ctRegisterMicroservice.MODE_NORMAL,
-            framework: ctRegisterMicroservice.KOA2,
-            app,
-            logger,
-            name: config.get('service.name'),
-            ctUrl: process.env.CT_URL,
-            url: process.env.LOCAL_URL,
-            token: process.env.CT_TOKEN,
-            active: true,
-        }).then(() => {}, (err) => {
-            logger.error(err);
-            process.exit(1);
-        });
-    });
-    logger.info('Server started in ', process.env.PORT);
+    logger.info(`Connected to mongoDB`);
 };
 
-mongoose.connect(mongoUri, () => { setTimeout(onDbReady, 1000) });
+mongoose.connect(mongoUri, mongooseOptions, onDbReady);
 
-module.exports = instance;
+const app = new Koa();
+
+app.use(koaBodyMiddleware);
+
+app.use(koaSimpleHealthCheck());
+
+app.use(async (ctx, next) => {
+    try {
+        await next();
+    } catch (applicationError) {
+        let error = applicationError;
+        try {
+            error = JSON.parse(applicationError);
+        } catch (e) {
+            logger.debug('Could not parse error message - is it JSON?: ', applicationError);
+            error = applicationError;
+        }
+        ctx.status = error.status || ctx.status || 500;
+        if (ctx.status >= 500) {
+            logger.error(error);
+        } else {
+            logger.info(error);
+        }
+
+        ctx.body = ErrorSerializer.serializeError(ctx.status, error.message);
+        if (process.env.NODE_ENV === 'prod' && ctx.status === 500) {
+            ctx.body = 'Unexpected error';
+        }
+        ctx.response.type = 'application/vnd.api+json';
+    }
+
+});
+
+app.use(koaLogger());
+
+koaValidate(app);
+
+loader.loadRoutes(app);
+
+const server = app.listen(process.env.PORT, () => {
+    ctRegisterMicroservice.register({
+        info: require('../microservice/register.json'),
+        swagger: require('../microservice/public-swagger.json'),
+        mode: (process.env.CT_REGISTER_MODE && process.env.CT_REGISTER_MODE === 'auto') ? ctRegisterMicroservice.MODE_AUTOREGISTER : ctRegisterMicroservice.MODE_NORMAL,
+        framework: ctRegisterMicroservice.KOA2,
+        app,
+        logger,
+        name: config.get('service.name'),
+        ctUrl: process.env.CT_URL,
+        url: process.env.LOCAL_URL,
+        token: process.env.CT_TOKEN,
+        active: true
+    }).then(() => {
+    }, (error) => {
+        logger.error(error);
+        process.exit(1);
+    });
+});
+
+logger.info('Server started in ', process.env.PORT);
+
+module.exports = server;

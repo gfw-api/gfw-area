@@ -1,8 +1,8 @@
-'use strict';
 
-module.exports = function (grunt) {
+module.exports = (grunt) => {
 
     grunt.file.setBase('..');
+    // eslint-disable-next-line import/no-extraneous-dependencies
     require('load-grunt-tasks')(grunt);
 
     grunt.initConfig({
@@ -32,8 +32,8 @@ module.exports = function (grunt) {
             e2e: {
                 options: {
                     reporter: 'spec',
-                    quiet: false, // Optionally suppress output to standard out (defaults to false)
-                    clearRequireCache: true, // Optionally clear the require cache before running tests (defaults to false)
+                    quiet: false,
+                    clearRequireCache: true,
                 },
                 src: ['app/test/e2e/**/*.spec.js']
             }
@@ -70,6 +70,20 @@ module.exports = function (grunt) {
                 }
             },
 
+        },
+
+        nyc: {
+            cover: {
+                options: {
+                    include: ['app/src/**'],
+                    exclude: '*.test.*',
+                    reporter: ['lcov', 'text-summary'],
+                    reportDir: 'coverage',
+                    all: true
+                },
+                cmd: false,
+                args: ['grunt', '--gruntfile', 'app/Gruntfile.js', 'mochaTest:e2e']
+            }
         }
     });
 
@@ -80,10 +94,12 @@ module.exports = function (grunt) {
 
     grunt.registerTask('e2eTest-watch', ['watch:e2eTest']);
 
-    grunt.registerTask('test', ['unitTest']);
+    grunt.registerTask('test', ['unitTest', 'e2eTest']);
 
     grunt.registerTask('serve', ['express:dev', 'watch']);
 
     grunt.registerTask('default', 'serve');
+
+    grunt.loadNpmTasks('grunt-simple-nyc');
 
 };

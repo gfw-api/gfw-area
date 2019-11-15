@@ -12,12 +12,20 @@ const router = new Router({
 class DownloadRouter {
 
     static async downloadTiles(ctx) {
+        // eslint-disable-next-line max-len
         logger.info(`Downloading tiles with minZoom ${ctx.params.minZoom}, maxZoom ${ctx.params.maxZoom}, geostoreId: ${ctx.params.geostoreId}, layerUrl ${ctx.query.layerUrl} and useExtension ${ctx.query.useExtension}`);
-        const path = await DownloadService.getTilesZip(ctx.params.geostoreId, parseInt(ctx.params.minZoom, 10), parseInt(ctx.params.maxZoom, 10), ctx.query.layerUrl, JSON.parse(ctx.query.useExtension));
+        const path = await DownloadService.getTilesZip(
+            ctx.params.geostoreId,
+            parseInt(ctx.params.minZoom, 10),
+            parseInt(ctx.params.maxZoom, 10),
+            ctx.query.layerUrl,
+            JSON.parse(ctx.query.useExtension)
+        );
         ctx.set('content-disposition', 'attachment; filename=download.zip');
         await send(ctx, path, { root: '/' });
         fs.unlinkSync(path);
     }
+
 }
 
 

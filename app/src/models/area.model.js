@@ -1,6 +1,7 @@
-'use strict';
+
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+
+const { Schema } = mongoose;
 
 const Dataset = new Schema({
     slug: { type: String, required: true, trim: true },
@@ -14,7 +15,9 @@ const Dataset = new Schema({
 
 const Area = new Schema({
     name: { type: String, required: true, trim: true },
-    application: { type: String, required: true, trim: true, default: 'gfw' },
+    application: {
+        type: String, required: true, trim: true, default: 'gfw'
+    },
     geostore: { type: String, required: false, trim: true },
     wdpaid: { type: Number, required: false, trim: true },
     userId: { type: String, required: true, trim: true },
