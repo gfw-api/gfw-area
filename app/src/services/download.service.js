@@ -7,6 +7,7 @@ const tmp = require('tmp');
 const fs = require('fs');
 const zipFolder = require('zip-folder');
 const request = require('request');
+
 const CONCURRENCY = 30;
 
 class DownloadService {
@@ -58,11 +59,11 @@ class DownloadService {
 
     static async downloadImage(layerUrl, z, x, y, tempDir, useExtension) {
         logger.debug('Downloading image ', layerUrl.replace('{z}', z).replace('{x}', x).replace('{y}', y));
-        let url = layerUrl.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+        const url = layerUrl.replace('{z}', z).replace('{x}', x).replace('{y}', y);
 
         return new Promise((resolve, reject) => {
             request.get(url)
-                .on('response', function (res) {
+                .on('response', (res) => {
                     let filename = `${z}x${x}x${y}`;
 
                     if (useExtension) {
@@ -72,23 +73,23 @@ class DownloadService {
                             filename += '.jpg';
                         }
                     }
-                    var fws = fs.createWriteStream(`${tempDir}/${filename}`);
+                    const fws = fs.createWriteStream(`${tempDir}/${filename}`);
                     // setup piping
                     res.pipe(fws);
-                    res.on('end', function () {
+                    res.on('end', () => {
                         resolve();
                     });
-                    res.on('error', function () {
+                    res.on('error', () => {
                         reject();
                     });
                 });
-        })
+        });
     }
 
     static async zipFolder(folder, zipDir) {
-        logger.debug('Zipping folder ' + folder);
+        logger.debug(`Zipping folder ${folder}`);
         return new Promise((resolve, reject) => {
-            zipFolder(folder, zipDir, function (err) {
+            zipFolder(folder, zipDir, (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -101,8 +102,8 @@ class DownloadService {
 
     static async removeFolder(path) {
         return new Promise((resolve, reject) => {
-            rimraf(path, (err) => {
-                if(err){
+            rimraf(path, (err) => {
+                if (err) {
                     reject(err);
                     return;
                 }
@@ -113,13 +114,13 @@ class DownloadService {
 
     static async downloadAndZipCoordinates(coordinates, layerUrl, useExtension) {
         logger.debug('Downloading coordinates', coordinates);
-        var tmpobj = tmp.dirSync();
-        var tmpDownload = tmp.dirSync();
+        const tmpobj = tmp.dirSync();
+        const tmpDownload = tmp.dirSync();
         let promises = [];
         try {
-            for (let i = 0, length = coordinates.length; i < length; i++) {
+            for (let i = 0, { length } = coordinates; i < length; i++) {
                 promises.push(DownloadService.downloadImage(layerUrl, coordinates[i][2], coordinates[i][0], coordinates[i][1], tmpobj.name, useExtension));
-                if (promises.length === CONCURRENCY){
+                if (promises.length === CONCURRENCY) {
                     await Promise.all(promises);
                     promises = [];
                 }
@@ -128,9 +129,8 @@ class DownloadService {
                 await Promise.all(promises);
                 promises = null;
             }
-        } catch(err){
-
-        }
+            // eslint-disable-next-line no-empty
+        } catch (err) {}
         await DownloadService.zipFolder(tmpobj.name, `${tmpDownload.name}/download.zip`);
         logger.info('Removing file ', tmpobj.name);
         await DownloadService.removeFolder(tmpobj.name);
@@ -138,11 +138,12 @@ class DownloadService {
     }
 
     static async getTilesZip(geostoreId, minZoom, maxZoom, layerUrl, useExtension = true) {
-        let bbox = await DownloadService.getBBox(geostoreId);
+        const bbox = await DownloadService.getBBox(geostoreId);
         const coordinates = DownloadService.calculateCoordinates(bbox, minZoom, maxZoom);
         logger.debug('Coordinates', coordinates);
-        return await DownloadService.downloadAndZipCoordinates(coordinates, layerUrl, useExtension);
+        return DownloadService.downloadAndZipCoordinates(coordinates, layerUrl, useExtension);
     }
+
 }
 
 module.exports = DownloadService;

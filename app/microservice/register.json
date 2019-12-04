@@ -2,6 +2,93 @@
 	"name": "#(service.name)",
 	"tags": ["gfw"],
 	"endpoints": [{
+		"path": "/v2/area",
+		"method": "GET",
+		"authenticated": true,
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v2/area"
+		}
+	},{
+        "path": "/v2/area/fw",
+        "method": "GET",
+        "authenticated": true,
+        "redirect": {
+          "method": "GET",
+          "path": "/api/v2/area/fw"
+        }
+      },{
+        "path": "/v2/area/fw/:userId",
+        "method": "GET",
+        "authenticated": true,
+        "redirect": {
+          "method": "GET",
+          "path": "/api/v2/area/fw/:userId"
+        }
+      },{
+          "path": "/v2/area/:id",
+          "method": "GET",
+          "authenticated": false,
+          "redirect": {
+              "method": "GET",
+              "path": "/api/v2/area/:id"
+		}
+	},{
+		"path": "/v2/area",
+		"method": "POST",
+		"authenticated": true,
+		"redirect": {
+			"method": "POST",
+			"path": "/api/v2/area"
+		}
+	},{
+		"path": "/v2/area/fw/:userId",
+		"method": "POST",
+		"authenticated": true,
+		"redirect": {
+			"method": "POST",
+			"path": "/api/v2/area/fw/:userId"
+		}
+	},{
+		"path": "/v2/area/:id",
+		"method": "PATCH",
+		"authenticated": true,
+		"redirect": {
+			"method": "PATCH",
+			"path": "/api/v2/area/:id"
+		}
+	},{
+		"path": "/v2/area/update",
+		"method": "POST",
+		"authenticated": true,
+		"redirect": {
+			"method": "POST",
+			"path": "/api/v2/area/update"
+		}
+	},{
+		"path": "/v2/area/:id",
+		"method": "DELETE",
+		"authenticated": true,
+		"redirect": {
+			"method": "DELETE",
+			"path": "/api/v2/area/:id"
+		}
+	}, {
+		"path": "/v2/area/:id/alerts",
+		"method": "GET",
+		"authenticated": true,
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v2/area/:id/alerts"
+		}
+	},{
+		"path": "/v2/download-tiles/:geostoreId/:minZoom/:maxZoom",
+		"method": "GET",
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v2/download-tiles/:geostoreId/:minZoom/:maxZoom"
+		}
+	},{
 		"path": "/v1/area",
 		"method": "GET",
 		"authenticated": true,

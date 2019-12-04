@@ -3,3 +3,7 @@ node_modules/
 /.vscode
 npm-debug.log
 
+dev.env
+
+coverage
+.nyc_output

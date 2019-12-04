@@ -12,7 +12,18 @@ const areaSerializer = new JSONAPISerializer('area', {
         'datasets',
         'use',
         'iso',
-        'templateId'
+        'admin',
+        'templateId',
+        'tags',
+        'status',
+        'public',
+        'fireAlerts',
+        'deforestationAlerts',
+        'webhookUrl',
+        'monthlySummary',
+        'subscriptionId',
+        'email',
+        'language',
     ],
     resource: {
         attributes: ['type', 'content']

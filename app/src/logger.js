@@ -1,25 +1,27 @@
-'use strict';
-var config = require('config');
-var bunyan = require('bunyan');
-/**
- * Create Logger
- */
+const config = require('config');
+const bunyan = require('bunyan');
 
-module.exports = (() => {
-    const streams = [{
+const streams = [
+    {
+        stream: process.stdout,
+        level: config.get('logger.level') || 'debug'
+    }, {
+        stream: process.stderr,
+        level: 'warn'
+    },
+];
+
+if (config.get('logger.toFile')) {
+    streams.push({
         level: config.get('logger.level') || 'debug',
-        stream: process.stdout
-    }];
-    if (config.get('logger.toFile')) {
-        streams.push({
-            level: config.get('logger.level') || 'debug',
-            path: config.get('logger.dirLogFile')
-        });
-    }
-    const logger = bunyan.createLogger({
-        name: config.get('logger.name'),
-        streams
+        path: config.get('logger.dirLogFile')
     });
-    return logger;
+}
 
-})();
+const logger = bunyan.createLogger({
+    name: config.get('logger.name'),
+    src: true,
+    streams,
+});
+
+module.exports = logger;

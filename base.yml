@@ -1,10 +1,10 @@
 base:
   build: .
   ports:
-    - "4200:4100"
+    - "4200:4200"
   container_name: gfw-area
   environment:
-    PORT: 4100
+    PORT: 4200
     NODE_PATH: app/src
 
 mongo:

@@ -1,5 +1,5 @@
-
 const mongoose = require('mongoose');
+const mongooseHistory = require('mongoose-history');
 
 const { Schema } = mongoose;
 
@@ -31,11 +31,48 @@ const Area = new Schema({
         country: { type: String, required: false, trim: true },
         region: { type: String, required: false, trim: true }
     },
+    admin: {
+        _id: false,
+        adm0: { type: String, required: false, trim: true },
+        adm1: { type: Number, required: false, trim: true },
+        adm2: { type: Number, required: false, trim: true }
+    },
     datasets: [Dataset],
     createdAt: { type: Date, required: true, default: Date.now },
     image: { type: String, required: false, trim: true },
-    templateId: { type: String, trim: true, required: false }
+    templateId: { type: String, trim: true, required: false },
+    tags: {
+        type: Array, trim: true, required: true, default: []
+    },
+    status: {
+        type: String, trim: true, required: true, default: 'pending'
+    },
+    public: {
+        type: Boolean, trim: true, required: true, default: false
+    },
+    fireAlerts: {
+        type: Boolean, trim: true, required: true, default: false
+    },
+    deforestationAlerts: {
+        type: Boolean, trim: true, required: true, default: false
+    },
+    webhookUrl: {
+        type: String, trim: true, required: false, default: ''
+    },
+    monthlySummary: {
+        type: Boolean, trim: true, required: true, default: false
+    },
+    subscriptionId: {
+        type: String, trim: true, required: false, default: ''
+    },
+    email: {
+        type: String, trim: true, required: false, default: ''
+    },
+    language: {
+        type: String, trim: true, required: false, default: 'en'
+    },
 });
 
+Area.plugin(mongooseHistory);
 
-module.exports = mongoose.model('Area', Area);
+module.exports = mongoose.model('area', Area);
