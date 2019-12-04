@@ -141,7 +141,7 @@ class DownloadService {
         const bbox = await DownloadService.getBBox(geostoreId);
         const coordinates = DownloadService.calculateCoordinates(bbox, minZoom, maxZoom);
         logger.debug('Coordinates', coordinates);
-        await DownloadService.downloadAndZipCoordinates(coordinates, layerUrl, useExtension);
+        return DownloadService.downloadAndZipCoordinates(coordinates, layerUrl, useExtension);
     }
 
 }
