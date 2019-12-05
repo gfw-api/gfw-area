@@ -268,7 +268,7 @@ class AreaRouterV2 {
             area.tags = ctx.request.body.tags;
         }
         if (ctx.request.body.status) {
-            area.status = JSON.parse(ctx.request.body.status);
+            area.status = ctx.request.body.status;
         }
         if (ctx.request.body.public) {
             area.public = ctx.request.body.public;
@@ -375,7 +375,7 @@ async function checkPermission(ctx, next) {
         ctx.throw(404, 'Area not found');
         return;
     }
-    if (area.userId !== ctx.state.loggedUser.id && area.userId !== ctx.request.body.userId) {
+    if (area.userId !== ctx.state.loggedUser.id && area.userId !== ctx.request.body.userId && ctx.state.loggedUser.role !== 'ADMIN') {
         ctx.throw(401, 'Not authorized');
         return;
     }
