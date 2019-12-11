@@ -2,6 +2,7 @@ const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.model');
 const fs = require('fs');
+const config = require('config');
 const { createArea } = require('./utils/helpers');
 const { USERS } = require('./utils/test.constants');
 
@@ -105,8 +106,13 @@ describe('Update area', () => {
         });
     });
 
-    it('Updating an area with a file while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
+    it('Updating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the updated area object', async () => {
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+        nock(`https://${config.get('s3.bucket')}.s3.amazonaws.com`)
+            .put(/^\/areas-dev\/(\w|-)+.png/)
+            .reply(200);
+
 
         const fileData = fs.readFileSync(`${__dirname}/assets/sample.png`);
 
@@ -143,6 +149,7 @@ describe('Update area', () => {
         });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
+        response.body.data.attributes.should.have.property('image').and.include(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}`);
         response.body.data.attributes.datasets[0].should.deep.equal({
             cache: true,
             active: true,

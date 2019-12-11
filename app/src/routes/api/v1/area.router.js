@@ -127,10 +127,7 @@ class AreaRouter {
     static async update(ctx) {
         logger.info(`Updating area with id ${ctx.params.id}`);
         const area = await AreaModel.findById(ctx.params.id);
-        const { files } = ctx.request.body;
-        if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields;
-        }
+        const { files } = ctx.request;
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
         }

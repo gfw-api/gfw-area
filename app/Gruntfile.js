@@ -1,4 +1,3 @@
-
 module.exports = (grunt) => {
 
     grunt.file.setBase('..');
@@ -33,6 +32,7 @@ module.exports = (grunt) => {
                 options: {
                     reporter: 'spec',
                     quiet: false,
+                    timeout: 10000,
                     clearRequireCache: true,
                 },
                 src: ['app/test/e2e/**/*.spec.js']
