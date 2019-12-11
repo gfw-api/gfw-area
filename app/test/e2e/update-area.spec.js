@@ -13,18 +13,17 @@ const { getTestServer } = require('./utils/test-server');
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-let requester;
+const requester = getTestServer();
 
 describe('Update area', () => {
-    before(async () => {
+    before(() => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
-
-        requester = await getTestServer();
     });
 
     it('Updating an area without being logged in should return a 401 - "Not logged" error', async () => {
+
         const testArea = await new Area(createArea()).save();
 
         const response = await requester

@@ -5,16 +5,13 @@ chai.should();
 
 const { getTestServer } = require('./utils/test-server');
 
-let requester;
+const requester = getTestServer();
 
 describe('GET healthcheck', () => {
     before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
-
-        requester = await getTestServer();
-        nock.cleanAll();
     });
 
     it('Checking the application\'s health should return a 200', async () => {

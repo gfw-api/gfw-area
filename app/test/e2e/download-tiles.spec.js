@@ -9,15 +9,13 @@ const { getTestServer } = require('./utils/test-server');
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-let requester;
+const requester = getTestServer();
 
 describe('GET download tiles', () => {
     before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
-
-        requester = await getTestServer();
     });
 
     it('Load a set of areas in a zip file should return a 200 with a zip file attached in the response', async () => {
