@@ -10,12 +10,16 @@ env:
   global:
     - CC_TEST_REPORTER_ID=249b9754ecbd021d08b0961a1b49aed7fbda2f82397f946a005a0b31cff4b6b7
     - NODE_ENV=test
+    - CT_REGISTER_MODE=auto
     - PORT=4100
     - API_VERSION=v1
     - LOCAL_URL=http://127.0.0.1:4100
     - CT_URL=http://127.0.0.1:9000
     - MONGO_PORT_27017_TCP_ADDR=127.0.0.1
     - CT_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1pY3Jvc2VydmljZSIsImNyZWF0ZWRBdCI6IjIwMTYtMDktMTQifQ.IRCIRm1nfIQTfda_Wb6Pg-341zhV8soAgzw7dd5HxxQ
+    - S3_ACCESS_KEY_ID=1
+    - S3_SECRET_ACCESS_KEY=1
+    - S3_BUCKET=s3bucket
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter

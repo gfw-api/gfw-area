@@ -35,13 +35,13 @@ class S3Service {
                     Key: `${config.get('s3.folder')}/${uuid}.${ext}`,
                     Body: base64data,
                     ACL: 'public-read'
-                }, (resp) => {
-                    if (resp && resp.statusCode >= 300) {
-                        logger.error(resp);
-                        reject(resp);
+                }, (error, data) => {
+                    if (error) {
+                        logger.error('[S3Service] Error uploading file to S3', error);
+                        reject(error);
                         return;
                     }
-                    logger.debug('File uploaded successfully', resp);
+                    logger.debug('File uploaded successfully', data);
                     resolve(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}/${uuid}.${ext}`);
                 });
             });
