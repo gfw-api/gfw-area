@@ -3,7 +3,7 @@ const chai = require('chai');
 
 chai.should();
 
-const { getTestServer } = require('./test-server');
+const { getTestServer } = require('./utils/test-server');
 
 let requester;
 

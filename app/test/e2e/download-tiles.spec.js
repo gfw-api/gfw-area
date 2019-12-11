@@ -1,9 +1,10 @@
+/* eslint-disable max-len */
 const nock = require('nock');
 const chai = require('chai');
 
 chai.should();
 
-const { getTestServer } = require('./test-server');
+const { getTestServer } = require('./utils/test-server');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -17,7 +18,6 @@ describe('GET download tiles', () => {
         }
 
         requester = await getTestServer();
-        nock.cleanAll();
     });
 
     it('Load a set of areas in a zip file should return a 200 with a zip file attached in the response', async () => {

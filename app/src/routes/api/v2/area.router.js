@@ -32,7 +32,7 @@ class AreaRouterV2 {
 
     static async getAll(ctx) {
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
-        const filter = getFilters(ctx)
+        const filter = getFilters(ctx);
         const areas = await AreaModel.find(filter);
         ctx.body = AreaSerializerV2.serialize(areas);
     }
