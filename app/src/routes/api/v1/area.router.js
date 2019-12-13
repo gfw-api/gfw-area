@@ -127,10 +127,7 @@ class AreaRouter {
     static async update(ctx) {
         logger.info(`Updating area with id ${ctx.params.id}`);
         const area = await AreaModel.findById(ctx.params.id);
-        const { files } = ctx.request.body;
-        if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields;
-        }
+        const { files } = ctx.request;
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
         }
@@ -224,7 +221,12 @@ async function loggedUserToState(ctx, next) {
         ctx.state.loggedUser = JSON.parse(ctx.query.loggedUser);
         delete ctx.query.loggedUser;
     } else if (ctx.request.body && ctx.request.body.loggedUser) {
-        ctx.state.loggedUser = ctx.request.body.loggedUser;
+        if (typeof ctx.request.body.loggedUser === 'object') {
+            ctx.state.loggedUser = ctx.request.body.loggedUser;
+        } else {
+            ctx.state.loggedUser = JSON.parse(ctx.request.body.loggedUser);
+
+        }
         delete ctx.request.body.loggedUser;
     } else if (ctx.request.body.fields && ctx.request.body.fields.loggedUser) {
         ctx.state.loggedUser = JSON.parse(ctx.request.body.fields.loggedUser);
@@ -257,8 +259,27 @@ async function checkPermission(ctx, next) {
     await next();
 }
 
+async function unwrapJSONStrings(ctx, next) {
+    if (ctx.request.body.use && typeof ctx.request.body.use === 'string' && ctx.request.body.use.length > 0) {
+        try {
+            ctx.request.body.use = JSON.parse(ctx.request.body.use);
+        } catch (e) {
+            // not a JSON, ignore and move on
+        }
+    }
+    if (ctx.request.body.iso && typeof ctx.request.body.iso === 'string' && ctx.request.body.iso.length > 0) {
+        try {
+            ctx.request.body.iso = JSON.parse(ctx.request.body.iso);
+        } catch (e) {
+            // not a JSON, ignore and move on
+        }
+    }
+
+    await next();
+}
+
 router.post('/', loggedUserToState, AreaValidator.create, AreaRouter.save);
-router.patch('/:id', loggedUserToState, checkPermission, AreaValidator.update, AreaRouter.update);
+router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
 router.get('/fw', loggedUserToState, AreaRouter.getFWAreas);
 router.post('/fw/:userId', loggedUserToState, AreaValidator.create, AreaRouter.saveByUserId);

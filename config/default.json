@@ -1,27 +1,27 @@
 {
-     "logger": {
-        "name": "gfw-area-DEV",
-        "level": "debug",
-        "toFile": false,
-        "dirLogFile": null
-    },
-    "service": {
-        "id": "gfw-area-1.0.0",
-        "name": "GFW Area API",
-        "port": 4100
-    },
-    "mongodb": {
-        "database": "gfw_areas",
-        "host": "127.0.0.1",
-        "port": 27017
-    },
-    "gladDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade",
-    "viirsDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade",
-    "viirsDatasetTableName": "vnp14imgtdl_nrt_global_7d",
-    "s3":{
-        "accessKeyId": null,
-        "secretAccessKey": null,
-        "bucket": null,
-        "folder": "areas-dev"
-    }
+  "logger": {
+    "name": "gfw-area-DEV",
+    "level": "debug",
+    "toFile": false,
+    "dirLogFile": null
+  },
+  "service": {
+    "id": "gfw-area-1.0.0",
+    "name": "GFW Area API",
+    "port": 4100
+  },
+  "mongodb": {
+    "database": "gfw_areas",
+    "host": "127.0.0.1",
+    "port": 27017
+  },
+  "gladDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade",
+  "viirsDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade",
+  "viirsDatasetTableName": "vnp14imgtdl_nrt_global_7d",
+  "s3": {
+    "accessKeyId": null,
+    "secretAccessKey": null,
+    "bucket": null,
+    "folder": "areas-dev"
+  }
 }

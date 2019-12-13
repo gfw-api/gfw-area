@@ -1,12 +1,30 @@
-test:
-  extends:
-    file: base.yml
-    service: base
-  ports:
-    - "4100"
-  container_name: gfw-area-test
-  environment:
-    NODE_ENV: test
-    CT_URL: http://mymachine:9000
-    API_VERSION: v1
-  command: test
+version: "3"
+services:
+  test:
+    build: .
+    ports:
+      - "4100:4100"
+    container_name: gfw-area-test
+    environment:
+      NODE_ENV: test
+      PORT: 4110
+      NODE_PATH: app/src
+      API_VERSION: v1
+      CT_URL: http://mymachine:9000
+      CT_REGISTER_MODE: auto
+      LOCAL_URL: http://127.0.0.1:4110
+      HOST_IP: 127.0.0.1
+      MONGO_PORT_27017_TCP_ADDR: mongo
+      S3_ACCESS_KEY_ID: 1
+      S3_SECRET_ACCESS_KEY: 1
+      S3_BUCKET: s3bucket
+      WAIT_HOSTS: mongo:27017
+    command: test
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:3.4
+    command: --smallfiles
+    ports:
+      - "27017"

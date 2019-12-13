@@ -1,16 +1,16 @@
 {
-    "logger": {
-        "name": "gfw-area",
-        "level": "warn",
-        "toFile": false,
-        "dirLogFile": null
-    },
-    "service": {
-    },
-    "s3":{
-        "accessKeyId": null,
-        "secretAccessKey": null,
-        "bucket": null,
-        "folder": "areas-staging"
-    }
+  "logger": {
+    "name": "gfw-area",
+    "level": "warn",
+    "toFile": false,
+    "dirLogFile": null
+  },
+  "service": {
+  },
+  "s3": {
+    "accessKeyId": null,
+    "secretAccessKey": null,
+    "bucket": null,
+    "folder": "areas-staging"
+  }
 }

@@ -11,11 +11,11 @@ exports.getTestServer = function getTestServer() {
         return requester;
     }
 
-    nock(`${process.env.CT_URL}`)
-        .post(`/api/v1/microservice`)
+    nock(process.env.CT_URL)
+        .post('/api/v1/microservice')
         .reply(200);
 
-    const server = require('../../src/app');
+    const server = require('../../../src/app');
     requester = chai.request(server).keepOpen();
 
     return requester;
