@@ -34,6 +34,10 @@ class AreaRouterV2 {
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
         const filter = getFilters(ctx);
         const areas = await AreaModel.find(filter);
+        if (!areas || areas.length === 0) {
+            ctx.throw(404, 'Area not found');
+            return;
+        }
         ctx.body = AreaSerializerV2.serialize(areas);
     }
 
@@ -46,11 +50,20 @@ class AreaRouterV2 {
         // validate update json
         updateParams.updatedDate = Date.now;
 
-        const area = await AreaModel.updateMany(
+        const response = await AreaModel.updateMany(
             { geostore: { $in: geostores } },
             { $set: updateParams }
         );
-        logger.info('Updated! ', area);
+
+        logger.info(`Updated ${response.nModified} out of ${response.n}.`);
+        if (response.ok && response.ok === 1) {
+            const areas = await AreaModel.find({ geostore: { $in: geostores } });
+            ctx.body = AreaSerializerV2.serialize(areas);
+        }
+        else{
+            ctx.throw(404, 'Update failed.');
+            return;
+        }
     }
 
     static async get(ctx) {
