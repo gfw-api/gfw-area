@@ -42,6 +42,10 @@ class AreaRouterV2 {
     }
 
     static async updateByGeostore(ctx) {
+        if ( ctx.state.loggedUser.role !== 'ADMIN') {
+            ctx.throw(401, 'Not authorized');
+            return;
+        }
         const geostores = ctx.request.body.geostores || [];
         const updateParams = ctx.request.body.update_params || {};
         logger.info('Updating geostores: ', geostores);
@@ -286,6 +290,9 @@ class AreaRouterV2 {
         if (ctx.request.body.public) {
             area.public = ctx.request.body.public;
         }
+        if (ctx.request.body.status) {
+            area.status = ctx.request.body.status;
+        }
         const updateKeys = ctx.request.body && Object.keys(ctx.request.body);
         area.public = updateKeys.includes('public') ? ctx.request.body.public : area.public;
         area.webhookUrl = updateKeys.includes('webhookUrl') ? ctx.request.body.webhookUrl : area.webhookUrl;
@@ -295,6 +302,7 @@ class AreaRouterV2 {
         area.subscriptionId = updateKeys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
         area.email = updateKeys.includes('email') ? ctx.request.body.email : area.email;
         area.language = updateKeys.includes('language') ? ctx.request.body.language : area.language;
+        area.status = updateKeys.includes('status') ? ctx.request.body.status : area.status;
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
@@ -404,6 +412,6 @@ router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
 router.get('/fw', loggedUserToState, AreaRouterV2.getFWAreas);
 router.post('/fw/:userId', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.saveByUserId);
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouterV2.getFWAreasByUserId);
-router.post('/update', AreaRouterV2.updateByGeostore);
+router.post('/update', loggedUserToState, AreaRouterV2.updateByGeostore);
 
 module.exports = router;
