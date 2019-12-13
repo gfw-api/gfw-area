@@ -34,10 +34,18 @@ class AreaRouterV2 {
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
         const filter = getFilters(ctx);
         const areas = await AreaModel.find(filter);
+        if (!areas || areas.length === 0) {
+            ctx.throw(404, 'Area not found');
+            return;
+        }
         ctx.body = AreaSerializerV2.serialize(areas);
     }
 
     static async updateByGeostore(ctx) {
+        if ( ctx.state.loggedUser.role !== 'ADMIN') {
+            ctx.throw(401, 'Not authorized');
+            return;
+        }
         const geostores = ctx.request.body.geostores || [];
         const updateParams = ctx.request.body.update_params || {};
         logger.info('Updating geostores: ', geostores);
@@ -46,11 +54,20 @@ class AreaRouterV2 {
         // validate update json
         updateParams.updatedDate = Date.now;
 
-        const area = await AreaModel.updateMany(
+        const response = await AreaModel.updateMany(
             { geostore: { $in: geostores } },
             { $set: updateParams }
         );
-        logger.info('Updated! ', area);
+
+        logger.info(`Updated ${response.nModified} out of ${response.n}.`);
+        if (response.ok && response.ok === 1) {
+            const areas = await AreaModel.find({ geostore: { $in: geostores } });
+            ctx.body = AreaSerializerV2.serialize(areas);
+        }
+        else{
+            ctx.throw(404, 'Update failed.');
+            return;
+        }
     }
 
     static async get(ctx) {
@@ -133,6 +150,7 @@ class AreaRouterV2 {
     static async saveArea(ctx, userId) {
         logger.info('Saving area');
         let image = '';
+        let isSaved = false;
         if (ctx.request.body.files && ctx.request.body.files.image) {
             image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
         }
@@ -152,12 +170,25 @@ class AreaRouterV2 {
         if (ctx.request.body.iso) {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
             iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
+            if (iso.country || iso.region){
+                isSaved = true;
+            }
         }
         const admin = {};
         if (ctx.request.body.admin) {
             admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
             admin.adm1 = ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
             admin.adm2 = ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+            if (admin.adm0){
+                isSaved = true;
+            }
+        }
+        let wdpaid = null;
+        if (ctx.request.body.wdpaid) {
+            wdpaid = ctx.request.body.wdpaid
+            if (wdpaid){
+                isSaved = true;
+            }
         }
         let tags = [];
         if (ctx.request.body.tags) {
@@ -195,11 +226,12 @@ class AreaRouterV2 {
         if (ctx.request.body.language) {
             lang = ctx.request.body.language;
         }
+
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
             geostore: ctx.request.body.geostore,
-            wdpaid: ctx.request.body.wdpaid,
+            wdpaid: wdpaid,
             userId: userId || ctx.state.loggedUser.id,
             use,
             iso,
@@ -207,7 +239,7 @@ class AreaRouterV2 {
             datasets,
             image,
             tags,
-            status: 'pending',
+            status: isSaved ? 'saved' : 'pending',
             public: publicStatus,
             fireAlerts: fireAlertSub,
             deforestationAlerts: deforAlertSub,
@@ -273,6 +305,9 @@ class AreaRouterV2 {
         if (ctx.request.body.public) {
             area.public = ctx.request.body.public;
         }
+        if (ctx.request.body.status) {
+            area.status = ctx.request.body.status;
+        }
         const updateKeys = ctx.request.body && Object.keys(ctx.request.body);
         area.public = updateKeys.includes('public') ? ctx.request.body.public : area.public;
         area.webhookUrl = updateKeys.includes('webhookUrl') ? ctx.request.body.webhookUrl : area.webhookUrl;
@@ -282,6 +317,7 @@ class AreaRouterV2 {
         area.subscriptionId = updateKeys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
         area.email = updateKeys.includes('email') ? ctx.request.body.email : area.email;
         area.language = updateKeys.includes('language') ? ctx.request.body.language : area.language;
+        area.status = updateKeys.includes('status') ? ctx.request.body.status : area.status;
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
@@ -391,6 +427,6 @@ router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
 router.get('/fw', loggedUserToState, AreaRouterV2.getFWAreas);
 router.post('/fw/:userId', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.saveByUserId);
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouterV2.getFWAreasByUserId);
-router.post('/update', AreaRouterV2.updateByGeostore);
+router.post('/update', loggedUserToState, AreaRouterV2.updateByGeostore);
 
 module.exports = router;
