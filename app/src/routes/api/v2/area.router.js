@@ -150,6 +150,7 @@ class AreaRouterV2 {
     static async saveArea(ctx, userId) {
         logger.info('Saving area');
         let image = '';
+        let isSaved = false;
         if (ctx.request.body.files && ctx.request.body.files.image) {
             image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
         }
@@ -169,12 +170,25 @@ class AreaRouterV2 {
         if (ctx.request.body.iso) {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
             iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
+            if (iso.country || iso.region){
+                isSaved = true;
+            }
         }
         const admin = {};
         if (ctx.request.body.admin) {
             admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
             admin.adm1 = ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
             admin.adm2 = ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+            if (admin.adm0){
+                isSaved = true;
+            }
+        }
+        let wdpaid = null;
+        if (ctx.request.body.wdpaid) {
+            wdpaid = ctx.request.body.wdpaid
+            if (wdpaid){
+                isSaved = true;
+            }
         }
         let tags = [];
         if (ctx.request.body.tags) {
@@ -212,11 +226,12 @@ class AreaRouterV2 {
         if (ctx.request.body.language) {
             lang = ctx.request.body.language;
         }
+
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
             geostore: ctx.request.body.geostore,
-            wdpaid: ctx.request.body.wdpaid,
+            wdpaid: wdpaid,
             userId: userId || ctx.state.loggedUser.id,
             use,
             iso,
@@ -224,7 +239,7 @@ class AreaRouterV2 {
             datasets,
             image,
             tags,
-            status: 'pending',
+            status: isSaved ? 'saved' : 'pending',
             public: publicStatus,
             fireAlerts: fireAlertSub,
             deforestationAlerts: deforAlertSub,
