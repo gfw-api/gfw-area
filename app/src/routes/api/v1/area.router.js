@@ -225,7 +225,6 @@ async function loggedUserToState(ctx, next) {
             ctx.state.loggedUser = ctx.request.body.loggedUser;
         } else {
             ctx.state.loggedUser = JSON.parse(ctx.request.body.loggedUser);
-
         }
         delete ctx.request.body.loggedUser;
     } else if (ctx.request.body.fields && ctx.request.body.fields.loggedUser) {
