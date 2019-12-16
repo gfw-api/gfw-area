@@ -4,14 +4,14 @@ const chai = require('chai');
 
 chai.should();
 
-const { getTestServer } = require('./utils/test-server');
+const { getTestServer } = require('../utils/test-server');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
 const requester = getTestServer();
 
-describe('GET download tiles', () => {
+describe('GET download tiles - V1', () => {
     before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);

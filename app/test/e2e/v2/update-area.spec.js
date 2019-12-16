@@ -1,21 +1,21 @@
 const nock = require('nock');
 const chai = require('chai');
-const Area = require('models/area.model');
+const Area = require('models/area.modelV2');
 const fs = require('fs');
 const config = require('config');
-const { createArea } = require('./utils/helpers');
-const { USERS } = require('./utils/test.constants');
+const { createArea } = require('../utils/helpers');
+const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
-const { getTestServer } = require('./utils/test-server');
+const { getTestServer } = require('../utils/test-server');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
 const requester = getTestServer();
 
-describe('Update area', () => {
+describe('Update area - V2', () => {
     before(() => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
@@ -27,7 +27,7 @@ describe('Update area', () => {
         const testArea = await new Area(createArea()).save();
 
         const response = await requester
-            .patch(`/api/v1/area/${testArea.id}`);
+            .patch(`/api/v2/area/${testArea.id}`);
 
         response.status.should.equal(401);
 
@@ -39,7 +39,7 @@ describe('Update area', () => {
         const testArea = await new Area(createArea()).save();
 
         const response = await requester
-            .patch(`/api/v1/area/${testArea.id}`)
+            .patch(`/api/v2/area/${testArea.id}`)
             .send({
                 loggedUser: USERS.USER
             });
@@ -54,7 +54,7 @@ describe('Update area', () => {
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
-            .patch(`/api/v1/area/${testArea.id}`)
+            .patch(`/api/v2/area/${testArea.id}`)
             .send({
                 loggedUser: USERS.USER,
                 name: 'Portugal area',
@@ -113,10 +113,10 @@ describe('Update area', () => {
             .reply(200);
 
 
-        const fileData = fs.readFileSync(`${__dirname}/assets/sample.png`);
+        const fileData = fs.readFileSync(`${__dirname}/../assets/sample.png`);
 
         const response = await requester
-            .patch(`/api/v1/area/${testArea.id}`)
+            .patch(`/api/v2/area/${testArea.id}`)
             .attach('image', fileData, 'sample.png')
             .field('loggedUser', JSON.stringify(USERS.USER))
             .field('name', 'Portugal area')
