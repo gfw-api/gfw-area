@@ -104,6 +104,7 @@ class DownloadService {
         return new Promise((resolve, reject) => {
             rimraf(path, (err) => {
                 if (err) {
+                    logger.error(`Error removing folder ${path}: ${err}`);
                     reject(err);
                     return;
                 }

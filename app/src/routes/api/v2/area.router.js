@@ -42,7 +42,7 @@ class AreaRouterV2 {
     }
 
     static async updateByGeostore(ctx) {
-        if ( ctx.state.loggedUser.role !== 'ADMIN') {
+        if (ctx.state.loggedUser.role !== 'ADMIN') {
             ctx.throw(401, 'Not authorized');
             return;
         }
@@ -63,10 +63,9 @@ class AreaRouterV2 {
         if (response.ok && response.ok === 1) {
             const areas = await AreaModel.find({ geostore: { $in: geostores } });
             ctx.body = AreaSerializerV2.serialize(areas);
-        }
-        else{
+        } else {
             ctx.throw(404, 'Update failed.');
-            return;
+
         }
     }
 
@@ -170,7 +169,7 @@ class AreaRouterV2 {
         if (ctx.request.body.iso) {
             iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
             iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
-            if (iso.country || iso.region){
+            if (iso.country || iso.region) {
                 isSaved = true;
             }
         }
@@ -179,14 +178,14 @@ class AreaRouterV2 {
             admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
             admin.adm1 = ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
             admin.adm2 = ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
-            if (admin.adm0){
+            if (admin.adm0) {
                 isSaved = true;
             }
         }
         let wdpaid = null;
         if (ctx.request.body.wdpaid) {
-            wdpaid = ctx.request.body.wdpaid
-            if (wdpaid){
+            wdpaid = ctx.request.body.wdpaid;
+            if (wdpaid) {
                 isSaved = true;
             }
         }
@@ -231,7 +230,7 @@ class AreaRouterV2 {
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
             geostore: ctx.request.body.geostore,
-            wdpaid: wdpaid,
+            wdpaid,
             userId: userId || ctx.state.loggedUser.id,
             use,
             iso,
@@ -258,10 +257,7 @@ class AreaRouterV2 {
 
     static async update(ctx) {
         const area = await AreaModel.findById(ctx.params.id);
-        const { files } = ctx.request.body;
-        if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields;
-        }
+        const { files } = ctx.request;
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
         }
@@ -385,13 +381,17 @@ async function loggedUserToState(ctx, next) {
         ctx.state.loggedUser = JSON.parse(ctx.query.loggedUser);
         delete ctx.query.loggedUser;
     } else if (ctx.request.body && ctx.request.body.loggedUser) {
-        ctx.state.loggedUser = ctx.request.body.loggedUser;
+        if (typeof ctx.request.body.loggedUser === 'object') {
+            ctx.state.loggedUser = ctx.request.body.loggedUser;
+        } else {
+            ctx.state.loggedUser = JSON.parse(ctx.request.body.loggedUser);
+        }
         delete ctx.request.body.loggedUser;
     } else if (ctx.request.body.fields && ctx.request.body.fields.loggedUser) {
         ctx.state.loggedUser = JSON.parse(ctx.request.body.fields.loggedUser);
         delete ctx.request.body.loggedUser;
     } else {
-        ctx.state.loggedUser = null;
+        ctx.throw(401, 'Not logged');
         return;
     }
     await next();
@@ -412,15 +412,34 @@ async function checkPermission(ctx, next) {
         return;
     }
     if (area.userId !== ctx.state.loggedUser.id && area.userId !== ctx.request.body.userId && ctx.state.loggedUser.role !== 'ADMIN') {
-        ctx.throw(401, 'Not authorized');
+        ctx.throw(403, 'Not authorized');
         return;
     }
     await next();
 }
 
+async function unwrapJSONStrings(ctx, next) {
+    if (ctx.request.body.use && typeof ctx.request.body.use === 'string' && ctx.request.body.use.length > 0) {
+        try {
+            ctx.request.body.use = JSON.parse(ctx.request.body.use);
+        } catch (e) {
+            // not a JSON, ignore and move on
+        }
+    }
+    if (ctx.request.body.iso && typeof ctx.request.body.iso === 'string' && ctx.request.body.iso.length > 0) {
+        try {
+            ctx.request.body.iso = JSON.parse(ctx.request.body.iso);
+        } catch (e) {
+            // not a JSON, ignore and move on
+        }
+    }
+
+    await next();
+}
+
 router.get('/', loggedUserToState, AreaRouterV2.getAll);
 router.post('/', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.save);
-router.patch('/:id', loggedUserToState, checkPermission, AreaValidatorV2.update, AreaRouterV2.update);
+router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouterV2.delete);
 router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
