@@ -86,13 +86,10 @@ class AreaRouter {
     static async saveArea(ctx, userId) {
         logger.info('Saving area');
         let image = '';
-        if (ctx.request.body.files && ctx.request.body.files.image) {
-            image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
+        if (ctx.request.files && ctx.request.files.image) {
+            image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
         }
         let datasets = [];
-        if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields;
-        }
         if (ctx.request.body.datasets) {
             datasets = JSON.parse(ctx.request.body.datasets);
         }
@@ -277,7 +274,7 @@ async function unwrapJSONStrings(ctx, next) {
     await next();
 }
 
-router.post('/', loggedUserToState, AreaValidator.create, AreaRouter.save);
+router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidator.create, AreaRouter.save);
 router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
 router.get('/fw', loggedUserToState, AreaRouter.getFWAreas);
