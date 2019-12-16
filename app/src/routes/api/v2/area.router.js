@@ -150,13 +150,10 @@ class AreaRouterV2 {
         logger.info('Saving area');
         let image = '';
         let isSaved = false;
-        if (ctx.request.body.files && ctx.request.body.files.image) {
-            image = await s3Service.uploadFile(ctx.request.body.files.image.path, ctx.request.body.files.image.name);
+        if (ctx.request.files && ctx.request.files.image) {
+            image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
         }
         let datasets = [];
-        if (ctx.request.body.fields) {
-            ctx.request.body = ctx.request.body.fields;
-        }
         if (ctx.request.body.datasets) {
             datasets = JSON.parse(ctx.request.body.datasets);
         }
@@ -438,7 +435,7 @@ async function unwrapJSONStrings(ctx, next) {
 }
 
 router.get('/', loggedUserToState, AreaRouterV2.getAll);
-router.post('/', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.save);
+router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidatorV2.create, AreaRouterV2.save);
 router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouterV2.delete);
