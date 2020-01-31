@@ -154,11 +154,16 @@ class AreaRouterV2 {
             image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
         }
         const geostore = (ctx.request.body && ctx.request.body.geostore) || null;
-        const filters = { geostore: geostore };
+        const query = {
+            $and: [
+                { status: 'saved' },
+                { geostore }
+            ]
+        };
         logger.info(`Checking if data created already for geostore ${geostore}`);
-        const areas = await AreaModel.find(filters);
-        const saved_areas = areas.find(el => el.status === 'saved');
-        if (geostore && saved_areas){
+        const areas = await AreaModel.find(query);
+        // const saved_areas = areas.find(el => el.status === 'saved');
+        if (geostore && areas && areas.length > 0){
             isSaved = true;
         }
         let datasets = [];
