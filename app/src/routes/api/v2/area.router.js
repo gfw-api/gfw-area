@@ -162,7 +162,6 @@ class AreaRouterV2 {
         };
         logger.info(`Checking if data created already for geostore ${geostore}`);
         const areas = await AreaModel.find(query);
-        // const saved_areas = areas.find(el => el.status === 'saved');
         if (geostore && areas && areas.length > 0){
             isSaved = true;
         }
@@ -235,7 +234,6 @@ class AreaRouterV2 {
         if (ctx.request.body.language) {
             lang = ctx.request.body.language;
         }
-        logger.info('\n\n\nisSaved', isSaved)
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
