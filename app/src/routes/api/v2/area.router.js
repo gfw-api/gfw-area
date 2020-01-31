@@ -153,6 +153,18 @@ class AreaRouterV2 {
         if (ctx.request.files && ctx.request.files.image) {
             image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
         }
+        const geostore = (ctx.request.body && ctx.request.body.geostore) || null;
+        const query = {
+            $and: [
+                { status: 'saved' },
+                { geostore }
+            ]
+        };
+        logger.info(`Checking if data created already for geostore ${geostore}`);
+        const areas = await AreaModel.find(query);
+        if (geostore && areas && areas.length > 0){
+            isSaved = true;
+        }
         let datasets = [];
         if (ctx.request.body.datasets) {
             datasets = JSON.parse(ctx.request.body.datasets);
@@ -222,7 +234,6 @@ class AreaRouterV2 {
         if (ctx.request.body.language) {
             lang = ctx.request.body.language;
         }
-
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
