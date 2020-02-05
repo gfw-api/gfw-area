@@ -181,9 +181,10 @@ class AreaRouter {
                 );
             }else{
                 let singleTemplateId = ctx.request.body.templateId[0];
-                // backward compatibility
+                // backward compatibility - templateIds is the new version
+                // templateId is for backward compatibility
                 area.templateId = (singleTemplateId);
-                area.templateIds.push(ctx.request.body.templateId);
+                area.templateIds.addToSet(ctx.request.body.templateId);
             }
         }
         area.updatedDate = Date.now;
