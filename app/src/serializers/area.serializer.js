@@ -12,7 +12,8 @@ const areaSerializer = new JSONAPISerializer('area', {
         'datasets',
         'use',
         'iso',
-        'templateId'
+        'templateId',
+        'templateIds'
     ],
     resource: {
         attributes: ['type', 'content']

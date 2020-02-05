@@ -33,8 +33,8 @@ const Area = new Schema({
     datasets: [Dataset],
     createdAt: { type: Date, required: true, default: Date.now },
     image: { type: String, required: false, trim: true },
-    templateId: { type: String, trim: true, required: false }
-});
+    templateId: { type: String, trim: true, required: false },
+    templateIds: {type: Array, required: false, default: []  }});
 
 
 module.exports = mongoose.model('Area', Area);
