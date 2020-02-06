@@ -7,16 +7,6 @@ const TeamService = require('services/team.service');
 const SubscriptionService = require('services/subscription.service');
 const s3Service = require('services/s3.service');
 
-const findAreaOrSubscriptionById = async (id) => {
-    const areas = await AreaModel.find({ _id: id });
-
-    if (!areas || areas.length === 0) {
-        return SubscriptionService.getSubscriptionById(id);
-    }
-
-    return areas[0];
-};
-
 class AreaRouterV2 {
 
     static async getAll(ctx) {
@@ -26,18 +16,22 @@ class AreaRouterV2 {
             filter.application = ctx.query.application.split(',').map((el) => el.trim());
         }
         const areas = await AreaModel.find(filter);
-        const subscriptions = await SubscriptionService.getSubscriptionsForUser(filter);
-        const returnData = areas.concat(subscriptions);
-        ctx.body = AreaSerializerV2.serialize(returnData);
+        const subscriptions = await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
+        ctx.body = AreaSerializerV2.serialize(areas.concat(subscriptions));
     }
 
     static async get(ctx) {
         logger.info(`Obtaining v2 area with areaId ${ctx.params.id}`);
 
-        const area = await findAreaOrSubscriptionById(ctx.params.id);
+        const area = await AreaModel.findById(ctx.params.id);
         if (area === null) {
             ctx.throw(404, 'Area not found');
             return;
+        }
+
+        if (area.subscriptionId) {
+            const [sub] = await SubscriptionService.findByIds([area.subscriptionId]);
+            area.subscription = sub;
         }
 
         const user = (ctx.state.loggedUser && ctx.state.loggedUser.id) || null;
@@ -145,12 +139,9 @@ class AreaRouterV2 {
         if (ctx.request.body.email) {
             email = ctx.request.body.email;
         }
-        let lang = '';
-        if (ctx.request.body.language) {
-            lang = ctx.request.body.language;
-        }
 
-        const areaData = {
+        // First save the area - if there is any data missing, we break here
+        let area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
             geostore: ctx.request.body.geostore,
@@ -168,18 +159,16 @@ class AreaRouterV2 {
             deforestationAlerts: deforAlertSub,
             webhookUrl,
             monthlySummary: summarySub,
-            language: lang,
+            language: ctx.request.body.language,
             email
-        };
+        }).save();
 
-        // First save the subscription
-        const createdSub = await SubscriptionService.createSubscription(areaData);
+        // All good saving the area, now we save the subscription
+        const subscriptionId = await SubscriptionService.createSubscription(area);
 
-        // Update the subscription id in the area to be saved
-        areaData.subscriptionId = createdSub.id;
-
-        // Save the area
-        const area = await new AreaModel(areaData).save();
+        // Update the subscription id in the area and save again
+        area.subscriptionId = subscriptionId;
+        area = await area.save();
 
         ctx.body = AreaSerializerV2.serialize(area);
     }
