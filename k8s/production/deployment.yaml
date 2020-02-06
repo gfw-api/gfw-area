@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  namespace: gfw
+  namespace: fw
   labels:
     name: {name}
     app: gfw
@@ -10,9 +10,25 @@ spec:
   revisionHistoryLimit: 2
   template:
     metadata:
+      annotations:
+        chaos.alpha.kubernetes.io/enabled: "true"
       labels:
         name: {name}
     spec:
+      tolerations:
+        - key: "type"
+          operator: "Equal"
+          value: "gfw"
+          effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: type
+                    operator: In
+                    values:
+                      - gfw
       containers:
         - name: {name}
           image: vizzuality/{name}
@@ -28,24 +44,29 @@ spec:
             - start
           env:
             - name: PORT
-              value: "4100"
+              value: "4400"
             - name: NODE_ENV
               value: prod
             - name: NODE_PATH
               value: app/src
             - name: LOCAL_URL
-              value: http://{name}.gfw.svc.cluster.local:4100
-            - name: GLAD_DATASET
-              value: e663eb09-04de-4f39-b871-35c6c2ed10b5
-            - name: VIIRS_DATASET
-              value: 20cc5eca-8c63-4c41-8e8e-134dcf1e6d76
-            - name: VIIRS_DATASET_TABLENAME
-              value: vnp14imgtdl_nrt_global_7d
+              value: http://{name}.fw.svc.cluster.local:4400
+            - name: QUEUE_PROVIDER
+              value: redis
+            - name: QUEUE_NAME
+              value: mail_prod
+            - name: WRI_MAIL_RECIPIENTS
+              value: mweisse@wri.org
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
                   name: dbsecrets
-                  key: AREA_MONGO_URI
+                  key: FORMS_MONGO_URI
+            - name: QUEUE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dbsecrets
+                  key: REDIS_URI
             - name: CT_URL
               valueFrom:
                 secretKeyRef:
@@ -70,34 +91,40 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: mssecrets
-                  key: AREA_S3_ACCESS_KEY_ID
+                  key: FORMS_S3_ACCESS_KEY_ID
             - name: S3_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: mssecrets
-                  key: AREA_S3_SECRET_ACCESS_KEY
+                  key: FORMS_S3_SECRET_ACCESS_KEY
             - name: S3_BUCKET
               value: forest-watcher-files
-            - name: AOI_DATA_S3_ACCESS_KEY_ID
+            - name: GOOGLE_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
                   name: mssecrets
-                  key: AREA_AOI_DATA_S3_ACCESS_KEY_ID
-            - name: AOI_DATA_S3_SECRET_ACCESS_KEY
+                  key: FORMS_GOOGLE_PRIVATE_KEY
+            - name: GOOGLE_PROJECT_EMAIL
               valueFrom:
                 secretKeyRef:
                   name: mssecrets
-                  key: AREA_AOI_DATA_S3_SECRET_ACCESS_KEY
-            - name: AOI_DATA_S3_BUCKET
-              value: gfw-pipelines
+                  key: FORMS_GOOGLE_PROJECT_EMAIL
+            - name: TARGET_SHEET_ID
+              value: 1oCRTDUlaaadA_xVCWTQ9BaCLxY8do0uSQYGLXu0fQ1k
+            - name: TARGET_SHEET_INDEX
+              value: "1"
+            - name: LEGACY_TEMPLATE_ID
+              value: "597b0f55856351000b087c9c"
+            - name: DEFAULT_TEMPLATE_ID
+              value: "59b6a26b138f260012e9fdeb"
 
           ports:
-            - containerPort: 4100
+            - containerPort: 4400
           readinessProbe:
             httpGet:
               scheme: HTTP
               path: /healthcheck
-              port: 4100
+              port: 4400
             initialDelaySeconds: 30
             timeoutSeconds: 5
             periodSeconds: 15
@@ -105,7 +132,7 @@ spec:
             httpGet:
               scheme: HTTP
               path: /healthcheck
-              port: 4100
+              port: 4400
             failureThreshold: 3
             initialDelaySeconds: 30
             timeoutSeconds: 5

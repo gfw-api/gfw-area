@@ -161,6 +161,14 @@
 			"path": "/api/v1/area/:id/alerts"
 		}
 	},{
+		"path": "/v1/area/find/:id",
+		"method": "GET",
+		"authenticated": true,
+		"redirect": {
+			"method": "GET",
+			"path": "/api/v1/area/find/:id"
+		}
+	},{
 		"path": "/v1/download-tiles/:geostoreId/:minZoom/:maxZoom",
 		"method": "GET",
 		"redirect": {

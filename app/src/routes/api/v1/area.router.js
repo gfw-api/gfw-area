@@ -6,6 +6,7 @@ const AreaValidator = require('validators/area.validator');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const s3Service = require('services/s3.service');
+const config = require('config');
 
 const router = new Router({
     prefix: '/area',
@@ -83,11 +84,22 @@ class AreaRouter {
         await AreaRouter.saveArea(ctx, ctx.params.userId);
     }
 
+    // returns all area ID's which include the templateID given
+    static async getAOIs(ctx) {
+        const area = await AreaModel.find({ $or: [{ templateIds: ctx.params.id }, { templateId: ctx.params.id }] }, {
+            _id: 1
+        });
+        ctx.body = AreaSerializer.serialize(area);
+    }
+
+
     static async saveArea(ctx, userId) {
         logger.info('Saving area');
         let image = '';
         if (ctx.request.files && ctx.request.files.image) {
             image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
+        } else {
+            image = config.get('image.PLACEHOLDER');
         }
         let datasets = [];
         if (ctx.request.body.datasets) {
@@ -152,11 +164,34 @@ class AreaRouter {
         if (ctx.request.body.datasets) {
             area.datasets = JSON.parse(ctx.request.body.datasets);
         }
+        // image fall back
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
+        } else {
+            area.image = config.get('image.PLACEHOLDER');
         }
         if (typeof ctx.request.body.templateId !== 'undefined') {
-            area.templateId = ctx.request.body.templateId;
+
+            if (ctx.request.body.override === true) {
+                logger.debug('debug', ctx.request.body.templateId);
+
+                const { templateId } = ctx.request.body;
+                await AreaModel.findOneAndUpdate(
+                    { _id: ctx.params.id },
+                    { $pull: { templateIds: templateId.toString() } }
+                );
+            } else {
+                // backward compatibility - templateIds is the new version
+                // templateId is for backward compatibility
+                const templateIds = ctx.request.body.templateId;
+                if (templateIds.constructor === Array) {
+                    // eslint-disable-next-line prefer-destructuring
+                    area.templateId = ctx.request.body.templateId[0];
+                } else {
+                    area.templateId = ctx.request.body.templateId;
+                }
+                area.templateIds.addToSet(ctx.request.body.templateId);
+            }
         }
         area.updatedDate = Date.now;
 
@@ -276,6 +311,7 @@ async function unwrapJSONStrings(ctx, next) {
 
 router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidator.create, AreaRouter.save);
 router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidator.update, AreaRouter.update);
+router.get('/find/:id', loggedUserToState, AreaRouter.getAOIs);
 router.get('/', loggedUserToState, AreaRouter.getAll);
 router.get('/fw', loggedUserToState, AreaRouter.getFWAreas);
 router.post('/fw/:userId', loggedUserToState, AreaValidator.create, AreaRouter.saveByUserId);

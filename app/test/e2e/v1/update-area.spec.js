@@ -161,6 +161,64 @@ describe('Update area - V1', () => {
         });
     });
 
+    it('Update area with multiple template ids who is logged in', async () => {
+        const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+        const response = await requester
+            .patch(`/api/v1/area/${testArea.id}`)
+            .send({
+                loggedUser: USERS.USER,
+                name: 'Portugal area',
+                application: 'rw',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                wdpaid: 3,
+                use: {
+                    id: 'bbb',
+                    name: 'updated name'
+                },
+                iso: {
+                    country: 'updatedCountryIso',
+                    region: 'updatedRegionIso'
+                },
+                datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastUpdate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                templateId: 'firstUpdatedID'
+            });
+
+        response.status.should.equal(200);
+
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id').and.equal(testArea.id);
+        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+        response.body.data.attributes.should.have.property('application').and.equal('rw');
+        response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
+        response.body.data.attributes.should.have.property('userId').and.equal(testArea.userId);
+        response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
+        response.body.data.attributes.should.have.property('use').and.deep.equal({
+            id: 'bbb',
+            name: 'updated name'
+        });
+        response.body.data.attributes.should.have.property('iso').and.deep.equal({
+            country: 'updatedCountryIso',
+            region: 'updatedRegionIso'
+        });
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
+        response.body.data.attributes.datasets[0].should.deep.equal({
+            cache: true,
+            active: true,
+            _id: '5a3aa9eb98b5910011731f66',
+            slug: 'viirs',
+            name: 'VIIRS',
+            startDate: '7',
+            endDate: '1',
+            lastUpdate: 1513793462776
+        });
+        response.body.data.attributes.should.have.property('templateId').and.equal('firstUpdatedID');
+        response.body.data.attributes.should.have.property('templateIds').and.be.an('array');
+    });
+
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
