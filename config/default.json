@@ -15,6 +15,9 @@
     "host": "127.0.0.1",
     "port": 27017
   },
+  "image": {
+    "PLACEHOLDER": "https://glowvarietyshow.com/wp-content/uploads/2017/03/placeholder-image.jpg"
+  },
   "gladDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade",
   "viirsDataset": "f8662607-02cc-4bfb-9bb3-06b25c9ecade",
   "viirsDatasetTableName": "vnp14imgtdl_nrt_global_7d",
