@@ -9,6 +9,7 @@ const createArea = (anotherData = {}) => ({
     image: '',
     createdAt: new Date(),
     wdpaid: 1,
+    templateId: 'updatedTemplateId',
     ...anotherData
 });
 

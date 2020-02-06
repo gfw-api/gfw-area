@@ -85,7 +85,7 @@ class AreaRouter {
 
     // returns all area ID's which include the templateID given
     static async getAOIs(ctx) {
-        const area = await AreaModel.find( { $or:[ { 'templateIds' : ctx.params.id}, { 'templateId' : ctx.params.id} ]}, {
+        const area = await AreaModel.find({ $or: [{ templateIds: ctx.params.id }, { templateId: ctx.params.id }] }, {
             _id: 1
         });
         ctx.body = AreaSerializer.serialize(area);
@@ -97,8 +97,8 @@ class AreaRouter {
         let image = '';
         if (ctx.request.files && ctx.request.files.image) {
             image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
-        }else{
-            image = 'https://glowvarietyshow.com/wp-content/uploads/2017/03/placeholder-image.jpg';
+        } else {
+            image = config.get('image.PLACEHOLDER');
         }
         let datasets = [];
         if (ctx.request.body.datasets) {
@@ -166,30 +166,35 @@ class AreaRouter {
         // image fall back
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
-        }else {
-            area.image = 'https://glowvarietyshow.com/wp-content/uploads/2017/03/placeholder-image.jpg';
+        } else {
+            area.image = config.get('image.PLACEHOLDER');
         }
         if (typeof ctx.request.body.templateId !== 'undefined') {
 
-            if (ctx.request.body.override === true){
+            if (ctx.request.body.override === true) {
                 logger.debug('debug', ctx.request.body.templateId);
 
-                let templateId = ctx.request.body.templateId;
-                const areas = await AreaModel.findOneAndUpdate(
-                    { "_id" : ctx.params.id} ,
-                    { "$pull" : { "templateIds" : templateId.toString()  } }
+                const { templateId } = ctx.request.body;
+                await AreaModel.findOneAndUpdate(
+                    { _id: ctx.params.id },
+                    { $pull: { templateIds: templateId.toString() } }
                 );
-            }else{
-                let singleTemplateId = ctx.request.body.templateId[0];
+            } else {
                 // backward compatibility - templateIds is the new version
                 // templateId is for backward compatibility
-                area.templateId = (singleTemplateId);
+                const templateIds = ctx.request.body.templateId
+                if (templateIds.constructor === Array) {
+                    // eslint-disable-next-line prefer-destructuring
+                    area.templateId = ctx.request.body.templateId[0];
+                } else {
+                    area.templateId = ctx.request.body.templateId;
+                }
                 area.templateIds.addToSet(ctx.request.body.templateId);
             }
         }
         area.updatedDate = Date.now;
 
-        await area();
+        await area.save();
         ctx.body = AreaSerializer.serialize(area);
     }
 

@@ -15,6 +15,9 @@
     "secretAccessKey": "S3_SECRET_ACCESS_KEY",
     "bucket": "S3_BUCKET"
   },
+  "image": {
+    "PLACEHOLDER": "https://glowvarietyshow.com/wp-content/uploads/2017/03/placeholder-image.jpg"
+  },
   "logger": {
     "level": "LOGGER_LEVEL"
   }

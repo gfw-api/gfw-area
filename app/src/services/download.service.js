@@ -130,17 +130,17 @@ class DownloadService {
                 // map the promises which error to the error promise array, retry those requests.
                 // If they fail then catch them as null
                 // This will result in missing tiles however will not fall over
-                let errors = [];
-                await Promise.all(promises.map(p => p.catch(error => errors.push(p))));
-                if (errors.length > 0){
-                    await Promise.all(errors.map(p => p.catch(error => null)));
-                    logger.debug(errors)
+                const errors = [];
+                await Promise.all(promises.map((p) => p.catch(() => errors.push(p))));
+                if (errors.length > 0) {
+                    await Promise.all(errors.map((p) => p.catch(() => null)));
+                    logger.debug(errors);
                 }
                 promises = null;
             }
             // eslint-disable-next-line no-empty
         } catch (err) {
-            logger.debug(err)
+            logger.debug(err);
         }
         await DownloadService.zipFolder(tmpobj.name, `${tmpDownload.name}/download.zip`);
         logger.info('Removing file ', tmpobj.name);
