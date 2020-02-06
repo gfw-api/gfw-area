@@ -6,6 +6,7 @@ const AreaValidator = require('validators/area.validator');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const s3Service = require('services/s3.service');
+const config = require('config');
 
 const router = new Router({
     prefix: '/area',
@@ -182,7 +183,7 @@ class AreaRouter {
             } else {
                 // backward compatibility - templateIds is the new version
                 // templateId is for backward compatibility
-                const templateIds = ctx.request.body.templateId
+                const templateIds = ctx.request.body.templateId;
                 if (templateIds.constructor === Array) {
                     // eslint-disable-next-line prefer-destructuring
                     area.templateId = ctx.request.body.templateId[0];
