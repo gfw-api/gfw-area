@@ -325,7 +325,7 @@ class AreaRouterV2 {
 
         // 2. The area already exists and doesn’t have subscription preferences in the data
         } else if (previousArea.subscriptionId) {
-            await SubscriptionService.deleteSubscriptionFromArea(area);
+            await SubscriptionService.deleteSubscription(area.subscriptionId);
             area.subscriptionId = '';
             area = await area.save();
         }
@@ -335,10 +335,24 @@ class AreaRouterV2 {
 
     static async delete(ctx) {
         logger.info(`Deleting area with id ${ctx.params.id}`);
-        const result = await AreaModel.deleteOne({ _id: ctx.params.id });
-        if (!result || result.ok === 0) {
-            ctx.throw(404, 'Area not found');
-            return;
+        const areaToDelete = await AreaModel.findById(ctx.params.id);
+        if (areaToDelete) {
+            if (areaToDelete.subscriptionId) {
+                // Try to find subscription and delete subscription
+                const [subscription] = await SubscriptionService.findByIds([areaToDelete.subscriptionId]);
+                if (subscription) {
+                    await SubscriptionService.deleteSubscription(areaToDelete.subscriptionId);
+                }
+            }
+
+            // Then delete area
+            await AreaModel.deleteOne({ _id: ctx.params.id });
+        } else {
+            // Try to find subscription and delete subscription
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+            if (subscription) {
+                await SubscriptionService.deleteSubscription(ctx.params.id);
+            }
         }
         logger.info(`Area ${ctx.params.id} deleted successfully`);
 

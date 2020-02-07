@@ -105,9 +105,9 @@ class SubscriptionsService {
         return updatedSubscription.data.id;
     }
 
-    static async deleteSubscriptionFromArea(area) {
+    static async deleteSubscription(id) {
         return ctRegisterMicroservice.requestToMicroservice({
-            uri: `/subscriptions/${area.subscriptionId}`,
+            uri: `/subscriptions/${id}`,
             method: 'DELETE',
             json: true,
         });
