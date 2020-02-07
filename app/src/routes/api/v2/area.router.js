@@ -282,7 +282,7 @@ class AreaRouterV2 {
         const email = area.email;
         const lang = area.language || 'en';
         MailService.sendMail(
-          status === 'pending' ? `area-fetching-data-${lang}` : `area-complete-${lang}`,
+          status === 'pending' ? `area-data-pending-${lang}` : `area-complete-${lang}`,
           {
             id,
             name,
