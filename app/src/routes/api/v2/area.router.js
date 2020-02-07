@@ -197,20 +197,53 @@ class AreaRouterV2 {
             email
         }).save();
 
-        // All good saving the area, now we save the subscription
-        const subscriptionId = await SubscriptionService.createSubscriptionFromAreaIfNeeded(area);
-        if (subscriptionId) {
-            // Update the subscription id in the area and save again
-            area.subscriptionId = subscriptionId;
-            area = await area.save();
+        // If no datasets to register, no need to create a subscription
+        if (area.fireAlerts || area.deforestationAlerts || area.monthlySummary) {
+            const subscriptionId = await SubscriptionService.createSubscriptionFromArea(area);
+            if (subscriptionId) {
+                // Update the subscription id in the area and save again
+                area.subscriptionId = subscriptionId;
+                area = await area.save();
+            }
         }
 
         ctx.body = AreaSerializerV2.serialize(area);
     }
 
     static async update(ctx) {
-        const oldAreaData = await AreaModel.findById(ctx.params.id);
+        let previousArea = await AreaModel.findById(ctx.params.id);
         let area = await AreaModel.findById(ctx.params.id);
+        if (!area) {
+            // Try to find subscription with same ID
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+            if (!subscription) {
+                ctx.throw(404, 'Area not found');
+                return;
+            }
+
+            // Create a new area from the subscription
+            area = await new AreaModel({
+                _id: subscription.id,
+                name: subscription.attributes.name,
+                application: subscription.attributes.attributes || 'gfw',
+                userId: ctx.state.loggedUser.id,
+                status: 'saved',
+                public: true,
+                fireAlerts: false,
+                deforestationAlerts: false,
+                email: subscription.attributes.resource.type === 'EMAIL' ? subscription.attributes.resource.content : '',
+                webhookUrl: subscription.attributes.resource.type === 'URL' ? subscription.attributes.resource.content : '',
+                monthlySummary: false,
+                language: subscription.attributes.language,
+                subscriptionId: subscription.id,
+            }).save();
+
+            // Set also the subscription id in the previousArea
+            previousArea = {
+                subscriptionId: subscription.id,
+            };
+        }
+
         const { files } = ctx.request;
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
@@ -281,9 +314,9 @@ class AreaRouterV2 {
 
         // 1. The area already exists and has subscriptions preference in the request data
         if (area.fireAlerts || area.deforestationAlerts || area.monthlySummary) {
-            const subscriptionId = oldAreaData.subscriptionId
+            const subscriptionId = previousArea.subscriptionId
                 ? await SubscriptionService.updateSubscriptionFromArea(area)
-                : await SubscriptionService.createSubscriptionFromAreaIfNeeded(area);
+                : await SubscriptionService.createSubscriptionFromArea(area);
 
             if (subscriptionId) {
                 area.subscriptionId = subscriptionId;
@@ -291,7 +324,7 @@ class AreaRouterV2 {
             }
 
         // 2. The area already exists and doesn’t have subscription preferences in the data
-        } else if (oldAreaData.subscriptionId) {
+        } else if (previousArea.subscriptionId) {
             await SubscriptionService.deleteSubscriptionFromArea(area);
             area.subscriptionId = '';
             area = await area.save();
@@ -356,11 +389,7 @@ async function loggedUserToState(ctx, next) {
 async function checkPermission(ctx, next) {
     ctx.assert(ctx.params.id, 400, 'Id required');
     const area = await AreaModel.findById(ctx.params.id);
-    if (!area) {
-        ctx.throw(404, 'Area not found');
-        return;
-    }
-    if (area.userId !== ctx.state.loggedUser.id && area.userId !== ctx.request.body.userId && ctx.state.loggedUser.role !== 'ADMIN') {
+    if (area && area.userId !== ctx.state.loggedUser.id && area.userId !== ctx.request.body.userId && ctx.state.loggedUser.role !== 'ADMIN') {
         ctx.throw(403, 'Not authorized');
         return;
     }

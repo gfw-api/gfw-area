@@ -74,10 +74,39 @@ const mockSubscriptionDeletion = (id = '123') => {
     nock(process.env.CT_URL).delete(`/v1/subscriptions/${id}`).reply(200);
 };
 
+const mockSubscriptionFindByIds = (ids = []) => {
+    nock(process.env.CT_URL)
+        .post(`/v1/subscriptions/find-by-ids`)
+        .reply(200, () => ({
+            data: ids.map((id) => ({
+                type: 'subscription',
+                id,
+                attributes: {
+                    name: 'Subscription Name',
+                    createdAt: '2020-02-06T11:27:43.751Z',
+                    userId: '5dd7b92abf56ca0011875ae2',
+                    resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
+                    datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
+                    params: {},
+                    confirmed: true,
+                    language: 'en',
+                    datasetsQuery: [{
+                        threshold: 1,
+                        lastSentDate: '2020-02-06T11:27:43.751Z',
+                        historical: [],
+                        type: 'undefined'
+                    }],
+                    env: 'production',
+                }
+            }))
+        }));
+};
+
 module.exports = {
     createArea,
     getUUID,
     mockSubscriptionCreation,
     mockSubscriptionEdition,
     mockSubscriptionDeletion,
+    mockSubscriptionFindByIds,
 };

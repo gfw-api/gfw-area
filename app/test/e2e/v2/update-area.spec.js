@@ -13,6 +13,7 @@ const {
     mockSubscriptionCreation,
     mockSubscriptionEdition,
     mockSubscriptionDeletion,
+    mockSubscriptionFindByIds,
 } = require('../utils/helpers');
 
 nock.disableNetConnect();
@@ -227,6 +228,36 @@ describe('Update area - V2', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal(testArea.id);
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
+    });
+
+    it('Updating an area that didn\'t exist (existing subscription) creates a new area and PATCHes subscription, returning a 200 HTTP code and the updated area object', async () => {
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1333']);
+        mockSubscriptionEdition('5e3bf82fad36f4001abe1333');
+
+        const response = await requester
+            .patch(`/api/v2/area/5e3bf82fad36f4001abe1333`)
+            .send({ loggedUser: USERS.USER, fireAlerts: true });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id').and.equal('5e3bf82fad36f4001abe1333');
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe1333');
+    });
+
+    it('Updating an area that didn\'t exist (existing subscription) creates a new area and DELETEs subscription, returning a 200 HTTP code and the updated area object', async () => {
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1333']);
+        mockSubscriptionDeletion('5e3bf82fad36f4001abe1333');
+
+        const response = await requester
+            .patch(`/api/v2/area/5e3bf82fad36f4001abe1333`)
+            .send({ loggedUser: USERS.USER, fireAlerts: false });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id').and.equal('5e3bf82fad36f4001abe1333');
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
     });
 

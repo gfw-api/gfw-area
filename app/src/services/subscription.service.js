@@ -69,12 +69,7 @@ class SubscriptionsService {
         return createdSubscription.data;
     }
 
-    static async createSubscriptionFromAreaIfNeeded(area) {
-        // If no datasets to register, no need to create a subscription
-        if (!area.fireAlerts && !area.deforestationAlerts && !area.monthlySummary) {
-            return null;
-        }
-
+    static async createSubscriptionFromArea(area) {
         const createdSubscription = await ctRegisterMicroservice.requestToMicroservice({
             uri: `/subscriptions`,
             method: 'POST',
