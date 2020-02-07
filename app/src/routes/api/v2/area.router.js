@@ -21,20 +21,22 @@ class AreaRouterV2 {
         const areas = await AreaModel.find(filter);
         const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
 
-        // Filter subscriptions to find all subs that match area subscriptionId
+        // Add areas to the return array
+        areas.forEach((area) => returnArray.push(area));
+
+        // Filter subscriptions to find all subs that match area subscriptionId and merge them
         const allUserSubscriptions = await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
         const subscriptionsToMerge = allUserSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
-
-        // Merge each of those
         subscriptionsToMerge.forEach((sub) => {
             const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
-            returnArray.push(SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id }));
+            const position = returnArray.indexOf(areaForSub);
+            returnArray[position] = SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id });
         });
 
         // Then with the remaining subscriptions map them to the areas format and concat the two arrays
         const remainingSubscriptions = allUserSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
         remainingSubscriptions.forEach((sub) => {
-            returnArray.push(SubscriptionService.getAreaFromSubscription(sub));
+            returnArray.push(SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
         });
 
         ctx.body = AreaSerializerV2.serialize(returnArray);

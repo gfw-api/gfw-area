@@ -11,6 +11,7 @@ class SubscriptionsService {
     static mergeSubscriptionOverArea(area, subscription) {
         area._id = subscription.id;
         area.id = subscription.id;
+        area.subscriptionId = subscription.id;
         area.name = subscription.name;
         area.userId = subscription.userId;
         area.createdAt = subscription.createdAt;
