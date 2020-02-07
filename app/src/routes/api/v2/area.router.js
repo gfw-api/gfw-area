@@ -367,21 +367,23 @@ class AreaRouterV2 {
         await area.save();
         ctx.body = AreaSerializerV2.serialize(area);
 
-        const id = area.id;
-        const name = area.name;
-        const tags = area.tags && area.tags.join(', ');
-        const email = area.email;
-        const lang = area.language || 'en';
-        MailService.sendMail(
-          `area-complete-${lang}`,
-          {
-            id,
-            name,
-            tags
-          },
-          [{ address: email }],
-          'gfw'
-        );
+        if (area.status === 'saved') {
+          const id = area.id;
+          const name = area.name;
+          const tags = area.tags && area.tags.join(', ');
+          const email = area.email;
+          const lang = area.language || 'en';
+          MailService.sendMail(
+            `area-complete-${lang}`,
+            {
+              id,
+              name,
+              tags
+            },
+            [{ address: email }],
+            'gfw'
+          );
+        }
     }
 
     static async delete(ctx) {
