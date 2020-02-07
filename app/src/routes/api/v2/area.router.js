@@ -15,9 +15,29 @@ class AreaRouterV2 {
         if (ctx.query.application) {
             filter.application = ctx.query.application.split(',').map((el) => el.trim());
         }
+
+        // Parse areas and get all subscription IDs
+        const returnArray = [];
         const areas = await AreaModel.find(filter);
-        const subscriptions = await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
-        ctx.body = AreaSerializerV2.serialize(areas.concat(subscriptions));
+        const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
+
+        // Filter subscriptions to find all subs that match area subscriptionId
+        const allUserSubscriptions = await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
+        const subscriptionsToMerge = allUserSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
+
+        // Merge each of those
+        subscriptionsToMerge.forEach((sub) => {
+            const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
+            returnArray.push(SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id }));
+        });
+
+        // Then with the remaining subscriptions map them to the areas format and concat the two arrays
+        const remainingSubscriptions = allUserSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
+        remainingSubscriptions.forEach((sub) => {
+            returnArray.push(SubscriptionService.getAreaFromSubscription(sub));
+        });
+
+        ctx.body = AreaSerializerV2.serialize(returnArray);
     }
 
     static async get(ctx) {

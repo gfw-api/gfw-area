@@ -8,6 +8,8 @@ const FIRE_ALERTS_DATASET_ID = '63f34231-7369-4622-81f1-28a144d17834';
 class SubscriptionsService {
 
     static mergeSubscriptionOverArea(area, subscription) {
+        area._id = subscription.id;
+        area.id = subscription.id;
         area.name = subscription.name;
         area.userId = subscription.userId;
         area.createdAt = subscription.createdAt;
@@ -25,8 +27,7 @@ class SubscriptionsService {
     }
 
     static getAreaFromSubscription(subscription) {
-        const area = new AreaModel();
-        return SubscriptionsService.mergeSubscriptionOverArea(area, subscription);
+        return SubscriptionsService.mergeSubscriptionOverArea(new AreaModel(), subscription);
     }
 
     static getDatasetsForSubscription(area) {
@@ -68,8 +69,7 @@ class SubscriptionsService {
             json: true,
         });
 
-        const subscriptions = response.data.data;
-        return subscriptions.map((s) => SubscriptionsService.getAreaFromSubscription(s));
+        return response.data.data;
     }
 
     static async findByIds(ids) {
