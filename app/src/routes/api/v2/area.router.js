@@ -68,7 +68,7 @@ class AreaRouterV2 {
             areas.forEach(area => {
               const id = area.id;
               const name = area.name;
-              const tags = area.tags;
+              const tags = area.tags && area.tags.join(', ');
               const email = area.email;
               const lang = area.language || 'en';
               MailService.sendMail(
@@ -278,7 +278,7 @@ class AreaRouterV2 {
 
         const id = area.id;
         const name = area.name;
-        const tags = area.tags;
+        const tags = area.tags && area.tags.join(', ');
         const email = area.email;
         const lang = area.language || 'en';
         MailService.sendMail(
@@ -369,7 +369,7 @@ class AreaRouterV2 {
 
         const id = area.id;
         const name = area.name;
-        const tags = area.tags;
+        const tags = area.tags && area.tags.join(', ');
         const email = area.email;
         const lang = area.language || 'en';
         MailService.sendMail(
