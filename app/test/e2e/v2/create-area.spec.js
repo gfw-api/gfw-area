@@ -14,6 +14,34 @@ nock.enableNetConnect(process.env.HOST_IP);
 
 const requester = getTestServer();
 
+const mockSubscriptionCreation = (id = '123') => {
+    nock(process.env.CT_URL)
+        .post(`/v1/subscriptions`)
+        .reply(200, () => ({
+            data: {
+                type: 'subscription',
+                id,
+                attributes: {
+                    name: '',
+                    createdAt: '2020-02-06T11:27:43.751Z',
+                    userId: '5dd7b92abf56ca0011875ae2',
+                    resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
+                    datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
+                    params: {},
+                    confirmed: true,
+                    language: 'en',
+                    datasetsQuery: [{
+                        threshold: 1,
+                        lastSentDate: '2020-02-06T11:27:43.751Z',
+                        historical: [],
+                        type: 'undefined'
+                    }],
+                    env: 'production'
+                }
+            }
+        }));
+};
+
 describe('Create area - V2', () => {
     before(() => {
         if (process.env.NODE_ENV !== 'test') {
@@ -22,38 +50,26 @@ describe('Create area - V2', () => {
     });
 
     it('Creating an area without being logged in should return a 401 - "Not logged" error', async () => {
-        const response = await requester
-            .post(`/api/v2/area`);
-
+        const response = await requester.post(`/api/v2/area`);
         response.status.should.equal(401);
-
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
     });
 
     it('Creating an area while being logged in as a user that owns the area should return a 200 HTTP code and the created area object', async () => {
-        const response = await requester
-            .post(`/api/v2/area`)
-            .send({
-                loggedUser: USERS.USER,
-                name: 'Portugal area',
-                application: 'rw',
-                geostore: '713899292fc118a915741728ef84a2a7',
-                wdpaid: 3,
-                use: {
-                    id: 'bbb',
-                    name: 'created name'
-                },
-                iso: {
-                    country: 'createdCountryIso',
-                    region: 'createdRegionIso'
-                },
-                datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
-                templateId: 'createdTemplateId'
-            });
+        const response = await requester.post(`/api/v2/area`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            application: 'rw',
+            geostore: '713899292fc118a915741728ef84a2a7',
+            wdpaid: 3,
+            use: { id: 'bbb', name: 'created name' },
+            iso: { country: 'createdCountryIso', region: 'createdRegionIso' },
+            datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+            templateId: 'createdTemplateId'
+        });
 
         response.status.should.equal(200);
-
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id');
@@ -62,14 +78,8 @@ describe('Create area - V2', () => {
         response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
         response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
         response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
-        response.body.data.attributes.should.have.property('use').and.deep.equal({
-            id: 'bbb',
-            name: 'created name'
-        });
-        response.body.data.attributes.should.have.property('iso').and.deep.equal({
-            country: 'createdCountryIso',
-            region: 'createdRegionIso'
-        });
+        response.body.data.attributes.should.have.property('use').and.deep.equal({ id: 'bbb', name: 'created name' });
+        response.body.data.attributes.should.have.property('iso').and.deep.equal({ country: 'createdCountryIso', region: 'createdRegionIso' });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
         response.body.data.attributes.datasets[0].should.deep.equal({
@@ -113,14 +123,8 @@ describe('Create area - V2', () => {
         response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
         response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
         response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
-        response.body.data.attributes.should.have.property('use').and.deep.equal({
-            id: 'bbb',
-            name: 'created name'
-        });
-        response.body.data.attributes.should.have.property('iso').and.deep.equal({
-            country: 'createdCountryIso',
-            region: 'createdRegionIso'
-        });
+        response.body.data.attributes.should.have.property('use').and.deep.equal({ id: 'bbb', name: 'created name' });
+        response.body.data.attributes.should.have.property('iso').and.deep.equal({ country: 'createdCountryIso', region: 'createdRegionIso' });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
         response.body.data.attributes.should.have.property('image').and.include(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}`);
@@ -133,6 +137,57 @@ describe('Create area - V2', () => {
             startDate: '7',
             endDate: '1'
         });
+    });
+
+    it('Creating an area with fires alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
+        mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
+
+        const response = await requester.post(`/api/v2/area`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            geostore: '713899292fc118a915741728ef84a2a7',
+            fireAlerts: true,
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
+    });
+
+    it('Creating an area with deforestation alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
+        mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
+
+        const response = await requester.post(`/api/v2/area`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            geostore: '713899292fc118a915741728ef84a2a7',
+            deforestationAlerts: true,
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
+    });
+
+    it('Creating an area with monthly summary alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
+        mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
+
+        const response = await requester.post(`/api/v2/area`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            geostore: '713899292fc118a915741728ef84a2a7',
+            monthlySummary: true,
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
     });
 
     afterEach(async () => {

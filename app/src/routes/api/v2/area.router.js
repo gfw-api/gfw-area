@@ -198,11 +198,12 @@ class AreaRouterV2 {
         }).save();
 
         // All good saving the area, now we save the subscription
-        const subscriptionId = await SubscriptionService.createSubscription(area);
-
-        // Update the subscription id in the area and save again
-        area.subscriptionId = subscriptionId;
-        area = await area.save();
+        const subscriptionId = await SubscriptionService.createSubscriptionFromAreaIfNeeded(area);
+        if (subscriptionId) {
+            // Update the subscription id in the area and save again
+            area.subscriptionId = subscriptionId;
+            area = await area.save();
+        }
 
         ctx.body = AreaSerializerV2.serialize(area);
     }
