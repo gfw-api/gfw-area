@@ -23,15 +23,29 @@ class AreaRouterV2 {
     static async get(ctx) {
         logger.info(`Obtaining v2 area with areaId ${ctx.params.id}`);
 
-        const area = await AreaModel.findById(ctx.params.id);
+        // 1. Check for area in areas
+        let area = await AreaModel.findById(ctx.params.id);
+
+        // 3. if area doesn’t exist
         if (area === null) {
-            ctx.throw(404, 'Area not found');
-            return;
+            // get from subscriptions and return subscription mapped to have area props keys
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+
+            // if doesn’t exist, send rude message
+            if (!subscription) {
+                ctx.throw(404, 'Area not found');
+                return;
+            }
+
+            area = SubscriptionService.getAreaFromSubscription(subscription);
         }
 
+        // 2. If area exists
+        // if has subscription get subscription also and merge props
+        // if it doesn’t have subscription just return the area
         if (area.subscriptionId) {
             const [sub] = await SubscriptionService.findByIds([area.subscriptionId]);
-            area.subscription = sub;
+            area = SubscriptionService.mergeSubscriptionOverArea(area, sub);
         }
 
         const user = (ctx.state.loggedUser && ctx.state.loggedUser.id) || null;

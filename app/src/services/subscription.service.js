@@ -7,6 +7,28 @@ const FIRE_ALERTS_DATASET_ID = '63f34231-7369-4622-81f1-28a144d17834';
 
 class SubscriptionsService {
 
+    static mergeSubscriptionOverArea(area, subscription) {
+        area.name = subscription.name;
+        area.userId = subscription.userId;
+        area.createdAt = subscription.createdAt;
+        area.datasets = subscription.datasets;
+        area.email = subscription.resource.type === 'EMAIL' ? subscription.resource.content : '';
+        area.webhookUrl = subscription.resource.type === 'URL' ? subscription.resource.content : '';
+        area.subscriptionId = subscription.id;
+        // TODO: hardcoded
+        area.status = 'saved';
+        area.fireAlerts = subscription.datasets.includes(FIRE_ALERTS_DATASET_ID);
+        area.deforestationAlerts = subscription.datasets.includes(DEFORESTATION_ALERTS_DATASET_ID);
+        // TODO: doing nothing with monthlySummary for now
+        area.monthlySummary = false;
+        return area;
+    }
+
+    static getAreaFromSubscription(subscription) {
+        const area = new AreaModel();
+        return SubscriptionsService.mergeSubscriptionOverArea(area, subscription);
+    }
+
     static getDatasetsForSubscription(area) {
         const datasets = [];
 
@@ -47,23 +69,7 @@ class SubscriptionsService {
         });
 
         const subscriptions = response.data.data;
-        return subscriptions.map((s) => {
-            const area = new AreaModel();
-            area.name = s.attributes.name;
-            area.userId = s.attributes.userId;
-            area.createdAt = s.attributes.createdAt;
-            area.datasets = s.attributes.datasets;
-            area.email = s.attributes.resource.type === 'EMAIL' ? s.attributes.resource.content : '';
-            area.webhookUrl = s.attributes.resource.type === 'URL' ? s.attributes.resource.content : '';
-            area.subscriptionId = s.id;
-            // TODO: hardcoded
-            area.status = 'saved';
-            area.fireAlerts = s.attributes.datasets.includes(FIRE_ALERTS_DATASET_ID);
-            area.deforestationAlerts = s.attributes.datasets.includes(DEFORESTATION_ALERTS_DATASET_ID);
-            // TODO: doing nothing with monthlySummary for now
-            area.monthlySummary = false;
-            return area;
-        });
+        return subscriptions.map((s) => SubscriptionsService.getAreaFromSubscription(s));
     }
 
     static async findByIds(ids) {
