@@ -9,6 +9,11 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
+const {
+    mockSubscriptionCreation,
+    mockSubscriptionEdition,
+    mockSubscriptionDeletion,
+} = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -23,14 +28,11 @@ describe('Update area - V2', () => {
     });
 
     it('Updating an area without being logged in should return a 401 - "Not logged" error', async () => {
-
         const testArea = await new Area(createArea()).save();
 
-        const response = await requester
-            .patch(`/api/v2/area/${testArea.id}`);
+        const response = await requester.patch(`/api/v2/area/${testArea.id}`);
 
         response.status.should.equal(401);
-
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
     });
@@ -40,12 +42,9 @@ describe('Update area - V2', () => {
 
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
-            .send({
-                loggedUser: USERS.USER
-            });
+            .send({ loggedUser: USERS.USER });
 
         response.status.should.equal(403);
-
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal(`Not authorized`);
     });
@@ -61,14 +60,8 @@ describe('Update area - V2', () => {
                 application: 'rw',
                 geostore: '713899292fc118a915741728ef84a2a7',
                 wdpaid: 3,
-                use: {
-                    id: 'bbb',
-                    name: 'updated name'
-                },
-                iso: {
-                    country: 'updatedCountryIso',
-                    region: 'updatedRegionIso'
-                },
+                use: { id: 'bbb', name: 'updated name' },
+                iso: { country: 'updatedCountryIso', region: 'updatedRegionIso' },
                 datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastUpdate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
                 templateId: 'updatedTemplateId'
             });
@@ -158,6 +151,83 @@ describe('Update area - V2', () => {
             endDate: '1',
             lastUpdate: 1513793462776
         });
+    });
+
+    it('Updating an area that did not have a subscription attached creates a subscription and should return a 200 HTTP code and the updated area object', async () => {
+        const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+        testArea.should.have.property('subscriptionId').and.equal('');
+
+        mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
+
+        const response = await requester
+            .patch(`/api/v2/area/${testArea.id}`)
+            .send({ loggedUser: USERS.USER, deforestationAlerts: true });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id').and.equal(testArea.id);
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
+    });
+
+    it('Updating an area that had a subscription attached but now with different values updates the subscription and should return a 200 HTTP code and the updated area object', async () => {
+        const testArea = await new Area(createArea({
+            userId: USERS.USER.id,
+            deforestationAlerts: true,
+            subscriptionId: '5e3bf82fad36f4001abe1444'
+        })).save();
+        testArea.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe1444');
+
+        mockSubscriptionEdition('5e3bf82fad36f4001abe1444');
+
+        const response = await requester
+            .patch(`/api/v2/area/${testArea.id}`)
+            .send({ loggedUser: USERS.USER, fireAlerts: false });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id').and.equal(testArea.id);
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe1444');
+    });
+
+    it('Updating an area that had a subscription attached to not having deletes the subscription and should return a 200 HTTP code and the updated area object', async () => {
+        const testArea = await new Area(createArea({
+            userId: USERS.USER.id,
+            deforestationAlerts: true,
+            subscriptionId: '5e3bf82fad36f4001abe1444'
+        })).save();
+        testArea.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe1444');
+
+        mockSubscriptionDeletion('5e3bf82fad36f4001abe1444');
+
+        const response = await requester
+            .patch(`/api/v2/area/${testArea.id}`)
+            .send({ loggedUser: USERS.USER, deforestationAlerts: false });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id').and.equal(testArea.id);
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
+    });
+
+    it('Updating an area that didn\'t have subscription attached to continue not having does nothing to subscriptions and should return a 200 HTTP code and the updated area object', async () => {
+        const testArea = await new Area(createArea({
+            userId: USERS.USER.id,
+            subscriptionId: ''
+        })).save();
+        testArea.should.have.property('subscriptionId').and.equal('');
+
+        const response = await requester
+            .patch(`/api/v2/area/${testArea.id}`)
+            .send({ loggedUser: USERS.USER, name: 'Bla bla' });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id').and.equal(testArea.id);
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
     });
 
     afterEach(async () => {

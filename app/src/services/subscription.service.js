@@ -92,14 +92,30 @@ class SubscriptionsService {
         return createdSubscription.data.id;
     }
 
-    // TODO: perform request to subscriptions
-    static async updateSubscription() {
-        return true;
+    static async updateSubscriptionFromArea(area) {
+        const updatedSubscription = await ctRegisterMicroservice.requestToMicroservice({
+            uri: `/subscriptions/${area.subscriptionId}`,
+            method: 'PATCH',
+            json: true,
+            body: {
+                name: area.name,
+                datasets: SubscriptionsService.getDatasetsForSubscription(area),
+                language: area.language,
+                resource: SubscriptionsService.getResourceInfoForSubscription(area),
+                params: {},
+                userId: area.userId,
+            },
+        });
+
+        return updatedSubscription.data.id;
     }
 
-    // TODO: perform request to subscriptions
-    static async deleteSubscription() {
-        return true;
+    static async deleteSubscriptionFromArea(area) {
+        return ctRegisterMicroservice.requestToMicroservice({
+            uri: `/subscriptions/${area.subscriptionId}`,
+            method: 'DELETE',
+            json: true,
+        });
     }
 
 }

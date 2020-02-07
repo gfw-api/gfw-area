@@ -8,39 +8,12 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
+const { mockSubscriptionCreation } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
 const requester = getTestServer();
-
-const mockSubscriptionCreation = (id = '123') => {
-    nock(process.env.CT_URL)
-        .post(`/v1/subscriptions`)
-        .reply(200, () => ({
-            data: {
-                type: 'subscription',
-                id,
-                attributes: {
-                    name: '',
-                    createdAt: '2020-02-06T11:27:43.751Z',
-                    userId: '5dd7b92abf56ca0011875ae2',
-                    resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
-                    datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
-                    params: {},
-                    confirmed: true,
-                    language: 'en',
-                    datasetsQuery: [{
-                        threshold: 1,
-                        lastSentDate: '2020-02-06T11:27:43.751Z',
-                        historical: [],
-                        type: 'undefined'
-                    }],
-                    env: 'production'
-                }
-            }
-        }));
-};
 
 describe('Create area - V2', () => {
     before(() => {

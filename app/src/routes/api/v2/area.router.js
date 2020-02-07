@@ -209,7 +209,8 @@ class AreaRouterV2 {
     }
 
     static async update(ctx) {
-        const area = await AreaModel.findById(ctx.params.id);
+        const oldAreaData = await AreaModel.findById(ctx.params.id);
+        let area = await AreaModel.findById(ctx.params.id);
         const { files } = ctx.request;
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
@@ -274,8 +275,28 @@ class AreaRouterV2 {
             area.templateId = ctx.request.body.templateId;
         }
         area.updatedDate = Date.now;
-
         await area.save();
+
+        // Update associated subscription after updating the area
+
+        // 1. The area already exists and has subscriptions preference in the request data
+        if (area.fireAlerts || area.deforestationAlerts || area.monthlySummary) {
+            const subscriptionId = oldAreaData.subscriptionId
+                ? await SubscriptionService.updateSubscriptionFromArea(area)
+                : await SubscriptionService.createSubscriptionFromAreaIfNeeded(area);
+
+            if (subscriptionId) {
+                area.subscriptionId = subscriptionId;
+                area = await area.save();
+            }
+
+        // 2. The area already exists and doesn’t have subscription preferences in the data
+        } else if (oldAreaData.subscriptionId) {
+            await SubscriptionService.deleteSubscriptionFromArea(area);
+            area.subscriptionId = '';
+            area = await area.save();
+        }
+
         ctx.body = AreaSerializerV2.serialize(area);
     }
 
