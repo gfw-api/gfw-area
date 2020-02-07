@@ -67,8 +67,8 @@ describe('Create area - V2', () => {
     });
 
     it('Creating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the created area object', async () => {
-        nock(`https://s3.amazonaws.com`)
-            .put(/^\/\w+\/areas-dev\/(\w|-)+.png/)
+        nock(`https://${config.get('s3.bucket')}.s3.amazonaws.com`)
+            .put(/^\/areas-dev\/(\w|-)+.png/)
             .reply(200);
 
         const fileData = fs.readFileSync(`${__dirname}/../assets/sample.png`);
