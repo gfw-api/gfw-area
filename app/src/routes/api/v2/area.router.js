@@ -6,6 +6,7 @@ const AreaValidatorV2 = require('validators/area.validatorV2');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const s3Service = require('services/s3.service');
+const MailService = require('services/mail.service');
 
 const router = new Router({
     prefix: '/area',
@@ -63,9 +64,26 @@ class AreaRouterV2 {
         if (response.ok && response.ok === 1) {
             const areas = await AreaModel.find({ geostore: { $in: geostores } });
             ctx.body = AreaSerializerV2.serialize(areas);
+
+            areas.forEach(area => {
+              const id = area.id;
+              const name = area.name;
+              const tags = area.tags;
+              const email = area.email;
+              const lang = area.language || 'en';
+              MailService.sendMail(
+                `area-complete-${lang}`,
+                {
+                  id,
+                  name,
+                  tags
+                },
+                [{ address: email }],
+                'gfw'
+              );
+            });
         } else {
             ctx.throw(404, 'Update failed.');
-
         }
     }
 
@@ -257,6 +275,22 @@ class AreaRouterV2 {
             email
         }).save();
         ctx.body = AreaSerializerV2.serialize(area);
+
+        const id = area.id;
+        const name = area.name;
+        const tags = area.tags;
+        const email = area.email;
+        const lang = area.language || 'en';
+        MailService.sendMail(
+          status === 'pending' ? `area-fetching-data-${lang}` : `area-complete-${lang}`,
+          {
+            id,
+            name,
+            tags
+          },
+          [{ address: email }],
+          'gfw'
+        );
     }
 
     static async save(ctx) {
@@ -332,6 +366,22 @@ class AreaRouterV2 {
 
         await area.save();
         ctx.body = AreaSerializerV2.serialize(area);
+
+        const id = area.id;
+        const name = area.name;
+        const tags = area.tags;
+        const email = area.email;
+        const lang = area.language || 'en';
+        MailService.sendMail(
+          `area-complete-${lang}`,
+          {
+            id,
+            name,
+            tags
+          },
+          [{ address: email }],
+          'gfw'
+        );
     }
 
     static async delete(ctx) {
