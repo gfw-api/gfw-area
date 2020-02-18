@@ -7,11 +7,33 @@ const TeamService = require('services/team.service');
 const SubscriptionService = require('services/subscription.service');
 const s3Service = require('services/s3.service');
 
+function getFilters(ctx) {
+    let filter = { userId: ctx.state.loggedUser.id };
+
+    const all = ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
+    if (ctx.state.loggedUser.role === 'ADMIN' && all) filter = {};
+
+    if (ctx.query.application) {
+        filter.application = ctx.query.application.split(',').map((el) => el.trim());
+    }
+
+    if (ctx.query.status) {
+        filter.status = ctx.query.status.trim();
+    }
+
+    if (ctx.query.public) {
+        const publicFilter = ctx.query.public.trim().toLowerCase() === 'true';
+        filter.public = publicFilter;
+    }
+
+    return filter;
+}
+
 class AreaRouterV2 {
 
     static async getAll(ctx) {
         logger.info('Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
-        const filter = { userId: ctx.state.loggedUser.id };
+        const filter = getFilters(ctx);
         if (ctx.query.application) {
             filter.application = ctx.query.application.split(',').map((el) => el.trim());
         }
