@@ -1,10 +1,6 @@
 const ctRegisterMicroservice = require('ct-register-microservice-node');
+const config = require('config');
 const AreaModel = require('models/area.modelV2');
-
-// TODO: hardcoded ids
-const DEFORESTATION_ALERTS_DATASET_ID = '63f34231-7369-4622-81f1-28a144d17835';
-const FIRE_ALERTS_DATASET_ID = '63f34231-7369-4622-81f1-28a144d17834';
-const MONTHLY_SUMMARY_DATASET_ID = 'monthlySummary';
 
 class SubscriptionsService {
 
@@ -17,10 +13,9 @@ class SubscriptionsService {
         area.email = subscription.resource.type === 'EMAIL' ? subscription.resource.content : '';
         area.webhookUrl = subscription.resource.type === 'URL' ? subscription.resource.content : '';
         area.subscriptionId = subscription.id;
-        area.fireAlerts = subscription.datasets.includes(FIRE_ALERTS_DATASET_ID);
-        area.deforestationAlerts = subscription.datasets.includes(DEFORESTATION_ALERTS_DATASET_ID);
-        area.monthlySummary = subscription.datasets.includes(MONTHLY_SUMMARY_DATASET_ID);
-        // TODO: hardcoded
+        area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
+        area.deforestationAlerts = subscription.datasets.includes(config.get('datasets.deforestation'));
+        area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
         area.status = 'saved';
         return area;
     }
@@ -31,9 +26,9 @@ class SubscriptionsService {
 
     static getDatasetsForSubscription(area) {
         const datasets = [];
-        if (area.deforestationAlerts) datasets.push(DEFORESTATION_ALERTS_DATASET_ID);
-        if (area.fireAlerts) datasets.push(FIRE_ALERTS_DATASET_ID);
-        if (area.monthlySummary) datasets.push(MONTHLY_SUMMARY_DATASET_ID);
+        if (area.deforestationAlerts) datasets.push(config.get('datasets.deforestation'));
+        if (area.fireAlerts) datasets.push(config.get('datasets.fires'));
+        if (area.monthlySummary) datasets.push(config.get('datasets.monthlySummary'));
         return datasets;
     }
 

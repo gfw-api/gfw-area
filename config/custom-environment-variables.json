@@ -17,5 +17,10 @@
   },
   "logger": {
     "level": "LOGGER_LEVEL"
+  },
+  "datasets": {
+    "deforestation": "DEFORESTATION_ALERTS_DATASET_ID",
+    "fires": "FIRE_ALERTS_DATASET_ID",
+    "monthlySummary": "MONTHLY_SUMMARY_DATASET_ID"
   }
 }
