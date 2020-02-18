@@ -9,8 +9,6 @@ const MONTHLY_SUMMARY_DATASET_ID = 'monthlySummary';
 class SubscriptionsService {
 
     static mergeSubscriptionOverArea(area, subscription) {
-        area._id = subscription.id;
-        area.id = subscription.id;
         area.subscriptionId = subscription.id;
         area.name = subscription.name;
         area.userId = subscription.userId;
@@ -56,7 +54,7 @@ class SubscriptionsService {
             json: true,
         });
 
-        return response.data.data;
+        return response.data;
     }
 
     static async findByIds(ids) {

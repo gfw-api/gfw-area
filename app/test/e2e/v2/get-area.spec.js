@@ -71,7 +71,6 @@ describe('Get areas - V2', () => {
         response.body.data.find((element) => element.attributes.subscriptionId === '456').should.be.ok;
     });
 
-
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);

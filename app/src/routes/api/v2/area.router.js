@@ -59,15 +59,14 @@ class AreaRouterV2 {
                 return;
             }
 
-            area = SubscriptionService.getAreaFromSubscription(subscription);
-        }
+            area = SubscriptionService.getAreaFromSubscription({ ...subscription.attributes, id: subscription.id });
 
         // 2. If area exists
         // if has subscription get subscription also and merge props
         // if it doesn’t have subscription just return the area
-        if (area.subscriptionId) {
+        } else if (area.subscriptionId) {
             const [sub] = await SubscriptionService.findByIds([area.subscriptionId]);
-            area = SubscriptionService.mergeSubscriptionOverArea(area, sub);
+            area = SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
         }
 
         const user = (ctx.state.loggedUser && ctx.state.loggedUser.id) || null;
