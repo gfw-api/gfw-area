@@ -53,14 +53,14 @@ class SubscriptionsService {
     }
 
     static async findByIds(ids) {
-        const createdSubscription = await ctRegisterMicroservice.requestToMicroservice({
+        const result = await ctRegisterMicroservice.requestToMicroservice({
             uri: `/subscriptions/find-by-ids`,
             method: 'POST',
             json: true,
             body: { ids },
         });
 
-        return createdSubscription.data;
+        return result.data;
     }
 
     static async createSubscriptionFromArea(area) {

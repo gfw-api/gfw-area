@@ -245,26 +245,27 @@ class AreaRouterV2 {
             }
 
             // Create a new area from the subscription
+            const {
+                name, application, resource, language
+            } = subscription.attributes;
             area = await new AreaModel({
                 _id: subscription.id,
-                name: subscription.attributes.name,
-                application: subscription.attributes.attributes || 'gfw',
+                name,
+                application: application || 'gfw',
                 userId: ctx.state.loggedUser.id,
                 status: 'saved',
                 public: true,
                 fireAlerts: false,
                 deforestationAlerts: false,
-                email: subscription.attributes.resource.type === 'EMAIL' ? subscription.attributes.resource.content : '',
-                webhookUrl: subscription.attributes.resource.type === 'URL' ? subscription.attributes.resource.content : '',
                 monthlySummary: false,
-                language: subscription.attributes.language,
+                email: resource.type === 'EMAIL' ? resource.content : '',
+                webhookUrl: resource.type === 'URL' ? resource.content : '',
+                language,
                 subscriptionId: subscription.id,
             }).save();
 
             // Set also the subscription id in the previousArea
-            previousArea = {
-                subscriptionId: subscription.id,
-            };
+            previousArea = { subscriptionId: subscription.id };
         }
 
         const { files } = ctx.request;
