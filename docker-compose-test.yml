@@ -19,9 +19,6 @@ services:
       S3_SECRET_ACCESS_KEY: 1
       S3_BUCKET: s3bucket
       WAIT_HOSTS: mongo:27017
-      DEFORESTATION_ALERTS_DATASET_ID: 4145f642-5455-4414-b214-58ad39b83e1e
-      FIRE_ALERTS_DATASET_ID: 63e88e53-0a88-416e-9532-fa06f703d435
-      MONTHLY_SUMMARY_DATASET_ID: monthlySummary
     command: test
     depends_on:
       - mongo
