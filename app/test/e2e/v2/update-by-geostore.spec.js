@@ -59,6 +59,20 @@ describe('Update area - V2', () => {
         response.body.data[1].attributes.should.have.property('name').and.equal('Updated Area');
     });
 
+    it('Updating areas by geostore as an ADMIN user providing invalid data should fail with 400 Bad Request and an appropriate error message', async () => {
+        await new Area(createArea({ geostore: 1, name: 'Old Name', status: 'pending' })).save();
+        await new Area(createArea({ geostore: 2, name: 'Old Name', status: 'pending' })).save();
+
+        const response = await requester.post(`/api/v2/area/update`).send({
+            loggedUser: USERS.ADMIN,
+            geostores: [1, 2],
+            update_params: { application: [1, 2] }
+        });
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array').and.have.length(1);
+        response.body.errors[0].should.have.property('detail').and.equal('Cast to string failed for value "[ 1, 2 ]" at path "application"');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);

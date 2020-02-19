@@ -251,7 +251,7 @@ class AreaRouterV2 {
             area = await new AreaModel({
                 _id: subscription.id,
                 name,
-                application: application || 'gfw',
+                application,
                 userId: ctx.state.loggedUser.id,
                 status: 'saved',
                 public: true,
@@ -331,7 +331,7 @@ class AreaRouterV2 {
         if (typeof ctx.request.body.templateId !== 'undefined') {
             area.templateId = ctx.request.body.templateId;
         }
-        area.updatedDate = Date.now;
+        area.updatedDate = Date.now();
         await area.save();
 
         // Update associated subscription after updating the area
@@ -402,29 +402,23 @@ class AreaRouterV2 {
     }
 
     static async updateByGeostore(ctx) {
-        if (ctx.state.loggedUser.role !== 'ADMIN') {
-            ctx.throw(401, 'Not authorized');
-            return;
-        }
         const geostores = ctx.request.body.geostores || [];
         const updateParams = ctx.request.body.update_params || {};
         logger.info('Updating geostores: ', geostores);
         logger.info('Updating with params: ', updateParams);
 
-        // validate update json
-        updateParams.updatedDate = Date.now;
+        try {
+            updateParams.updatedDate = Date.now();
+            const response = await AreaModel.updateMany(
+                { geostore: { $in: geostores } },
+                { $set: updateParams }
+            );
 
-        const response = await AreaModel.updateMany(
-            { geostore: { $in: geostores } },
-            { $set: updateParams }
-        );
-
-        logger.info(`Updated ${response.nModified} out of ${response.n}.`);
-        if (response.ok && response.ok === 1) {
+            logger.info(`Updated ${response.nModified} out of ${response.n}.`);
             const areas = await AreaModel.find({ geostore: { $in: geostores } });
             ctx.body = AreaSerializerV2.serialize(areas);
-        } else {
-            ctx.throw(404, 'Update failed.');
+        } catch (err) {
+            ctx.throw(400, err.message);
         }
     }
 
@@ -480,6 +474,15 @@ async function unwrapJSONStrings(ctx, next) {
     await next();
 }
 
+const ensureAdminUser = async (ctx, next) => {
+    if (ctx.state.loggedUser.role !== 'ADMIN') {
+        ctx.throw(401, 'Not authorized');
+        return;
+    }
+
+    await next();
+};
+
 const router = new Router({ prefix: '/area' });
 
 router.get('/', loggedUserToState, AreaRouterV2.getAll);
@@ -487,6 +490,6 @@ router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidatorV2.create, A
 router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouterV2.delete);
-router.post('/update', loggedUserToState, AreaRouterV2.updateByGeostore);
+router.post('/update', loggedUserToState, ensureAdminUser, AreaRouterV2.updateByGeostore);
 
 module.exports = router;
