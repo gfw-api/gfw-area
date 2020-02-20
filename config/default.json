@@ -23,5 +23,10 @@
     "secretAccessKey": null,
     "bucket": null,
     "folder": "areas-dev"
+  },
+  "datasets": {
+    "deforestation": "deforestation_alerts_dataset_id",
+    "fires": "fire_alerts_dataset_id",
+    "monthlySummary": "monthly_summary_dataset_id"
   }
 }

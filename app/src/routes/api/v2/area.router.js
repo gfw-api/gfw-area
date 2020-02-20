@@ -3,86 +3,100 @@ const logger = require('logger');
 const AreaSerializerV2 = require('serializers/area.serializerV2');
 const AreaModel = require('models/area.modelV2');
 const AreaValidatorV2 = require('validators/area.validatorV2');
-const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
+const SubscriptionService = require('services/subscription.service');
 const s3Service = require('services/s3.service');
-
-const router = new Router({
-    prefix: '/area',
-});
 
 function getFilters(ctx) {
     let filter = { userId: ctx.state.loggedUser.id };
+
     const all = ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
     if (ctx.state.loggedUser.role === 'ADMIN' && all) filter = {};
+
     if (ctx.query.application) {
         filter.application = ctx.query.application.split(',').map((el) => el.trim());
     }
+
     if (ctx.query.status) {
         filter.status = ctx.query.status.trim();
     }
+
     if (ctx.query.public) {
         const publicFilter = ctx.query.public.trim().toLowerCase() === 'true';
         filter.public = publicFilter;
     }
+
     return filter;
 }
 
 class AreaRouterV2 {
 
     static async getAll(ctx) {
-        logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
+        logger.info('Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
         const filter = getFilters(ctx);
+        if (ctx.query.application) {
+            filter.application = ctx.query.application.split(',').map((el) => el.trim());
+        }
+
+        // Parse areas and get all subscription IDs
+        const returnArray = [];
         const areas = await AreaModel.find(filter);
-        if (!areas || areas.length === 0) {
-            ctx.throw(404, 'Area not found');
-            return;
-        }
-        ctx.body = AreaSerializerV2.serialize(areas);
-    }
+        const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
 
-    static async updateByGeostore(ctx) {
-        if (ctx.state.loggedUser.role !== 'ADMIN') {
-            ctx.throw(401, 'Not authorized');
-            return;
-        }
-        const geostores = ctx.request.body.geostores || [];
-        const updateParams = ctx.request.body.update_params || {};
-        logger.info('Updating geostores: ', geostores);
-        logger.info('Updating with params: ', updateParams);
+        // Add areas to the return array
+        areas.forEach((area) => returnArray.push(area));
 
-        // validate update json
-        updateParams.updatedDate = Date.now;
+        // Filter subscriptions to find all subs that match area subscriptionId and merge them
+        const allUserSubscriptions = await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
+        const subscriptionsToMerge = allUserSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
+        subscriptionsToMerge.forEach((sub) => {
+            const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
+            const position = returnArray.indexOf(areaForSub);
+            returnArray[position] = SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id });
+        });
 
-        const response = await AreaModel.updateMany(
-            { geostore: { $in: geostores } },
-            { $set: updateParams }
-        );
+        // Then with the remaining subscriptions map them to the areas format and concat the two arrays
+        const remainingSubscriptions = allUserSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
+        remainingSubscriptions.forEach((sub) => {
+            returnArray.push(SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
+        });
 
-        logger.info(`Updated ${response.nModified} out of ${response.n}.`);
-        if (response.ok && response.ok === 1) {
-            const areas = await AreaModel.find({ geostore: { $in: geostores } });
-            ctx.body = AreaSerializerV2.serialize(areas);
-        } else {
-            ctx.throw(404, 'Update failed.');
-
-        }
+        ctx.body = AreaSerializerV2.serialize(returnArray);
     }
 
     static async get(ctx) {
-        const filters = { _id: ctx.params.id };
-        const user = (ctx.state.loggedUser && ctx.state.loggedUser.id) || null;
-        logger.info(`Obtaining area with areaId ${ctx.params.id}`);
-        const areas = await AreaModel.find(filters);
-        if (!areas || areas.length === 0) {
-            ctx.throw(404, 'Area not found');
-            return;
+        logger.info(`Obtaining v2 area with areaId ${ctx.params.id}`);
+
+        // 1. Check for area in areas
+        let area = await AreaModel.findById(ctx.params.id);
+
+        // 3. if area doesn’t exist
+        if (area === null) {
+            // get from subscriptions and return subscription mapped to have area props keys
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+
+            // if doesn’t exist, send rude message
+            if (!subscription) {
+                ctx.throw(404, 'Area not found');
+                return;
+            }
+
+            area = SubscriptionService.getAreaFromSubscription({ ...subscription.attributes, id: subscription.id });
+
+        // 2. If area exists
+        // if has subscription get subscription also and merge props
+        // if it doesn’t have subscription just return the area
+        } else if (area.subscriptionId) {
+            const [sub] = await SubscriptionService.findByIds([area.subscriptionId]);
+            area = SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
         }
-        const area = areas[0];
+
+        const user = (ctx.state.loggedUser && ctx.state.loggedUser.id) || null;
         if (area.public === false && area.userId !== user) {
             ctx.throw(401, 'Area private');
             return;
         }
+
         if (area.public === true && area.userId !== user) {
             area.tags = null;
             area.userId = null;
@@ -94,65 +108,21 @@ class AreaRouterV2 {
             area.email = null;
             area.language = null;
             area.subscriptionId = null;
-            ctx.body = AreaSerializerV2.serialize(area);
-        } else {
-            ctx.body = AreaSerializerV2.serialize(area);
         }
+
+        ctx.body = AreaSerializerV2.serialize(area);
     }
 
-    static async getFWAreas(ctx) {
-        logger.info('Obtaining all user areas + fw team areas', ctx.state.loggedUser.id);
+    static async save(ctx) {
+        logger.info('Saving v2 area', ctx.request.body);
         const userId = ctx.state.loggedUser.id;
-        let team = null;
-        try {
-            team = await TeamService.getTeamByUserId(userId);
-        } catch (e) {
-            logger.error(e);
-        }
-        const teamAreas = team && Array.isArray(team.areas) ? team.areas : [];
-        const query = {
-            $or: [
-                { userId },
-                { _id: { $in: teamAreas } }
-            ]
-        };
-
-        const areas = await AreaModel.find(query);
-        ctx.body = AreaSerializerV2.serialize(areas);
-    }
-
-    static async getFWAreasByUserId(ctx) {
-        const { userId } = ctx.params;
-        logger.info('Obtaining all user areas + fw team areas', userId);
-        let team = null;
-        try {
-            team = await TeamService.getTeamByUserId(userId);
-        } catch (e) {
-            logger.error(e);
-        }
-        const teamAreas = team && Array.isArray(team.areas) ? team.areas : [];
-        const query = {
-            $or: [
-                { userId },
-                { _id: { $in: teamAreas } }
-            ]
-        };
-
-        const areas = await AreaModel.find(query);
-        ctx.body = AreaSerializerV2.serialize(areas);
-    }
-
-    static async saveByUserId(ctx) {
-        await AreaRouterV2.saveArea(ctx, ctx.params.userId);
-    }
-
-    static async saveArea(ctx, userId) {
-        logger.info('Saving area');
-        let image = '';
         let isSaved = false;
+
+        let image = '';
         if (ctx.request.files && ctx.request.files.image) {
             image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
         }
+
         const geostore = (ctx.request.body && ctx.request.body.geostore) || null;
         const query = {
             $and: [
@@ -162,7 +132,7 @@ class AreaRouterV2 {
         };
         logger.info(`Checking if data created already for geostore ${geostore}`);
         const areas = await AreaModel.find(query);
-        if (geostore && areas && areas.length > 0){
+        if (geostore && areas && areas.length > 0) {
             isSaved = true;
         }
         let datasets = [];
@@ -222,19 +192,13 @@ class AreaRouterV2 {
         if (ctx.request.body.monthlySummary) {
             summarySub = ctx.request.body.monthlySummary;
         }
-        let subId = '';
-        if (ctx.request.body.subscriptionId) {
-            subId = ctx.request.body.subscriptionId;
-        }
         let email = '';
         if (ctx.request.body.email) {
             email = ctx.request.body.email;
         }
-        let lang = '';
-        if (ctx.request.body.language) {
-            lang = ctx.request.body.language;
-        }
-        const area = await new AreaModel({
+
+        // First save the area - if there is any data missing, we break here
+        let area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
             geostore: ctx.request.body.geostore,
@@ -252,19 +216,58 @@ class AreaRouterV2 {
             deforestationAlerts: deforAlertSub,
             webhookUrl,
             monthlySummary: summarySub,
-            subscriptionId: subId,
-            language: lang,
+            language: ctx.request.body.language,
             email
         }).save();
+
+        // If no datasets to register, no need to create a subscription
+        if (area.fireAlerts || area.deforestationAlerts || area.monthlySummary) {
+            const subscriptionId = await SubscriptionService.createSubscriptionFromArea(area);
+            if (subscriptionId) {
+                // Update the subscription id in the area and save again
+                area.subscriptionId = subscriptionId;
+                area = await area.save();
+            }
+        }
+
         ctx.body = AreaSerializerV2.serialize(area);
     }
 
-    static async save(ctx) {
-        await AreaRouterV2.saveArea(ctx, ctx.state.loggedUser.id);
-    }
-
     static async update(ctx) {
-        const area = await AreaModel.findById(ctx.params.id);
+        let previousArea = await AreaModel.findById(ctx.params.id);
+        let area = await AreaModel.findById(ctx.params.id);
+        if (!area) {
+            // Try to find subscription with same ID
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+            if (!subscription) {
+                ctx.throw(404, 'Area not found');
+                return;
+            }
+
+            // Create a new area from the subscription
+            const {
+                name, application, resource, language
+            } = subscription.attributes;
+            area = await new AreaModel({
+                _id: subscription.id,
+                name,
+                application,
+                userId: ctx.state.loggedUser.id,
+                status: 'saved',
+                public: true,
+                fireAlerts: false,
+                deforestationAlerts: false,
+                monthlySummary: false,
+                email: resource.type === 'EMAIL' ? resource.content : '',
+                webhookUrl: resource.type === 'URL' ? resource.content : '',
+                language,
+                subscriptionId: subscription.id,
+            }).save();
+
+            // Set also the subscription id in the previousArea
+            previousArea = { subscriptionId: subscription.id };
+        }
+
         const { files } = ctx.request;
         if (ctx.request.body.application || !area.application) {
             area.application = ctx.request.body.application || 'gfw';
@@ -328,18 +331,52 @@ class AreaRouterV2 {
         if (typeof ctx.request.body.templateId !== 'undefined') {
             area.templateId = ctx.request.body.templateId;
         }
-        area.updatedDate = Date.now;
-
+        area.updatedDate = Date.now();
         await area.save();
+
+        // Update associated subscription after updating the area
+
+        // 1. The area already exists and has subscriptions preference in the request data
+        if (area.fireAlerts || area.deforestationAlerts || area.monthlySummary) {
+            const subscriptionId = previousArea.subscriptionId
+                ? await SubscriptionService.updateSubscriptionFromArea(area)
+                : await SubscriptionService.createSubscriptionFromArea(area);
+
+            if (subscriptionId) {
+                area.subscriptionId = subscriptionId;
+                area = await area.save();
+            }
+
+        // 2. The area already exists and doesn’t have subscription preferences in the data
+        } else if (previousArea.subscriptionId) {
+            await SubscriptionService.deleteSubscription(area.subscriptionId);
+            area.subscriptionId = '';
+            area = await area.save();
+        }
+
         ctx.body = AreaSerializerV2.serialize(area);
     }
 
     static async delete(ctx) {
         logger.info(`Deleting area with id ${ctx.params.id}`);
-        const result = await AreaModel.deleteOne({ _id: ctx.params.id });
-        if (!result || result.ok === 0) {
-            ctx.throw(404, 'Area not found');
-            return;
+        const areaToDelete = await AreaModel.findById(ctx.params.id);
+        if (areaToDelete) {
+            if (areaToDelete.subscriptionId) {
+                // Try to find subscription and delete subscription
+                const [subscription] = await SubscriptionService.findByIds([areaToDelete.subscriptionId]);
+                if (subscription) {
+                    await SubscriptionService.deleteSubscription(areaToDelete.subscriptionId);
+                }
+            }
+
+            // Then delete area
+            await AreaModel.deleteOne({ _id: ctx.params.id });
+        } else {
+            // Try to find subscription and delete subscription
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+            if (subscription) {
+                await SubscriptionService.deleteSubscription(ctx.params.id);
+            }
         }
         logger.info(`Area ${ctx.params.id} deleted successfully`);
 
@@ -364,22 +401,25 @@ class AreaRouterV2 {
         ctx.statusCode = 204;
     }
 
-    static async getAlertsOfArea(ctx) {
-        logger.info(`Obtaining alerts of area with id ${ctx.params.id}`);
-        ctx.assert(ctx.query.precissionPoints, 400, 'precissionPoints is required');
-        ctx.assert(ctx.query.precissionBBOX, 400, 'precissionBBOX is required');
-        const result = await AreaModel.findOne({ _id: ctx.params.id });
-        if (!result) {
-            ctx.throw(404, 'Area not found');
-            return;
-        }
-        let generateImages = true;
-        if (ctx.query.nogenerate) {
-            generateImages = false;
-        }
+    static async updateByGeostore(ctx) {
+        const geostores = ctx.request.body.geostores || [];
+        const updateParams = ctx.request.body.update_params || {};
+        logger.info('Updating geostores: ', geostores);
+        logger.info('Updating with params: ', updateParams);
 
-        const response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages);
-        ctx.body = response;
+        try {
+            updateParams.updatedDate = Date.now();
+            const response = await AreaModel.updateMany(
+                { geostore: { $in: geostores } },
+                { $set: updateParams }
+            );
+
+            logger.info(`Updated ${response.nModified} out of ${response.n}.`);
+            const areas = await AreaModel.find({ geostore: { $in: geostores } });
+            ctx.body = AreaSerializerV2.serialize(areas);
+        } catch (err) {
+            ctx.throw(400, err.message);
+        }
     }
 
 }
@@ -405,21 +445,10 @@ async function loggedUserToState(ctx, next) {
     await next();
 }
 
-async function isMicroservice(ctx, next) {
-    if (ctx.state.loggedUser.id !== 'microservice') {
-        ctx.throw(403, 'Not authorized');
-    }
-    await next();
-}
-
 async function checkPermission(ctx, next) {
     ctx.assert(ctx.params.id, 400, 'Id required');
     const area = await AreaModel.findById(ctx.params.id);
-    if (!area) {
-        ctx.throw(404, 'Area not found');
-        return;
-    }
-    if (area.userId !== ctx.state.loggedUser.id && area.userId !== ctx.request.body.userId && ctx.state.loggedUser.role !== 'ADMIN') {
+    if (area && area.userId !== ctx.state.loggedUser.id && area.userId !== ctx.request.body.userId && ctx.state.loggedUser.role !== 'ADMIN') {
         ctx.throw(403, 'Not authorized');
         return;
     }
@@ -445,15 +474,22 @@ async function unwrapJSONStrings(ctx, next) {
     await next();
 }
 
+const ensureAdminUser = async (ctx, next) => {
+    if (ctx.state.loggedUser.role !== 'ADMIN') {
+        ctx.throw(401, 'Not authorized');
+        return;
+    }
+
+    await next();
+};
+
+const router = new Router({ prefix: '/area' });
+
 router.get('/', loggedUserToState, AreaRouterV2.getAll);
 router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidatorV2.create, AreaRouterV2.save);
 router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouterV2.delete);
-router.get('/:id/alerts', loggedUserToState, AreaRouterV2.getAlertsOfArea);
-router.get('/fw', loggedUserToState, AreaRouterV2.getFWAreas);
-router.post('/fw/:userId', loggedUserToState, AreaValidatorV2.create, AreaRouterV2.saveByUserId);
-router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouterV2.getFWAreasByUserId);
-router.post('/update', loggedUserToState, AreaRouterV2.updateByGeostore);
+router.post('/update', loggedUserToState, ensureAdminUser, AreaRouterV2.updateByGeostore);
 
 module.exports = router;
