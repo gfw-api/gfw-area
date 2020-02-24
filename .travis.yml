@@ -13,6 +13,7 @@ env:
     - CT_REGISTER_MODE=auto
     - PORT=4100
     - API_VERSION=v1
+    - HOST_IP=127.0.0.1
     - LOCAL_URL=http://127.0.0.1:4100
     - CT_URL=http://127.0.0.1:9000
     - MONGO_PORT_27017_TCP_ADDR=127.0.0.1

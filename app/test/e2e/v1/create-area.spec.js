@@ -88,7 +88,6 @@ describe('Create area - V1', () => {
             .put(/^\/areas-dev\/(\w|-)+.png/)
             .reply(200);
 
-
         const fileData = fs.readFileSync(`${__dirname}/../assets/sample.png`);
 
         const response = await requester

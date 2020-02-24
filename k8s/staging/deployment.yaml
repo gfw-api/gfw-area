@@ -91,6 +91,12 @@ spec:
               value: gfw-pipelines
             - name: S3_BUCKET
               value: forest-watcher-files
+            - name: DEFORESTATION_ALERTS_DATASET_ID
+              value: 4145f642-5455-4414-b214-58ad39b83e1e
+            - name: FIRE_ALERTS_DATASET_ID
+              value: 63e88e53-0a88-416e-9532-fa06f703d435
+            - name: MONTHLY_SUMMARY_DATASET_ID
+              value: monthlySummary
 
           ports:
             - containerPort: 4100

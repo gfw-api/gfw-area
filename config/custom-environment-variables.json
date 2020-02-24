@@ -22,5 +22,10 @@
     "uri": "API_GATEWAY_URI",
     "externalUrl": "API_GATEWAY_EXTERNAL_URL",
     "queueName": "API_GATEWAY_QUEUE_NAME"
+  },
+  "datasets": {
+    "deforestation": "DEFORESTATION_ALERTS_DATASET_ID",
+    "fires": "FIRE_ALERTS_DATASET_ID",
+    "monthlySummary": "MONTHLY_SUMMARY_DATASET_ID"
   }
 }
