@@ -30,7 +30,7 @@ describe('V2 Area emails', () => {
         sandbox = sinon.createSandbox();
     });
 
-    it('Creating an area with status saved triggers sending a dashboard ready email (happy case)', async () => {
+    it('Creating an area with status saved triggers sending a dashboard ready email', async () => {
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
         const response = await requester.post(`/api/v2/area`).send({
@@ -39,6 +39,7 @@ describe('V2 Area emails', () => {
             application: 'gfw',
             geostore: '713899292fc118a915741728ef84a2a7',
             wdpaid: 3,
+            email: 'test@example.com',
             use: { id: 'bbb', name: 'created name' },
             iso: { country: 'createdCountryIso', region: 'createdRegionIso' },
             datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
@@ -57,9 +58,56 @@ describe('V2 Area emails', () => {
         sinon.assert.calledWith(fake, 'area-complete-en', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
     });
 
-    it('Updating an existing with status saved triggers sending a dashboard ready email (happy case)', async () => {
+    it('Creating an area with status pending triggers sending a dashboard in construction email', async () => {
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
-        const area = await new Area(createArea({ status: 'saved', userId: USERS.USER.id, subscriptionId: '' })).save();
+
+        const response = await requester.post(`/api/v2/area`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            application: 'gfw',
+            email: 'test@example.com',
+            geostore: '713899292fc118a915741728ef84a2a7',
+            datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+            templateId: 'createdTemplateId'
+        });
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+
+        const { id, attributes } = response.body.data;
+        const { name, tags, email } = attributes;
+        const emailTags = tags && tags.join(', ');
+
+        sinon.assert.calledOnce(fake);
+        sinon.assert.calledWith(fake, 'area-data-pending-en', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
+    });
+
+    it('Creating an area without email associated does not trigger a dashboard in construction email', async () => {
+        const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
+
+        const response = await requester.post(`/api/v2/area`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            application: 'gfw',
+            geostore: '713899292fc118a915741728ef84a2a7',
+            datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+            templateId: 'createdTemplateId'
+        });
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        sinon.assert.notCalled(fake);
+    });
+
+    it('Updating an existing with status saved triggers sending a dashboard ready email', async () => {
+        const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
+        const area = await new Area(createArea({
+            email: 'test@example.com',
+            status: 'saved',
+            userId: USERS.USER.id,
+        })).save();
 
         const response = await requester.patch(`/api/v2/area/${area.id}`).send({
             loggedUser: USERS.USER,
@@ -78,16 +126,16 @@ describe('V2 Area emails', () => {
         sinon.assert.calledWith(fake, 'area-complete-en', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
     });
 
-    it('Updating areas by geostore triggers sending multiple emails informing the dashboards have been created (happy case)', async () => {
+    it('Updating areas by geostore triggers sending multiple emails informing the dashboards have been created', async () => {
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
-        await new Area(createArea({ geostore: 1, name: 'Old Name', status: 'pending' })).save();
-        await new Area(createArea({ geostore: 2, name: 'Old Name', status: 'pending' })).save();
-        await new Area(createArea({ geostore: 3, name: 'Old Name', status: 'pending' })).save();
+        await new Area(createArea({ geostore: 1, email: 'test@example.com', status: 'pending' })).save();
+        await new Area(createArea({ geostore: 2, email: 'test@example.com', status: 'pending' })).save();
+        await new Area(createArea({ geostore: 3, email: 'test@example.com', status: 'pending' })).save();
 
         const response = await requester.post(`/api/v2/area/update`).send({
             loggedUser: USERS.ADMIN,
             geostores: [1, 2],
-            update_params: { status: 'saved', name: 'Updated Area' }
+            update_params: { status: 'saved' }
         });
 
         response.status.should.equal(200);
