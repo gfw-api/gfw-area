@@ -19,7 +19,7 @@
     "level": "LOGGER_LEVEL"
   },
   "sparkpost": {
-    "key": "SPARKPOST_API_KEY"
+    "key": "SPARKPOST_KEY"
   },
   "datasets": {
     "deforestation": "DEFORESTATION_ALERTS_DATASET_ID",
