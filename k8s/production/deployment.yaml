@@ -99,7 +99,7 @@ spec:
             - name: SPARKPOST_KEY
               valueFrom:
                 secretKeyRef:
-                  name: ctsecrets
+                  name: mssecrets
                   key: SPARKPOST_KEY
 
           ports:
