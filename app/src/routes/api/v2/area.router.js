@@ -236,7 +236,7 @@ class AreaRouterV2 {
         const { id, name, status } = area;
         const emailTags = area.tags && area.tags.join(', ');
         const lang = area.language || 'en';
-        MailService.sendMail(
+        await MailService.sendMail(
             status === 'pending' ? `area-data-pending-${lang}` : `area-complete-${lang}`,
             { id, name, tags: emailTags },
             [{ address: area.email }],
@@ -371,7 +371,7 @@ class AreaRouterV2 {
             const { id, name, email } = area;
             const tags = area.tags && area.tags.join(', ');
             const lang = area.language || 'en';
-            MailService.sendMail(
+            await MailService.sendMail(
                 `area-complete-${lang}`,
                 { id, name, tags },
                 [{ address: email }],
@@ -441,17 +441,17 @@ class AreaRouterV2 {
             const areas = await AreaModel.find({ geostore: { $in: geostores } });
             ctx.body = AreaSerializerV2.serialize(areas);
 
-            areas.forEach((area) => {
+            await Promise.all(areas.map((area) => {
                 const { id, name, email } = area.id;
                 const tags = area.tags && area.tags.join(', ');
                 const lang = area.language || 'en';
-                MailService.sendMail(
+                return MailService.sendMail(
                     `area-complete-${lang}`,
                     { id, name, tags },
                     [{ address: email }],
                     'gfw'
                 );
-            });
+            }));
         } catch (err) {
             ctx.throw(400, err.message);
         }

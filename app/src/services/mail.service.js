@@ -17,7 +17,7 @@ class MailService {
         this.disableEmailSending = disableEmailSending;
     }
 
-    sendMail(template, data, recipients, sender = 'gfw') {
+    async sendMail(template, data, recipients, sender = 'gfw') {
         logger.info('[MailService] Sending confirmation mail to ', recipients);
         const reqOpts = {
             substitution_data: { ...data, application: sender },
