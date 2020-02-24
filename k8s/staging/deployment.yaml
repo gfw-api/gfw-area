@@ -97,6 +97,11 @@ spec:
               value: 63e88e53-0a88-416e-9532-fa06f703d435
             - name: MONTHLY_SUMMARY_DATASET_ID
               value: monthlySummary
+            - name: SPARKPOST_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ctsecrets
+                  key: SPARKPOST_KEY
 
           ports:
             - containerPort: 4100

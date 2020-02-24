@@ -6,6 +6,7 @@ const AreaValidatorV2 = require('validators/area.validatorV2');
 const TeamService = require('services/team.service');
 const SubscriptionService = require('services/subscription.service');
 const s3Service = require('services/s3.service');
+const MailService = require('services/mail.service');
 
 function getFilters(ctx) {
     let filter = { userId: ctx.state.loggedUser.id };
@@ -231,6 +232,20 @@ class AreaRouterV2 {
         }
 
         ctx.body = AreaSerializerV2.serialize(area);
+
+        if (email) {
+            const {
+                id, name, application, status
+            } = area;
+            const emailTags = area.tags && area.tags.join(', ');
+            const lang = area.language || 'en';
+            await MailService.sendMail(
+                status === 'pending' ? `area-data-pending-${lang}` : `area-complete-${lang}`,
+                { id, name, tags: emailTags },
+                [{ address: area.email }],
+                application
+            );
+        }
     }
 
     static async update(ctx) {
@@ -355,6 +370,20 @@ class AreaRouterV2 {
         }
 
         ctx.body = AreaSerializerV2.serialize(area);
+
+        if (area.email && area.status === 'saved') {
+            const {
+                id, name, email, application
+            } = area;
+            const tags = area.tags && area.tags.join(', ');
+            const lang = area.language || 'en';
+            await MailService.sendMail(
+                `area-complete-${lang}`,
+                { id, name, tags },
+                [{ address: email }],
+                application
+            );
+        }
     }
 
     static async delete(ctx) {
@@ -417,6 +446,24 @@ class AreaRouterV2 {
             logger.info(`Updated ${response.nModified} out of ${response.n}.`);
             const areas = await AreaModel.find({ geostore: { $in: geostores } });
             ctx.body = AreaSerializerV2.serialize(areas);
+
+            await Promise.all(areas.map((area) => {
+                const {
+                    id, name, email, application
+                } = area;
+                const tags = area.tags && area.tags.join(', ');
+                const lang = area.language || 'en';
+                if (!email) {
+                    return new Promise((resolve) => resolve());
+                }
+
+                return MailService.sendMail(
+                    `area-complete-${lang}`,
+                    { id, name, tags },
+                    [{ address: email }],
+                    application
+                );
+            }));
         } catch (err) {
             ctx.throw(400, err.message);
         }

@@ -1,3 +1,6 @@
+# 24/02/2020
+- Add notification emails being sent after area creation, update and bulk update.
+
 # 19/02/2020
 - Add Areas v2 router, which syncs areas of interest with subscriptions from the GFW Subscriptions API MS. For more information about this feature, check the docs.
 
