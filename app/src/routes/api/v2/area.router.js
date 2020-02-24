@@ -233,14 +233,16 @@ class AreaRouterV2 {
 
         ctx.body = AreaSerializerV2.serialize(area);
 
-        const { id, name, status } = area;
+        const {
+            id, name, application, status
+        } = area;
         const emailTags = area.tags && area.tags.join(', ');
         const lang = area.language || 'en';
         await MailService.sendMail(
             status === 'pending' ? `area-data-pending-${lang}` : `area-complete-${lang}`,
             { id, name, tags: emailTags },
             [{ address: area.email }],
-            'gfw'
+            application
         );
     }
 
@@ -368,14 +370,16 @@ class AreaRouterV2 {
         ctx.body = AreaSerializerV2.serialize(area);
 
         if (area.status === 'saved') {
-            const { id, name, email } = area;
+            const {
+                id, name, email, application
+            } = area;
             const tags = area.tags && area.tags.join(', ');
             const lang = area.language || 'en';
             await MailService.sendMail(
                 `area-complete-${lang}`,
                 { id, name, tags },
                 [{ address: email }],
-                'gfw'
+                application
             );
         }
     }
@@ -442,14 +446,16 @@ class AreaRouterV2 {
             ctx.body = AreaSerializerV2.serialize(areas);
 
             await Promise.all(areas.map((area) => {
-                const { id, name, email } = area.id;
+                const {
+                    id, name, email, application
+                } = area;
                 const tags = area.tags && area.tags.join(', ');
                 const lang = area.language || 'en';
                 return MailService.sendMail(
                     `area-complete-${lang}`,
                     { id, name, tags },
                     [{ address: email }],
-                    'gfw'
+                    application
                 );
             }));
         } catch (err) {

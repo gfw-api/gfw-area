@@ -1,8 +1,11 @@
 const nock = require('nock');
 const chai = require('chai');
-const Area = require('models/area.model');
+const sinon = require('sinon');
 const fs = require('fs');
 const config = require('config');
+
+const Area = require('models/area.modelV2');
+const MailService = require('services/mail.service');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
@@ -20,6 +23,8 @@ describe('Create area - V2', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        sinon.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
     });
 
     it('Creating an area without being logged in should return a 401 - "Not logged" error', async () => {
