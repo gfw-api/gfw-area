@@ -18,10 +18,8 @@
   "logger": {
     "level": "LOGGER_LEVEL"
   },
-  "apiGateway": {
-    "uri": "API_GATEWAY_URI",
-    "externalUrl": "API_GATEWAY_EXTERNAL_URL",
-    "queueName": "API_GATEWAY_QUEUE_NAME"
+  "sparkpost": {
+    "key": "SPARKPOST_API_KEY"
   },
   "datasets": {
     "deforestation": "DEFORESTATION_ALERTS_DATASET_ID",

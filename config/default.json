@@ -24,6 +24,9 @@
     "bucket": null,
     "folder": "areas-dev"
   },
+  "sparkpost": {
+    "key": null
+  },
   "datasets": {
     "deforestation": "deforestation_alerts_dataset_id",
     "fires": "fire_alerts_dataset_id",
