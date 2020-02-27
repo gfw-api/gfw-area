@@ -55,7 +55,7 @@ describe('V2 Area emails', () => {
         const emailTags = tags && tags.join(', ');
 
         sinon.assert.calledOnce(fake);
-        sinon.assert.calledWith(fake, 'area-complete-en', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
+        sinon.assert.calledWith(fake, 'dashboard-complete-en-copy', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
     });
 
     it('Creating an area with status pending triggers sending a dashboard in construction email', async () => {
@@ -80,7 +80,7 @@ describe('V2 Area emails', () => {
         const emailTags = tags && tags.join(', ');
 
         sinon.assert.calledOnce(fake);
-        sinon.assert.calledWith(fake, 'area-data-pending-en', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
+        sinon.assert.calledWith(fake, 'dashboard-pending-en-copy', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
     });
 
     it('Creating an area without email associated does not trigger a dashboard in construction email', async () => {
@@ -123,7 +123,7 @@ describe('V2 Area emails', () => {
         const emailTags = tags && tags.join(', ');
 
         sinon.assert.calledOnce(fake);
-        sinon.assert.calledWith(fake, 'area-complete-en', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
+        sinon.assert.calledWith(fake, 'subscription-preference-change-en-copy', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
     });
 
     it('Updating areas by geostore triggers sending multiple emails informing the dashboards have been created', async () => {
@@ -152,14 +152,14 @@ describe('V2 Area emails', () => {
         const area1Tags = response.body.data[0].attributes.tags;
         const area1EmailTags = area1Tags && area1Tags.join(', ');
         const area1Email = response.body.data[0].attributes.email;
-        sinon.assert.calledWith(fake, 'area-complete-en', { id: area1Id, name: area1Name, tags: area1EmailTags }, [{ address: area1Email }], 'gfw');
+        sinon.assert.calledWith(fake, 'dashboard-complete-en-copy', { id: area1Id, name: area1Name, tags: area1EmailTags }, [{ address: area1Email }], 'gfw');
 
         const area2Id = response.body.data[1].id;
         const area2Name = response.body.data[1].attributes.name;
         const area2Tags = response.body.data[1].attributes.tags;
         const area2EmailTags = area2Tags && area2Tags.join(', ');
         const area2Email = response.body.data[1].attributes.email;
-        sinon.assert.calledWith(fake, 'area-complete-en', { id: area2Id, name: area2Name, tags: area2EmailTags }, [{ address: area2Email }], 'gfw');
+        sinon.assert.calledWith(fake, 'dashboard-complete-en-copy', { id: area2Id, name: area2Name, tags: area2EmailTags }, [{ address: area2Email }], 'gfw');
     });
 
     afterEach(async () => {
