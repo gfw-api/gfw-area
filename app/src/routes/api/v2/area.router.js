@@ -240,7 +240,7 @@ class AreaRouterV2 {
             const emailTags = area.tags && area.tags.join(', ');
             const lang = area.language || 'en';
             await MailService.sendMail(
-                status === 'pending' ? `area-data-pending-${lang}` : `area-complete-${lang}`,
+                status === 'pending' ? `dashboard-pending-${lang}-copy` : `dashboard-complete-${lang}-copy`,
                 { id, name, tags: emailTags },
                 [{ address: area.email }],
                 application
@@ -378,7 +378,7 @@ class AreaRouterV2 {
             const tags = area.tags && area.tags.join(', ');
             const lang = area.language || 'en';
             await MailService.sendMail(
-                `area-complete-${lang}`,
+                `subscription-preference-change-${lang}-copy`,
                 { id, name, tags },
                 [{ address: email }],
                 application
@@ -458,7 +458,7 @@ class AreaRouterV2 {
                 }
 
                 return MailService.sendMail(
-                    `area-complete-${lang}`,
+                    `dashboard-complete-${lang}-copy`,
                     { id, name, tags },
                     [{ address: email }],
                     application
