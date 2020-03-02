@@ -3,10 +3,10 @@ kind: Service
 metadata:
   namespace: gfw
   labels:
-    name: {name}
-  name: {name}
+    name: area
+  name: area
 spec:
   ports:
     - port: 4100
   selector:
-    name: {name}
+    name: area

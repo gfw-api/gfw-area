@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   namespace: gfw
   labels:
-    name: {name}
+    name: area
     app: gfw
-  name: {name}
+  name: area
 spec:
   revisionHistoryLimit: 2
   template:
     metadata:
       labels:
-        name: {name}
+        name: area
     spec:
       containers:
-        - name: {name}
-          image: vizzuality/{name}
+        - name: area
+          image: vizzuality/area
           imagePullPolicy: Always
           resources:
             requests:
@@ -34,7 +34,7 @@ spec:
             - name: NODE_PATH
               value: app/src
             - name: LOCAL_URL
-              value: http://{name}.gfw.svc.cluster.local:4100
+              value: http://area.gfw.svc.cluster.local:4100
             - name: GLAD_DATASET
               value: e663eb09-04de-4f39-b871-35c6c2ed10b5
             - name: VIIRS_DATASET
