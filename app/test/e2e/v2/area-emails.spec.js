@@ -24,10 +24,10 @@ const getEmailParameters = (id, attributes) => ({
     name: attributes.name,
     tags: attributes.tags && attributes.tags.join(', '),
     image_url: attributes.image,
-    // location: '',
-    // subscriptions_url: '',
-    // dashboard_link: '',
-    // map_link: '',
+    location: attributes.name,
+    subscriptions_url: `https://staging.globalforestwatch.org/my-gfw`,
+    dashboard_link: `https://staging.globalforestwatch.org/dashboards/aoi/${id}`,
+    map_link: `https://staging.globalforestwatch.org/map/aoi/${id}`,
 });
 
 describe('V2 Area emails', () => {

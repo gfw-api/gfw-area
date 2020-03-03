@@ -18,13 +18,14 @@ class MailService {
     }
 
     async sendMail(template, data, recipients, sender = 'gfw') {
-        logger.info('[MailService] Sending confirmation mail to ', recipients);
+        logger.info(`[MailService] Sending areas "${template}" email to `, recipients);
         const reqOpts = {
             substitution_data: { ...data, application: sender },
             content: { template_id: template },
             recipients,
         };
 
+        logger.info(`[MailService] Email service request options:`, reqOpts);
         if (this.disableEmailSending) {
             logger.info(`[MailService] Email sending disabled, skipping ${template} email`);
             logger.info(reqOpts);

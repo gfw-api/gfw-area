@@ -1,5 +1,6 @@
 const Router = require('koa-router');
 const logger = require('logger');
+const config = require('config');
 const AreaSerializerV2 = require('serializers/area.serializerV2');
 const AreaModel = require('models/area.modelV2');
 const AreaValidatorV2 = require('validators/area.validatorV2');
@@ -39,10 +40,10 @@ function getEmailParametersFromArea(area) {
         name,
         tags: emailTags,
         image_url: area.image,
-        // location: '',
-        // subscriptions_url: '',
-        // dashboard_link: '',
-        // map_link: '',
+        location: name,
+        subscriptions_url: `${config.get('gfw.flagshipUrl')}my-gfw`,
+        dashboard_link: `${config.get('gfw.flagshipUrl')}dashboards/aoi/${id}`,
+        map_link: `${config.get('gfw.flagshipUrl')}map/aoi/${id}`,
     };
 }
 
