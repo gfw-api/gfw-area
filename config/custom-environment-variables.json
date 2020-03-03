@@ -21,6 +21,9 @@
   "sparkpost": {
     "key": "SPARKPOST_KEY"
   },
+  "gfw": {
+    "flagshipUrl": "GFW_FLAGSHIP_URL"
+  },
   "datasets": {
     "deforestation": "DEFORESTATION_ALERTS_DATASET_ID",
     "fires": "FIRE_ALERTS_DATASET_ID",

@@ -9,5 +9,8 @@
   },
   "s3": {
     "folder": "areas"
+  },
+  "gfw": {
+    "flagshipUrl": "https://globalforestwatch.org/"
   }
 }

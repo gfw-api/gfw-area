@@ -1,3 +1,6 @@
+# 03/03/2020
+- Update the substitution data sent to the email service when creating/editing v2 areas.
+
 # 24/02/2020
 - Add notification emails being sent after area creation, update and bulk update.
 
