@@ -19,6 +19,17 @@ nock.enableNetConnect(process.env.HOST_IP);
 let sandbox;
 const requester = getTestServer();
 
+const getEmailParameters = (id, attributes) => ({
+    id,
+    name: attributes.name,
+    tags: attributes.tags && attributes.tags.join(', '),
+    image_url: attributes.image,
+    location: attributes.name,
+    subscriptions_url: `https://staging.globalforestwatch.org/my-gfw`,
+    dashboard_link: `https://staging.globalforestwatch.org/dashboards/aoi/${id}`,
+    map_link: `https://staging.globalforestwatch.org/map/aoi/${id}`,
+});
+
 describe('V2 Area emails', () => {
     before(() => {
         if (process.env.NODE_ENV !== 'test') {
@@ -49,13 +60,16 @@ describe('V2 Area emails', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id');
-
-        const { id, attributes } = response.body.data;
-        const { name, tags, email } = attributes;
-        const emailTags = tags && tags.join(', ');
+        const { attributes } = response.body.data;
 
         sinon.assert.calledOnce(fake);
-        sinon.assert.calledWith(fake, 'dashboard-complete-en-copy', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
+        sinon.assert.calledWith(
+            fake,
+            'dashboard-complete-en-copy',
+            getEmailParameters(response.body.data.id, attributes),
+            [{ address: attributes.email }],
+            attributes.application,
+        );
     });
 
     it('Creating an area with status pending triggers sending a dashboard in construction email', async () => {
@@ -74,13 +88,16 @@ describe('V2 Area emails', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id');
-
-        const { id, attributes } = response.body.data;
-        const { name, tags, email } = attributes;
-        const emailTags = tags && tags.join(', ');
+        const { attributes } = response.body.data;
 
         sinon.assert.calledOnce(fake);
-        sinon.assert.calledWith(fake, 'dashboard-pending-en-copy', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
+        sinon.assert.calledWith(
+            fake,
+            'dashboard-pending-en-copy',
+            getEmailParameters(response.body.data.id, attributes),
+            [{ address: attributes.email }],
+            attributes.application,
+        );
     });
 
     it('Creating an area without email associated does not trigger a dashboard in construction email', async () => {
@@ -117,13 +134,16 @@ describe('V2 Area emails', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id');
-
-        const { id, attributes } = response.body.data;
-        const { name, tags, email } = attributes;
-        const emailTags = tags && tags.join(', ');
+        const { attributes } = response.body.data;
 
         sinon.assert.calledOnce(fake);
-        sinon.assert.calledWith(fake, 'subscription-preference-change-en-copy', { id, name, tags: emailTags }, [{ address: email }], 'gfw');
+        sinon.assert.calledWith(
+            fake,
+            'subscription-preference-change-en-copy',
+            getEmailParameters(response.body.data.id, attributes),
+            [{ address: attributes.email }],
+            attributes.application,
+        );
     });
 
     it('Updating areas by geostore triggers sending multiple emails informing the dashboards have been created', async () => {
@@ -144,22 +164,26 @@ describe('V2 Area emails', () => {
         response.body.data[0].should.have.property('attributes').and.be.an('object');
         response.body.data[1].should.have.property('id');
         response.body.data[1].should.have.property('attributes').and.be.an('object');
+        const area1Attributes = response.body.data[0].attributes;
+        const area2Attributes = response.body.data[1].attributes;
 
         sinon.assert.calledTwice(fake);
 
-        const area1Id = response.body.data[0].id;
-        const area1Name = response.body.data[0].attributes.name;
-        const area1Tags = response.body.data[0].attributes.tags;
-        const area1EmailTags = area1Tags && area1Tags.join(', ');
-        const area1Email = response.body.data[0].attributes.email;
-        sinon.assert.calledWith(fake, 'dashboard-complete-en-copy', { id: area1Id, name: area1Name, tags: area1EmailTags }, [{ address: area1Email }], 'gfw');
+        sinon.assert.calledWith(
+            fake,
+            'dashboard-complete-en-copy',
+            getEmailParameters(response.body.data[0].id, area1Attributes),
+            [{ address: area1Attributes.email }],
+            area1Attributes.application,
+        );
 
-        const area2Id = response.body.data[1].id;
-        const area2Name = response.body.data[1].attributes.name;
-        const area2Tags = response.body.data[1].attributes.tags;
-        const area2EmailTags = area2Tags && area2Tags.join(', ');
-        const area2Email = response.body.data[1].attributes.email;
-        sinon.assert.calledWith(fake, 'dashboard-complete-en-copy', { id: area2Id, name: area2Name, tags: area2EmailTags }, [{ address: area2Email }], 'gfw');
+        sinon.assert.calledWith(
+            fake,
+            'dashboard-complete-en-copy',
+            getEmailParameters(response.body.data[1].id, area2Attributes),
+            [{ address: area2Attributes.email }],
+            area2Attributes.application,
+        );
     });
 
     afterEach(async () => {

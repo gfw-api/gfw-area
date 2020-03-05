@@ -1,5 +1,6 @@
 const Router = require('koa-router');
 const logger = require('logger');
+const config = require('config');
 const AreaSerializerV2 = require('serializers/area.serializerV2');
 const AreaModel = require('models/area.modelV2');
 const AreaValidatorV2 = require('validators/area.validatorV2');
@@ -28,6 +29,22 @@ function getFilters(ctx) {
     }
 
     return filter;
+}
+
+function getEmailParametersFromArea(area) {
+    const { id, name } = area;
+    const emailTags = area.tags && area.tags.join(', ');
+
+    return {
+        id,
+        name,
+        tags: emailTags,
+        image_url: area.image,
+        location: name,
+        subscriptions_url: `${config.get('gfw.flagshipUrl')}my-gfw`,
+        dashboard_link: `${config.get('gfw.flagshipUrl')}dashboards/aoi/${id}`,
+        map_link: `${config.get('gfw.flagshipUrl')}map/aoi/${id}`,
+    };
 }
 
 class AreaRouterV2 {
@@ -234,14 +251,11 @@ class AreaRouterV2 {
         ctx.body = AreaSerializerV2.serialize(area);
 
         if (email) {
-            const {
-                id, name, application, status
-            } = area;
-            const emailTags = area.tags && area.tags.join(', ');
-            const lang = area.language || 'en';
+            const { application, status, language } = area;
+            const lang = language || 'en';
             await MailService.sendMail(
                 status === 'pending' ? `dashboard-pending-${lang}-copy` : `dashboard-complete-${lang}-copy`,
-                { id, name, tags: emailTags },
+                getEmailParametersFromArea(area),
                 [{ address: area.email }],
                 application
             );
@@ -372,14 +386,11 @@ class AreaRouterV2 {
         ctx.body = AreaSerializerV2.serialize(area);
 
         if (area.email && area.status === 'saved') {
-            const {
-                id, name, email, application
-            } = area;
-            const tags = area.tags && area.tags.join(', ');
+            const { email, application } = area;
             const lang = area.language || 'en';
             await MailService.sendMail(
                 `subscription-preference-change-${lang}-copy`,
-                { id, name, tags },
+                getEmailParametersFromArea(area),
                 [{ address: email }],
                 application
             );
@@ -448,10 +459,7 @@ class AreaRouterV2 {
             ctx.body = AreaSerializerV2.serialize(areas);
 
             await Promise.all(areas.map((area) => {
-                const {
-                    id, name, email, application
-                } = area;
-                const tags = area.tags && area.tags.join(', ');
+                const { email, application } = area;
                 const lang = area.language || 'en';
                 if (!email) {
                     return new Promise((resolve) => resolve());
@@ -459,7 +467,7 @@ class AreaRouterV2 {
 
                 return MailService.sendMail(
                     `dashboard-complete-${lang}-copy`,
-                    { id, name, tags },
+                    getEmailParametersFromArea(area),
                     [{ address: email }],
                     application
                 );
