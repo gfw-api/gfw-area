@@ -79,7 +79,9 @@ class AreaRouterV2 {
             returnArray.push(SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
         });
 
-        ctx.body = AreaSerializerV2.serialize(returnArray);
+        // Re-check filters after merging with subscriptions
+        const result = returnArray.filter((area) => Object.keys(filter).every((field) => area[field] === filter[field]));
+        ctx.body = AreaSerializerV2.serialize(result);
     }
 
     static async get(ctx) {
