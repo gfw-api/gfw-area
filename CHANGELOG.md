@@ -1,3 +1,9 @@
+# v1.0.1
+
+## 06/03/2020
+
+- Re-apply filters after merging areas with subscriptions
+
 # v1.0.0
 
 ## 28/02/2020
