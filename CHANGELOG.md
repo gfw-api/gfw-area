@@ -1,3 +1,10 @@
+# v1.1.0
+
+## 06/03/2020
+
+- Update the substitution data sent to the email service when creating/editing v2 areas.
+- Re-apply filters after merging areas with subscriptions
+
 # v1.0.0
 
 ## 28/02/2020

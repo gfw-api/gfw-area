@@ -12,5 +12,8 @@
     "secretAccessKey": null,
     "bucket": null,
     "folder": "areas-staging"
+  },
+  "gfw": {
+    "flagshipUrl": "https://staging.globalforestwatch.org/"
   }
 }
