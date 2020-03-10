@@ -1,14 +1,14 @@
-# v1.0.1
+# v1.1.0
 
 ## 06/03/2020
 
+- Update the substitution data sent to the email service when creating/editing v2 areas.
 - Re-apply filters after merging areas with subscriptions
 
 # v1.0.0
 
 ## 28/02/2020
 
-- Update the substitution data sent to the email service when creating/editing v2 areas.
 - Add notification emails being sent after area creation, update and bulk update.
 - Add Areas v2 router, which syncs areas of interest with subscriptions from the GFW Subscriptions API MS. For more information about this feature, check the docs.
 - Fix issue where creating areas would not save the thumbnail.
