@@ -113,7 +113,7 @@ const mockSubscriptionFindForUser = (userId, idsList = []) => {
                 attributes: {
                     name: 'Subscription Name',
                     createdAt: '2020-02-06T11:27:43.751Z',
-                    userId: '5dd7b92abf56ca0011875ae2',
+                    userId,
                     resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
                     datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
                     params: {},

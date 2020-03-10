@@ -77,39 +77,41 @@ describe('Get areas - V2', () => {
         await new Area(createArea({ userId: USERS.MANAGER.id })).save();
         await new Area(createArea({ userId: USERS.ADMIN.id })).save();
 
-        mockSubscriptionFindForUser(USERS.USER.id, []);
+        mockSubscriptionFindForUser(USERS.USER.id, ['123']);
         const userResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&all=true`);
         userResponse.status.should.equal(200);
-        userResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
+        // USER area + the subscription
+        userResponse.body.should.have.property('data').and.be.an('array').and.have.length(2);
 
-        mockSubscriptionFindForUser(USERS.MANAGER.id, []);
+        mockSubscriptionFindForUser(USERS.MANAGER.id, ['456']);
         const managerResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.MANAGER)}&all=true`);
         managerResponse.status.should.equal(200);
-        managerResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
+        // MANAGER area + the subscription
+        managerResponse.body.should.have.property('data').and.be.an('array').and.have.length(2);
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with all the areas (even not owned by the user)', async () => {
         await new Area(createArea({ userId: USERS.USER.id })).save();
         await new Area(createArea({ userId: USERS.MANAGER.id })).save();
-        await new Area(createArea({ userId: USERS.ADMIN.id })).save();
-        mockSubscriptionFindForUser(USERS.ADMIN.id, []);
+        await new Area(createArea({ userId: USERS.ADMIN.id, subscriptionId: '123' })).save();
+        mockSubscriptionFindForUser(USERS.ADMIN.id, ['123', '456']);
 
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.have.length(3);
+        response.body.should.have.property('data').and.be.an('array').and.have.length(4);
     });
 
     it('Getting areas filtered by application should return a 200 OK with only areas for the application requested', async () => {
         await new Area(createArea({ userId: USERS.USER.id, application: 'rw' })).save();
         await new Area(createArea({ userId: USERS.USER.id, application: 'gfw' })).save();
 
-        mockSubscriptionFindForUser(USERS.USER.id, []);
+        mockSubscriptionFindForUser(USERS.USER.id, ['123']);
         const rwResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&application=rw`);
         rwResponse.status.should.equal(200);
         rwResponse.body.should.have.property('data').and.be.an('array');
         rwResponse.body.data.every((area) => area.attributes.application === 'rw').should.be.true;
 
-        mockSubscriptionFindForUser(USERS.USER.id, []);
+        mockSubscriptionFindForUser(USERS.USER.id, ['456']);
         const gfwResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&application=gfw`);
         gfwResponse.status.should.equal(200);
         gfwResponse.body.should.have.property('data').and.be.an('array');
@@ -120,13 +122,13 @@ describe('Get areas - V2', () => {
         await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();
         await new Area(createArea({ userId: USERS.USER.id, status: 'pending' })).save();
 
-        mockSubscriptionFindForUser(USERS.USER.id, []);
+        mockSubscriptionFindForUser(USERS.USER.id, ['123']);
         const savedResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&status=saved`);
         savedResponse.status.should.equal(200);
         savedResponse.body.should.have.property('data').and.be.an('array');
         savedResponse.body.data.every((area) => area.attributes.status === 'saved').should.be.true;
 
-        mockSubscriptionFindForUser(USERS.USER.id, []);
+        mockSubscriptionFindForUser(USERS.USER.id, ['456']);
         const pendingResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&status=pending`);
         pendingResponse.status.should.equal(200);
         pendingResponse.body.should.have.property('data').and.be.an('array');
@@ -137,13 +139,13 @@ describe('Get areas - V2', () => {
         await new Area(createArea({ userId: USERS.USER.id, public: true })).save();
         await new Area(createArea({ userId: USERS.USER.id, public: false })).save();
 
-        mockSubscriptionFindForUser(USERS.USER.id, []);
+        mockSubscriptionFindForUser(USERS.USER.id, ['123']);
         const publicResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&public=true`);
         publicResponse.status.should.equal(200);
         publicResponse.body.should.have.property('data').and.be.an('array');
         publicResponse.body.data.every((area) => area.attributes.public === true).should.be.true;
 
-        mockSubscriptionFindForUser(USERS.USER.id, []);
+        mockSubscriptionFindForUser(USERS.USER.id, ['456']);
         const privateResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&public=false`);
         privateResponse.status.should.equal(200);
         privateResponse.body.should.have.property('data').and.be.an('array');
