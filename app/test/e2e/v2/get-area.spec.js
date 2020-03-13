@@ -8,7 +8,7 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { mockSubscriptionFindForUser } = require('../utils/helpers');
+const { mockSubscriptionFindForUser, mockSubscriptionFindAll } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -94,11 +94,16 @@ describe('Get areas - V2', () => {
         await new Area(createArea({ userId: USERS.USER.id })).save();
         await new Area(createArea({ userId: USERS.MANAGER.id })).save();
         await new Area(createArea({ userId: USERS.ADMIN.id, subscriptionId: '123' })).save();
-        mockSubscriptionFindForUser(USERS.ADMIN.id, ['123', '456']);
+
+        // Mock three subscriptions
+        mockSubscriptionFindAll(
+            ['123', '456', '789'],
+            [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
+        );
 
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.have.length(4);
+        response.body.should.have.property('data').and.be.an('array').and.have.length(5);
     });
 
     it('Getting areas filtered by application should return a 200 OK with only areas for the application requested', async () => {
@@ -150,6 +155,23 @@ describe('Get areas - V2', () => {
         privateResponse.status.should.equal(200);
         privateResponse.body.should.have.property('data').and.be.an('array');
         privateResponse.body.data.every((area) => area.attributes.public === false).should.be.true;
+    });
+
+    it('Getting areas sending query param all as an ADMIN should return a 200 OK with ALL the areas and ALL the subscriptions', async () => {
+        // Create 2 subscriptions, one for USER and another for ADMIN
+        await new Area(createArea({ userId: USERS.USER.id })).save();
+        await new Area(createArea({ userId: USERS.MANAGER.id })).save();
+
+        // Mock one subscription for each user role
+        mockSubscriptionFindAll(
+            ['123', '456', '789'],
+            [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
+        );
+
+        // 6 items should be returned
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.have.length(5);
     });
 
     afterEach(async () => {
