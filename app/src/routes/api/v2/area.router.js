@@ -9,11 +9,10 @@ const SubscriptionService = require('services/subscription.service');
 const s3Service = require('services/s3.service');
 const MailService = require('services/mail.service');
 
-function getFilters(ctx) {
-    let filter = { userId: ctx.state.loggedUser.id };
+const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
 
-    const all = ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
-    if (ctx.state.loggedUser.role === 'ADMIN' && all) filter = {};
+function getFilters(ctx) {
+    const filter = shouldUseAllFilter(ctx) ? {} : { userId: ctx.state.loggedUser.id };
 
     if (ctx.query.application) {
         filter.application = ctx.query.application.split(',').map((el) => el.trim());
@@ -64,9 +63,11 @@ class AreaRouterV2 {
         // Add areas to the return array
         areas.forEach((area) => returnArray.push(area));
 
-        // Filter subscriptions to find all subs that match area subscriptionId and merge them
-        const allUserSubscriptions = await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
-        const subscriptionsToMerge = allUserSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
+        const allSubscriptions = shouldUseAllFilter(ctx)
+            ? await SubscriptionService.getAllSubscriptions(ctx.state.loggedUser.id)
+            : await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
+
+        const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
         subscriptionsToMerge.forEach((sub) => {
             const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
             const position = returnArray.indexOf(areaForSub);
@@ -74,7 +75,7 @@ class AreaRouterV2 {
         });
 
         // Then with the remaining subscriptions map them to the areas format and concat the two arrays
-        const remainingSubscriptions = allUserSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
+        const remainingSubscriptions = allSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
         remainingSubscriptions.forEach((sub) => {
             returnArray.push(SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
         });
