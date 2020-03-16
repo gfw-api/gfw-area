@@ -44,7 +44,7 @@ class SubscriptionsService {
 
     static async getAllSubscriptions() {
         const response = await ctRegisterMicroservice.requestToMicroservice({
-            uri: `/subscriptions/admin/find-all`,
+            uri: `/subscriptions/find-all`,
             method: 'GET',
             json: true,
         });
