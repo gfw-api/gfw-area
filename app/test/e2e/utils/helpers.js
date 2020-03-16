@@ -133,7 +133,7 @@ const mockSubscriptionFindForUser = (userId, idsList = []) => {
 
 const mockSubscriptionFindAll = (ids = [], overrideArray = {}) => {
     nock(process.env.CT_URL)
-        .get(`/v1/subscriptions/admin/find-all`)
+        .get(`/v1/subscriptions/find-all`)
         .reply(200, () => ({
             data: ids.map((id, idx) => {
                 const overrideData = overrideArray[idx] || {};
