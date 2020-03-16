@@ -49,24 +49,24 @@ function getEmailParametersFromArea(area) {
 class AreaRouterV2 {
 
     static async getAll(ctx) {
-        logger.info('Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
+        logger.info('[AREAS-V2-ROUTER] Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
         const filter = getFilters(ctx);
-        if (ctx.query.application) {
-            filter.application = ctx.query.application.split(',').map((el) => el.trim());
-        }
 
         // Parse areas and get all subscription IDs
         const returnArray = [];
         const areas = await AreaModel.find(filter);
         const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
+        logger.info(`[AREAS-V2-ROUTER] Found ${areas.length} areas in the Areas collection`);
 
         // Add areas to the return array
         areas.forEach((area) => returnArray.push(area));
 
+        logger.info(`[AREAS-V2-ROUTER] Going to find subscriptions - should use all filter = ${shouldUseAllFilter(ctx)}`);
         const allSubscriptions = shouldUseAllFilter(ctx)
             ? await SubscriptionService.getAllSubscriptions(ctx.state.loggedUser.id)
             : await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
 
+        logger.info(`[AREAS-V2-ROUTER] Obtained ${shouldUseAllFilter(ctx)} subscriptions from MS Subscription`);
         const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
         subscriptionsToMerge.forEach((sub) => {
             const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
@@ -81,7 +81,9 @@ class AreaRouterV2 {
         });
 
         // Re-check filters after merging with subscriptions
+        logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (before filters)`);
         const result = returnArray.filter((area) => Object.keys(filter).every((field) => area[field] === filter[field]));
+        logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (after filters)`);
         ctx.body = AreaSerializerV2.serialize(result);
     }
 
