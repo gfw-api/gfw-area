@@ -158,20 +158,52 @@ describe('Get areas - V2', () => {
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with ALL the areas and ALL the subscriptions', async () => {
-        // Create 2 subscriptions, one for USER and another for ADMIN
         await new Area(createArea({ userId: USERS.USER.id })).save();
         await new Area(createArea({ userId: USERS.MANAGER.id })).save();
 
-        // Mock one subscription for each user role
         mockSubscriptionFindAll(
             ['123', '456', '789'],
             [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
         );
 
-        // 6 items should be returned
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(5);
+    });
+
+    it('Getting areas sending query param all along with other filters should return a 200 OK with the correct data', async () => {
+        await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();
+        await new Area(createArea({ userId: USERS.MANAGER.id, status: 'pending' })).save();
+
+        mockSubscriptionFindAll(
+            ['123', '456', '789'],
+            [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
+        );
+
+        // Requesting all areas => should return 5 areas
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.have.length(5);
+
+        mockSubscriptionFindAll(
+            ['123', '456', '789'],
+            [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
+        );
+
+        // Requesting all areas with status saved => should return 1 area
+        const savedResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&status=saved`);
+        savedResponse.status.should.equal(200);
+        savedResponse.body.should.have.property('data').and.be.an('array').and.have.length(4);
+
+        mockSubscriptionFindAll(
+            ['123', '456', '789'],
+            [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
+        );
+
+        // Requesting all areas with status pending => should return 4 areas
+        const pendingResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&status=pending`);
+        pendingResponse.status.should.equal(200);
+        pendingResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
     });
 
     afterEach(async () => {
