@@ -66,7 +66,7 @@ class AreaRouterV2 {
             ? await SubscriptionService.getAllSubscriptions(ctx.state.loggedUser.id)
             : await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
 
-        logger.info(`[AREAS-V2-ROUTER] Obtained ${shouldUseAllFilter(ctx)} subscriptions from MS Subscription`);
+        logger.info(`[AREAS-V2-ROUTER] Obtained ${allSubscriptions.length} subscriptions from MS Subscription`);
         const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
         subscriptionsToMerge.forEach((sub) => {
             const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
