@@ -12,11 +12,11 @@ class SubscriptionsService {
         area.datasets = subscription.datasets;
         area.email = subscription.resource.type === 'EMAIL' ? subscription.resource.content : '';
         area.webhookUrl = subscription.resource.type === 'URL' ? subscription.resource.content : '';
-        area.subscriptionId = subscription.id;
         area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
         area.deforestationAlerts = subscription.datasets.includes(config.get('datasets.deforestation'));
         area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
         area.status = 'saved';
+        area.overrideId = true;
         return area;
     }
 

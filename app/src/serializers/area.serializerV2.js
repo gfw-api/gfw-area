@@ -37,7 +37,18 @@ const areaSerializer = new JSONAPISerializer('area', {
 class AreaSerializer {
 
     static serialize(data) {
-        return areaSerializer.serialize(data);
+        const serializedData = areaSerializer.serialize(data);
+
+        if (serializedData.data && Array.isArray(serializedData.data)) {
+            serializedData.data.forEach((el, idx) => {
+                if (data[idx].isNew) {
+                    el.id = data[idx].subscriptionId;
+                }
+            });
+        }
+
+
+        return serializedData;
     }
 
 }

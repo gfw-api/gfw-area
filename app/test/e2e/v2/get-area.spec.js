@@ -47,12 +47,14 @@ describe('Get areas - V2', () => {
 
     it('Getting areas having some subscriptions should return a 200 OK with all the areas and subscriptions for the current user', async () => {
         mockSubscriptionFindForUser(USERS.USER.id, ['123', '456']);
-        const area = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const createdArea = await new Area(createArea({ userId: USERS.USER.id })).save();
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(3);
-        const areaInResult = response.body.data.find((element) => element.id === area.id);
-        areaInResult.should.have.property('id').and.equal(area.id);
+
+        response.body.data.find((area) => area.id === createdArea.id).should.be.an('object');
+        response.body.data.find((area) => area.id === '123').should.be.an('object');
+        response.body.data.find((area) => area.id === '456').should.be.an('object');
     });
 
     it('Getting areas having some subscriptions related to areas should return a 200 OK with all the areas and subscriptions for the current user', async () => {
