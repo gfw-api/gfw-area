@@ -1,6 +1,7 @@
 ## 16/03/2020
 
 - Fix all=true filter for v2 areas router - using endpoint to find all subscriptions in MS Subscriptions.
+- Fix problem with ids of subscriptions returned as areas.
 
 # v1.1.0
 
