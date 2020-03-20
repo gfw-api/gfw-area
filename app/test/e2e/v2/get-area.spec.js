@@ -220,6 +220,46 @@ describe('Get areas - V2', () => {
         pendingResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
     });
 
+    it('Getting areas with all=true filter returns the correct paginated result', async () => {
+        const area1 = await new Area(createArea()).save();
+        const area2 = await new Area(createArea()).save();
+        const area3 = await new Area(createArea()).save();
+        const area4 = await new Area(createArea()).save();
+        const area5 = await new Area(createArea()).save();
+
+        const response = await requester.get(`/api/v1/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').with.lengthOf(3);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const datasetIds = response.body.data.map((area) => area.id);
+        datasetIds.should.contain(area1._id);
+        datasetIds.should.contain(area2._id);
+        datasetIds.should.contain(area3._id);
+        datasetIds.should.not.contain(area4._id);
+        datasetIds.should.not.contain(area5._id);
+    });
+
+    it('Getting areas with all=true and requesting the second page returns the correct paginated result', async () => {
+        const area1 = await new Area(createArea()).save();
+        const area2 = await new Area(createArea()).save();
+        const area3 = await new Area(createArea()).save();
+        const area4 = await new Area(createArea()).save();
+        const area5 = await new Area(createArea()).save();
+
+        const response = await requester.get(`/api/v1/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').with.lengthOf(3);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const datasetIds = response.body.data.map((area) => area.id);
+        datasetIds.should.contain(area1._id);
+        datasetIds.should.contain(area2._id);
+        datasetIds.should.contain(area3._id);
+        datasetIds.should.not.contain(area4._id);
+        datasetIds.should.not.contain(area5._id);
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);

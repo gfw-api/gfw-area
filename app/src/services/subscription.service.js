@@ -6,7 +6,7 @@ class SubscriptionsService {
 
     static mergeSubscriptionOverArea(area, subscription) {
         area.subscriptionId = subscription.id;
-        area.name = subscription.name;
+        area.name = subscription.name || '';
         area.userId = subscription.userId;
         area.createdAt = subscription.createdAt;
         area.email = subscription.resource.type === 'EMAIL' ? subscription.resource.content : '';
