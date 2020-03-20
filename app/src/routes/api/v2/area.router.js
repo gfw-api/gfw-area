@@ -51,40 +51,44 @@ class AreaRouterV2 {
     static async getAll(ctx) {
         logger.info('[AREAS-V2-ROUTER] Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
         const filter = getFilters(ctx);
+        const useAllFilter = shouldUseAllFilter(ctx);
 
-        // Parse areas and get all subscription IDs
-        const returnArray = [];
-        const areas = await AreaModel.find(filter);
-        const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
-        logger.info(`[AREAS-V2-ROUTER] Found ${areas.length} areas in the Areas collection`);
+        logger.info(`[AREAS-V2-ROUTER] Going to find subscriptions - should use all filter = ${useAllFilter}`);
+        if (useAllFilter) {
+            const areas = await AreaModel.find(filter);
+            ctx.body = AreaSerializerV2.serialize(areas);
+        } else {
+            // Parse areas and get all subscription IDs
+            const returnArray = [];
+            const areas = await AreaModel.find(filter);
+            const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
+            logger.info(`[AREAS-V2-ROUTER] Found ${areas.length} areas in the Areas collection`);
 
-        // Add areas to the return array
-        areas.forEach((area) => returnArray.push(area));
+            // Add areas to the return array
+            areas.forEach((area) => returnArray.push(area));
 
-        logger.info(`[AREAS-V2-ROUTER] Going to find subscriptions - should use all filter = ${shouldUseAllFilter(ctx)}`);
-        const allSubscriptions = shouldUseAllFilter(ctx)
-            ? await SubscriptionService.getAllSubscriptions(ctx.state.loggedUser.id)
-            : await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
+            const allSubscriptions = await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
 
-        logger.info(`[AREAS-V2-ROUTER] Obtained ${allSubscriptions.length} subscriptions from MS Subscription`);
-        const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
-        subscriptionsToMerge.forEach((sub) => {
-            const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
-            const position = returnArray.indexOf(areaForSub);
-            returnArray[position] = SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id });
-        });
+            logger.info(`[AREAS-V2-ROUTER] Obtained ${allSubscriptions.length} subscriptions from MS Subscription`);
+            const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
+            subscriptionsToMerge.forEach((sub) => {
+                const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
+                const position = returnArray.indexOf(areaForSub);
+                returnArray[position] = SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id });
+            });
 
-        // Then with the remaining subscriptions map them to the areas format and concat the two arrays
-        const remainingSubscriptions = allSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
-        remainingSubscriptions.forEach((sub) => {
-            returnArray.push(SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
-        });
+            // Then with the remaining subscriptions map them to the areas format and concat the two arrays
+            const remainingSubscriptions = allSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
+            remainingSubscriptions.forEach((sub) => {
+                returnArray.push(SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
+            });
 
-        // Re-check filters after merging with subscriptions
-        logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (before filters)`);
-        const result = returnArray.filter((area) => Object.keys(filter).every((field) => area[field] === filter[field]));
-        logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (after filters)`);
-        ctx.body = AreaSerializerV2.serialize(result);
+            // Re-check filters after merging with subscriptions
+            logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (before filters)`);
+            const result = returnArray.filter((area) => Object.keys(filter).every((field) => area[field] === filter[field]));
+            logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (after filters)`);
+            ctx.body = AreaSerializerV2.serialize(result);
+        }
     }
 
     static async get(ctx) {

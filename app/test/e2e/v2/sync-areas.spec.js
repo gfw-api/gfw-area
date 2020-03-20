@@ -54,10 +54,6 @@ describe('Sync areas - V2', () => {
         response.body.data.should.have.property('syncedAreas').and.equal(3);
 
         // Getting the subscription now returns the synced information
-        mockSubscriptionFindAll(
-            ['123', '456', '789'],
-            [{ name: 'Updated subscription 1' }, { name: 'Updated subscription 2' }, { name: 'Updated subscription 3' }]
-        );
         const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(3);
@@ -82,10 +78,6 @@ describe('Sync areas - V2', () => {
         response.body.data.should.have.property('createdAreas').and.equal(3);
 
         // Getting the subscription now returns the synced information
-        mockSubscriptionFindAll(
-            ['123', '456', '789'],
-            [{ name: 'Updated 1' }, { name: 'Updated 2' }, { name: 'Updated 3' }]
-        );
         const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(6);
