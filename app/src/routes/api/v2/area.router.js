@@ -46,6 +46,11 @@ function getEmailParametersFromArea(area) {
     };
 }
 
+const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
+    a.push(`${k}=${encodeURIComponent(obj[k])}`);
+    return a;
+}, []).join('&');
+
 class AreaRouterV2 {
 
     static async getAll(ctx) {
@@ -55,8 +60,18 @@ class AreaRouterV2 {
 
         logger.info(`[AREAS-V2-ROUTER] Going to find subscriptions - should use all filter = ${useAllFilter}`);
         if (useAllFilter) {
-            const areas = await AreaModel.find(filter);
-            ctx.body = AreaSerializerV2.serialize(areas);
+            const page = ctx.query['page[number]'] ? parseInt(ctx.query['page[number]'], 10) : 1;
+            const limit = ctx.query['page[size]'] ? parseInt(ctx.query['page[size]'], 10) : 10;
+
+            const clonedQuery = { ...ctx.query };
+            delete clonedQuery['page[size]'];
+            delete clonedQuery['page[number]'];
+            const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
+
+            const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
+            const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
+            const areas = await AreaModel.paginate(filter, { page, limit, sort: 'id' });
+            ctx.body = AreaSerializerV2.serialize(areas, link);
         } else {
             // Parse areas and get all subscription IDs
             const returnArray = [];
@@ -493,9 +508,11 @@ class AreaRouterV2 {
             // Find all existing subscription ids
             const areas = await AreaModel.find();
             const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
+            logger.info(`[AREAS V2 ROUTER] Found ${areas.length} areas in the database.`);
 
-            // Find all subscriptions
+            // Find all subscriptions - updated since last week
             const allSubscriptions = await SubscriptionService.getAllSubscriptions();
+            logger.info(`[AREAS V2 ROUTER] Found all ${allSubscriptions.length} subscriptions.`);
 
             // Find subscriptions to sync
             const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));

@@ -34,6 +34,14 @@
               "path": "/api/v2/area/:id"
 		}
 	},{
+		"path": "/v2/area/sync",
+		"method": "POST",
+		"authenticated": true,
+		"redirect": {
+			"method": "POST",
+			"path": "/api/v2/area/sync"
+		}
+	},{
 		"path": "/v2/area",
 		"method": "POST",
 		"authenticated": true,

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate');
 const mongooseHistory = require('mongoose-history');
 
 const { Schema } = mongoose;
@@ -74,5 +75,6 @@ const Area = new Schema({
 });
 
 Area.plugin(mongooseHistory);
+Area.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('area', Area);
