@@ -482,6 +482,38 @@ class AreaRouterV2 {
         }
     }
 
+    static async sync(ctx) {
+        logger.info('[AREAS V2 ROUTER] Starting sync');
+
+        try {
+            // Find all existing subscription ids
+            const areas = await AreaModel.find();
+            const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
+
+            // Find all subscriptions
+            const allSubscriptions = await SubscriptionService.getAllSubscriptions();
+
+            // Find subscriptions to sync
+            const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
+            const syncResult = await subscriptionsToMerge.map(async (sub) => SubscriptionService.mergeSubscriptionOverArea(
+                areas.find((area) => area.subscriptionId === sub.id),
+                { ...sub.attributes, id: sub.id },
+            ).save());
+            const syncedAreas = syncResult.length;
+
+            // Then with the remaining subscriptions map them to the areas format and concat the two arrays
+            const remainingSubscriptions = allSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
+            const createResult = await Promise.all(remainingSubscriptions.map(
+                async (sub) => SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }).save()
+            ));
+            const createdAreas = createResult.length;
+
+            ctx.body = { data: { syncedAreas, createdAreas } };
+        } catch (err) {
+            ctx.throw(400, err.message);
+        }
+    }
+
 }
 
 async function loggedUserToState(ctx, next) {
@@ -551,5 +583,6 @@ router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, Area
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouterV2.delete);
 router.post('/update', loggedUserToState, ensureAdminUser, AreaRouterV2.updateByGeostore);
+router.post('/sync', loggedUserToState, ensureAdminUser, AreaRouterV2.sync);
 
 module.exports = router;
