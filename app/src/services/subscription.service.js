@@ -9,7 +9,6 @@ class SubscriptionsService {
         area.name = subscription.name;
         area.userId = subscription.userId;
         area.createdAt = subscription.createdAt;
-        area.datasets = subscription.datasets;
         area.email = subscription.resource.type === 'EMAIL' ? subscription.resource.content : '';
         area.webhookUrl = subscription.resource.type === 'URL' ? subscription.resource.content : '';
         area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
