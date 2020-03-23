@@ -1,15 +1,15 @@
 const ctRegisterMicroservice = require('ct-register-microservice-node');
 const config = require('config');
+const moment = require('moment');
 const AreaModel = require('models/area.modelV2');
 
 class SubscriptionsService {
 
     static mergeSubscriptionOverArea(area, subscription) {
         area.subscriptionId = subscription.id;
-        area.name = subscription.name;
+        area.name = subscription.name || '';
         area.userId = subscription.userId;
         area.createdAt = subscription.createdAt;
-        area.datasets = subscription.datasets;
         area.email = subscription.resource.type === 'EMAIL' ? subscription.resource.content : '';
         area.webhookUrl = subscription.resource.type === 'URL' ? subscription.resource.content : '';
         area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
@@ -42,14 +42,17 @@ class SubscriptionsService {
         return {};
     }
 
-    static async getAllSubscriptions() {
-        const response = await ctRegisterMicroservice.requestToMicroservice({
-            uri: `/subscriptions/find-all`,
+    static async getAllSubscriptions(pageNumber, pageSize, incremental) {
+        let uri = `/subscriptions/find-all?page[number]=${pageNumber}&page[size]=${pageSize}`;
+        if (incremental) {
+            uri = `${uri}&updatedAtSince=${moment().subtract('1', 'w').toISOString()}`;
+        }
+
+        return ctRegisterMicroservice.requestToMicroservice({
+            uri,
             method: 'GET',
             json: true,
         });
-
-        return response.data;
     }
 
     static async getUserSubscriptions(userId) {

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate');
 const mongooseHistory = require('mongoose-history');
 
 const { Schema } = mongoose;
@@ -14,13 +15,13 @@ const Dataset = new Schema({
 });
 
 const Area = new Schema({
-    name: { type: String, required: true, trim: true },
+    name: { type: String, required: false, trim: true },
     application: {
         type: String, required: true, trim: true, default: 'gfw'
     },
     geostore: { type: String, required: false, trim: true },
     wdpaid: { type: Number, required: false, trim: true },
-    userId: { type: String, required: true, trim: true },
+    userId: { type: String, required: false, trim: true },
     use: {
         _id: false,
         id: { type: String, required: false, trim: true },
@@ -74,5 +75,6 @@ const Area = new Schema({
 });
 
 Area.plugin(mongooseHistory);
+Area.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('area', Area);

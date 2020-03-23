@@ -36,17 +36,33 @@ const areaSerializer = new JSONAPISerializer('area', {
 
 class AreaSerializer {
 
-    static serialize(data) {
-        const serializedData = areaSerializer.serialize(data);
+    static serialize(data, link = null) {
+        const serializedData = link !== null ? areaSerializer.serialize(data.docs) : areaSerializer.serialize(data);
 
         if (serializedData.data && Array.isArray(serializedData.data)) {
             serializedData.data.forEach((el, idx) => {
-                if (data[idx].isNew) {
-                    el.id = data[idx].subscriptionId;
+                const modelEl = link !== null ? data.docs[idx] : data[idx];
+                if (modelEl.isNew) {
+                    el.id = modelEl.subscriptionId;
                 }
             });
         }
 
+        if (link) {
+            serializedData.links = {
+                self: `${link}page[number]=${data.page}&page[size]=${data.limit}`,
+                first: `${link}page[number]=1&page[size]=${data.limit}`,
+                last: `${link}page[number]=${data.pages}&page[size]=${data.limit}`,
+                prev: `${link}page[number]=${data.page - 1 > 0 ? data.page - 1 : data.page}&page[size]=${data.limit}`,
+                next: `${link}page[number]=${data.page + 1 < data.pages ? data.page + 1 : data.pages}&page[size]=${data.limit}`,
+            };
+
+            serializedData.meta = {
+                'total-pages': data.pages,
+                'total-items': data.total,
+                size: data.limit
+            };
+        }
 
         return serializedData;
     }
