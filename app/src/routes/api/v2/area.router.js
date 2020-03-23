@@ -1,6 +1,7 @@
 const Router = require('koa-router');
 const logger = require('logger');
 const config = require('config');
+const moment = require('moment');
 const AreaSerializerV2 = require('serializers/area.serializerV2');
 const AreaModel = require('models/area.modelV2');
 const AreaValidatorV2 = require('validators/area.validatorV2');
@@ -503,13 +504,31 @@ class AreaRouterV2 {
 
     static async sync(ctx) {
         try {
-            logger.info('[AREAS V2 ROUTER] Starting sync');
+            // Default interval is the last week
+            let startDate = moment().subtract('1', 'w').hour(0).minute(0);
+            let endDate = moment().hour(0).minute(0);
+
+            if (ctx.query.startDate && moment(ctx.query.startDate).isValid()) {
+                startDate = moment(ctx.query.startDate);
+            }
+
+            if (ctx.query.endDate && moment(ctx.query.endDate).isValid()) {
+                endDate = moment(ctx.query.endDate);
+            }
+
+            logger.info(`[AREAS V2 ROUTER] Starting sync from ${startDate.toISOString()} until ${endDate.toISOString()}`);
+
             let syncedAreas = 0;
             let createdAreas = 0;
             let page = 1;
             let hasMoreSubscriptions = true;
             while (hasMoreSubscriptions) {
-                const response = await SubscriptionService.getAllSubscriptions(page, 100, ctx.query.incremental !== 'false');
+                const response = await SubscriptionService.getAllSubscriptions(
+                    page,
+                    100,
+                    startDate.toISOString(),
+                    endDate.toISOString(),
+                );
                 const subscriptions = response.data;
                 const { links } = response;
                 logger.info(`[AREAS V2 ROUTER] Found page ${page} with ${subscriptions.length} subscriptions.`);

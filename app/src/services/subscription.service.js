@@ -1,6 +1,5 @@
 const ctRegisterMicroservice = require('ct-register-microservice-node');
 const config = require('config');
-const moment = require('moment');
 const AreaModel = require('models/area.modelV2');
 
 class SubscriptionsService {
@@ -42,14 +41,9 @@ class SubscriptionsService {
         return {};
     }
 
-    static async getAllSubscriptions(pageNumber, pageSize, incremental) {
-        let uri = `/subscriptions/find-all?page[number]=${pageNumber}&page[size]=${pageSize}`;
-        if (incremental) {
-            uri = `${uri}&updatedAtSince=${moment().subtract('1', 'w').toISOString()}`;
-        }
-
+    static async getAllSubscriptions(pageNumber, pageSize, startDate, endDate) {
         return ctRegisterMicroservice.requestToMicroservice({
-            uri,
+            uri: `/subscriptions/find-all?page[number]=${pageNumber}&page[size]=${pageSize}&updatedAtSince=${startDate}&updatedAtUntil=${endDate}`,
             method: 'GET',
             json: true,
         });
