@@ -502,20 +502,13 @@ class AreaRouterV2 {
     }
 
     static async sync(ctx) {
-        logger.info('[AREAS V2 ROUTER] Starting sync');
-
         try {
-            // Find all existing subscription ids
-            const areas = await AreaModel.find();
-            const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
-            logger.info(`[AREAS V2 ROUTER] Found ${areas.length} areas in the database.`);
-
+            logger.info('[AREAS V2 ROUTER] Starting sync');
             let syncedAreas = 0;
             let createdAreas = 0;
             let page = 1;
             let hasMoreSubscriptions = true;
             while (hasMoreSubscriptions) {
-                // Find subscriptions page
                 const response = await SubscriptionService.getAllSubscriptions(
                     page,
                     1000,
@@ -525,21 +518,19 @@ class AreaRouterV2 {
                 const { links } = response;
                 logger.info(`[AREAS V2 ROUTER] Found page ${page} with ${subscriptions.length} subscriptions.`);
 
-                // Find subscriptions to sync
-                const subscriptionsToMerge = subscriptions.filter((sub) => subscriptionIds.includes(sub.id));
-                const syncResult = await subscriptionsToMerge.map(async (sub) => SubscriptionService.mergeSubscriptionOverArea(
-                    areas.find((area) => area.subscriptionId === sub.id),
-                    { ...sub.attributes, id: sub.id },
-                ).save());
-                syncedAreas += syncResult.length;
-                logger.info(`[AREAS V2 ROUTER] Synced ${syncedAreas} until now.`);
+                // eslint-disable-next-line no-loop-func
+                await Promise.all(subscriptions.map(async (sub) => {
+                    const area = await AreaModel.findOne({ subscriptionId: sub.id });
+                    if (area) {
+                        syncedAreas += 1;
+                        return SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id },).save();
+                    }
 
-                // Then with the remaining subscriptions map them to the areas format and concat the two arrays
-                const remainingSubscriptions = subscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
-                const createResult = await Promise.all(remainingSubscriptions.map(
-                    async (sub) => SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }).save()
-                ));
-                createdAreas += createResult.length;
+                    createdAreas += 1;
+                    return SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }).save();
+                }));
+
+                logger.info(`[AREAS V2 ROUTER] Synced ${syncedAreas} until now.`);
                 logger.info(`[AREAS V2 ROUTER] Created ${createdAreas} until now.`);
 
                 page++;
