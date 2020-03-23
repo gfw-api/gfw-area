@@ -509,11 +509,7 @@ class AreaRouterV2 {
             let page = 1;
             let hasMoreSubscriptions = true;
             while (hasMoreSubscriptions) {
-                const response = await SubscriptionService.getAllSubscriptions(
-                    page,
-                    1000,
-                    ctx.query.incremental !== 'false',
-                );
+                const response = await SubscriptionService.getAllSubscriptions(page, 100, ctx.query.incremental !== 'false');
                 const subscriptions = response.data;
                 const { links } = response;
                 logger.info(`[AREAS V2 ROUTER] Found page ${page} with ${subscriptions.length} subscriptions.`);
