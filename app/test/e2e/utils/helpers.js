@@ -131,10 +131,32 @@ const mockSubscriptionFindForUser = (userId, idsList = []) => {
         }));
 };
 
-const mockSubscriptionFindAll = (ids = [], overrideArray = {}) => {
+const mockSubscriptionFindAll = (
+    ids = [],
+    overrideArray = [],
+    pageNumber = null,
+    pageSize = null,
+    updatedAtSince = null,
+) => {
     nock(process.env.CT_URL)
         .get(`/v1/subscriptions/find-all`)
-        .query(() => true)
+        .query((q) => {
+            let match = true;
+
+            if (pageNumber && q['page[number]'] !== pageNumber) {
+                match = false;
+            }
+
+            if (pageSize && q['page[size]'] !== pageSize) {
+                match = false;
+            }
+
+            if (updatedAtSince && q.updatedAtSince !== updatedAtSince) {
+                match = false;
+            }
+
+            return match;
+        })
         .reply(200, () => ({
             data: ids.map((id, idx) => {
                 const overrideData = overrideArray[idx] || {};
