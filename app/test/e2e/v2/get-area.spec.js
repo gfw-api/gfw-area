@@ -227,17 +227,17 @@ describe('Get areas - V2', () => {
         const area4 = await new Area(createArea()).save();
         const area5 = await new Area(createArea()).save();
 
-        const response = await requester.get(`/api/v1/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&page[size]=3`);
         response.status.should.equal(200);
         response.body.should.have.property('data').with.lengthOf(3);
         response.body.should.have.property('links').and.be.an('object');
 
-        const datasetIds = response.body.data.map((area) => area.id);
-        datasetIds.should.contain(area1._id);
-        datasetIds.should.contain(area2._id);
-        datasetIds.should.contain(area3._id);
-        datasetIds.should.not.contain(area4._id);
-        datasetIds.should.not.contain(area5._id);
+        const ids = response.body.data.map((area) => area.id);
+        ids.should.contain(area1.id);
+        ids.should.contain(area2.id);
+        ids.should.contain(area3.id);
+        ids.should.not.contain(area4.id);
+        ids.should.not.contain(area5.id);
     });
 
     it('Getting areas with all=true and requesting the second page returns the correct paginated result', async () => {
@@ -247,17 +247,17 @@ describe('Get areas - V2', () => {
         const area4 = await new Area(createArea()).save();
         const area5 = await new Area(createArea()).save();
 
-        const response = await requester.get(`/api/v1/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&page[number]=2&page[size]=2`);
         response.status.should.equal(200);
-        response.body.should.have.property('data').with.lengthOf(3);
+        response.body.should.have.property('data').with.lengthOf(2);
         response.body.should.have.property('links').and.be.an('object');
 
-        const datasetIds = response.body.data.map((area) => area.id);
-        datasetIds.should.contain(area1._id);
-        datasetIds.should.contain(area2._id);
-        datasetIds.should.contain(area3._id);
-        datasetIds.should.not.contain(area4._id);
-        datasetIds.should.not.contain(area5._id);
+        const ids = response.body.data.map((area) => area.id);
+        ids.should.not.contain(area1.id);
+        ids.should.not.contain(area2.id);
+        ids.should.contain(area3.id);
+        ids.should.contain(area4.id);
+        ids.should.not.contain(area5.id);
     });
 
     afterEach(async () => {

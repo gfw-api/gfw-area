@@ -41,14 +41,12 @@ class SubscriptionsService {
         return {};
     }
 
-    static async getAllSubscriptions() {
-        const response = await ctRegisterMicroservice.requestToMicroservice({
-            uri: `/subscriptions/find-all`,
+    static async getAllSubscriptions(pageNumber = 1, pageSize = 100) {
+        return ctRegisterMicroservice.requestToMicroservice({
+            uri: `/subscriptions/find-all?page[number]=${pageNumber}&page[size]=${pageSize}`,
             method: 'GET',
             json: true,
         });
-
-        return response.data;
     }
 
     static async getUserSubscriptions(userId) {

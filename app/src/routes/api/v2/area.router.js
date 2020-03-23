@@ -510,24 +510,37 @@ class AreaRouterV2 {
             const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
             logger.info(`[AREAS V2 ROUTER] Found ${areas.length} areas in the database.`);
 
-            // Find all subscriptions - updated since last week
-            const allSubscriptions = await SubscriptionService.getAllSubscriptions();
-            logger.info(`[AREAS V2 ROUTER] Found all ${allSubscriptions.length} subscriptions.`);
+            let syncedAreas = 0;
+            let createdAreas = 0;
+            let page = 1;
+            let hasMoreSubscriptions = true;
+            while (hasMoreSubscriptions) {
+                // Find subscriptions page
+                const response = await SubscriptionService.getAllSubscriptions(page, 1000);
+                const subscriptions = response.data;
+                const { links } = response;
+                logger.info(`[AREAS V2 ROUTER] Found page ${page} with ${subscriptions.length} subscriptions.`);
 
-            // Find subscriptions to sync
-            const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
-            const syncResult = await subscriptionsToMerge.map(async (sub) => SubscriptionService.mergeSubscriptionOverArea(
-                areas.find((area) => area.subscriptionId === sub.id),
-                { ...sub.attributes, id: sub.id },
-            ).save());
-            const syncedAreas = syncResult.length;
+                // Find subscriptions to sync
+                const subscriptionsToMerge = subscriptions.filter((sub) => subscriptionIds.includes(sub.id));
+                const syncResult = await subscriptionsToMerge.map(async (sub) => SubscriptionService.mergeSubscriptionOverArea(
+                    areas.find((area) => area.subscriptionId === sub.id),
+                    { ...sub.attributes, id: sub.id },
+                ).save());
+                syncedAreas += syncResult.length;
+                logger.info(`[AREAS V2 ROUTER] Synced ${syncedAreas} until now.`);
 
-            // Then with the remaining subscriptions map them to the areas format and concat the two arrays
-            const remainingSubscriptions = allSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
-            const createResult = await Promise.all(remainingSubscriptions.map(
-                async (sub) => SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }).save()
-            ));
-            const createdAreas = createResult.length;
+                // Then with the remaining subscriptions map them to the areas format and concat the two arrays
+                const remainingSubscriptions = subscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
+                const createResult = await Promise.all(remainingSubscriptions.map(
+                    async (sub) => SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }).save()
+                ));
+                createdAreas += createResult.length;
+                logger.info(`[AREAS V2 ROUTER] Created ${createdAreas} until now.`);
+
+                page++;
+                hasMoreSubscriptions = links.self !== links.last;
+            }
 
             ctx.body = { data: { syncedAreas, createdAreas } };
         } catch (err) {
