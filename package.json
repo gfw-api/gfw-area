@@ -66,6 +66,7 @@
     "koa-send": "^5.0.0",
     "koa-simple-healthcheck": "0.0.1",
     "koa-validate": "^1.0.7",
+    "moment": "^2.24.0",
     "mongoose": "^5.7.11",
     "mongoose-history": "^0.8.0",
     "mongoose-paginate": "^5.0.3",
