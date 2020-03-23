@@ -1,3 +1,10 @@
+# v1.2.0
+
+## 23/03/2020
+
+- Add endpoint for synchronizing areas and subscriptions.
+- Updated GET v2/area?all=true to use pagination.
+
 # v1.1.1
 
 ## 16/03/2020
