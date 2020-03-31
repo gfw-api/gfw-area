@@ -63,9 +63,9 @@ describe('Sync areas - V2', () => {
         const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(3);
-        getResponse.body.data.find((area) => area.id === area1.id).attributes.should.have.property('name').and.equal('Updated subscription 1');
-        getResponse.body.data.find((area) => area.id === area2.id).attributes.should.have.property('name').and.equal('Updated subscription 2');
-        getResponse.body.data.find((area) => area.id === area3.id).attributes.should.have.property('name').and.equal('Updated subscription 3');
+        getResponse.body.data.find((area) => area.id === area1.id).attributes.should.have.property('name').and.equal('Old Name 1');
+        getResponse.body.data.find((area) => area.id === area2.id).attributes.should.have.property('name').and.equal('Old Name 2');
+        getResponse.body.data.find((area) => area.id === area3.id).attributes.should.have.property('name').and.equal('Old Name 3');
     });
 
     it('Sync areas as an ADMIN creates new areas in the database with subscriptions that do not have a match with an existing area, returning the number of created areas', async () => {

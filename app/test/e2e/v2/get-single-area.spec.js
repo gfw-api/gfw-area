@@ -63,7 +63,7 @@ describe('Get single area - V2', () => {
         response.body.data.attributes.should.have.property('subscriptionId').and.equal(id.toHexString());
     });
 
-    it('Getting an area which has an associated subscription returns 200 OK with the subscription merged over the area info', async () => {
+    it('Getting an area which has an associated subscription returns 200 OK with the correct area info', async () => {
         const id = new mongoose.Types.ObjectId();
         const area = await new Area(createArea({
             public: false,
@@ -78,7 +78,7 @@ describe('Get single area - V2', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('id').and.equal(area.id);
         response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('name').and.equal('Subscription name');
+        response.body.data.attributes.should.have.property('name').and.equal('Area name');
     });
 
     afterEach(async () => {

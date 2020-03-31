@@ -5,23 +5,23 @@ const AreaModel = require('models/area.modelV2');
 class SubscriptionsService {
 
     static async mergeSubscriptionOverArea(area, subscription) {
-        // This is for the serializer to know that it must override the area id with the subscription id
         if (area.isNew) {
+            // This is for the serializer to know that it must override the area id with the subscription id
             area.overrideId = true;
+
+            // Merge subscription data over the area data
+            area.subscriptionId = subscription.id;
+            area.name = subscription.name || '';
+            area.userId = subscription.userId;
+            area.createdAt = subscription.createdAt;
+            area.email = subscription.resource.type === 'EMAIL' ? subscription.resource.content : '';
+            area.webhookUrl = subscription.resource.type === 'URL' ? subscription.resource.content : '';
+            area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
+            area.deforestationAlerts = subscription.datasets.includes(config.get('datasets.deforestation'));
+            area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
             area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
             area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
         }
-
-        // Merge subscription data over the area data
-        area.subscriptionId = subscription.id;
-        area.name = subscription.name || '';
-        area.userId = subscription.userId;
-        area.createdAt = subscription.createdAt;
-        area.email = subscription.resource.type === 'EMAIL' ? subscription.resource.content : '';
-        area.webhookUrl = subscription.resource.type === 'URL' ? subscription.resource.content : '';
-        area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
-        area.deforestationAlerts = subscription.datasets.includes(config.get('datasets.deforestation'));
-        area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
 
         // Update the status if needed the appropriate status
         if (area.geostore) {
