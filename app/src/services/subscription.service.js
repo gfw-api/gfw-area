@@ -39,8 +39,8 @@ class SubscriptionsService {
         return area;
     }
 
-    static async getAreaFromSubscription(subscription) {
-        return SubscriptionsService.mergeSubscriptionOverArea(new AreaModel(), subscription);
+    static async getAreaFromSubscription(subscription, areaData = {}) {
+        return SubscriptionsService.mergeSubscriptionOverArea(new AreaModel(areaData), subscription);
     }
 
     static getDatasetsForSubscription(area) {
