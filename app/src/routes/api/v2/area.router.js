@@ -52,12 +52,6 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     return a;
 }, []).join('&');
 
-async function asyncForEach(array, fn) {
-    for (let index = 0; index < array.length; index++) {
-        await fn(array[index], index, array);
-    }
-}
-
 class AreaRouterV2 {
 
     static async getAll(ctx) {
@@ -93,17 +87,17 @@ class AreaRouterV2 {
 
             logger.info(`[AREAS-V2-ROUTER] Obtained ${allSubscriptions.length} subscriptions from MS Subscription`);
             const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
-            await asyncForEach(subscriptionsToMerge, async (sub) => {
+            await Promise.all(subscriptionsToMerge.map(async (sub) => {
                 const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
                 const position = returnArray.indexOf(areaForSub);
                 returnArray[position] = await SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id });
-            });
+            }));
 
             // Then with the remaining subscriptions map them to the areas format and concat the two arrays
             const remainingSubscriptions = allSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
-            await asyncForEach(remainingSubscriptions, async (sub) => {
+            await Promise.all(remainingSubscriptions.map(async (sub) => {
                 returnArray.push(await SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
-            });
+            }));
 
             // Re-check filters after merging with subscriptions
             logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (before filters)`);
