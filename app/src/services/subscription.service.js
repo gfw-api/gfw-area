@@ -89,18 +89,23 @@ class SubscriptionsService {
     }
 
     static async createSubscriptionFromArea(area) {
+        const body = {
+            name: area.name,
+            datasets: SubscriptionsService.getDatasetsForSubscription(area),
+            language: area.language,
+            resource: SubscriptionsService.getResourceInfoForSubscription(area),
+            userId: area.userId,
+        };
+
+        if (area.geostore) {
+            body.params = { geostore: area.geostore };
+        }
+
         const createdSubscription = await ctRegisterMicroservice.requestToMicroservice({
             uri: `/subscriptions`,
             method: 'POST',
             json: true,
-            body: {
-                name: area.name,
-                datasets: SubscriptionsService.getDatasetsForSubscription(area),
-                language: area.language,
-                resource: SubscriptionsService.getResourceInfoForSubscription(area),
-                params: {},
-                userId: area.userId,
-            },
+            body,
         });
 
         return createdSubscription.data.id;

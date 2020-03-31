@@ -84,6 +84,25 @@ describe('Area v2 status', () => {
         response.body.data.attributes.should.have.property('status').and.equal('saved');
     });
 
+    it('Getting an area that has status \'pending\' in the database but has geostore and attached subscription should return the correct status - pending', async () => {
+        const subId = new mongoose.Types.ObjectId();
+        const testArea = await new Area(createArea({
+            userId: USERS.USER.id,
+            status: 'pending',
+            geostore: '123',
+            subscriptionId: subId.toHexString(),
+        })).save();
+
+        // Mock the test area
+        mockSubscriptionFindByIds([subId.toHexString()], { userId: USERS.USER.id });
+        const response = await requester.get(`/api/v2/area/${testArea.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal(subId.toHexString());
+        response.body.data.attributes.should.have.property('status').and.equal('pending');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
