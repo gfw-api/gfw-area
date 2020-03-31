@@ -299,24 +299,13 @@ class AreaRouterV2 {
             }
 
             // Create a new area from the subscription
-            const {
-                name, application, resource, language
-            } = subscription.attributes;
-            area = await new AreaModel({
-                _id: subscription.id,
-                name,
-                application,
-                userId: ctx.state.loggedUser.id,
-                status: 'saved',
-                public: true,
-                fireAlerts: false,
-                deforestationAlerts: false,
-                monthlySummary: false,
-                email: resource.type === 'EMAIL' ? resource.content : '',
-                webhookUrl: resource.type === 'URL' ? resource.content : '',
-                language,
+            area = await SubscriptionService.getAreaFromSubscription({
+                ...subscription.attributes,
+                id: subscription.id,
                 subscriptionId: subscription.id,
-            }).save();
+            }, { _id: subscription.id });
+
+            area = await area.save();
 
             // Set also the subscription id in the previousArea
             previousArea = { subscriptionId: subscription.id };
