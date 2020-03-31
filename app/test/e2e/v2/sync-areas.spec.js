@@ -1,5 +1,7 @@
 const nock = require('nock');
 const chai = require('chai');
+const mongoose = require('mongoose');
+
 const Area = require('models/area.modelV2');
 const { createArea } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
@@ -39,12 +41,16 @@ describe('Sync areas - V2', () => {
     });
 
     it('Sync areas as an ADMIN updates the areas in the database with overwrite information from associated subscriptions, returning the number of synced areas', async () => {
-        const area1 = await new Area(createArea({ subscriptionId: '123', name: 'Old Name 1' })).save();
-        const area2 = await new Area(createArea({ subscriptionId: '456', name: 'Old Name 2' })).save();
-        const area3 = await new Area(createArea({ subscriptionId: '789', name: 'Old Name 3' })).save();
+        const subId1 = new mongoose.Types.ObjectId();
+        const subId2 = new mongoose.Types.ObjectId();
+        const subId3 = new mongoose.Types.ObjectId();
+
+        const area1 = await new Area(createArea({ subscriptionId: subId1.toHexString(), name: 'Old Name 1' })).save();
+        const area2 = await new Area(createArea({ subscriptionId: subId2.toHexString(), name: 'Old Name 2' })).save();
+        const area3 = await new Area(createArea({ subscriptionId: subId3.toHexString(), name: 'Old Name 3' })).save();
 
         mockSubscriptionFindAll(
-            ['123', '456', '789'],
+            [subId1.toHexString(), subId2.toHexString(), subId3.toHexString()],
             [{ name: 'Updated subscription 1' }, { name: 'Updated subscription 2' }, { name: 'Updated subscription 3' }]
         );
 

@@ -1,6 +1,8 @@
 /* eslint-disable no-unused-expressions */
 const nock = require('nock');
 const chai = require('chai');
+const mongoose = require('mongoose');
+
 const Area = require('models/area.modelV2');
 const { createArea } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
@@ -58,9 +60,12 @@ describe('Get areas - V2', () => {
     });
 
     it('Getting areas having some subscriptions related to areas should return a 200 OK with all the areas and subscriptions for the current user', async () => {
-        mockSubscriptionFindForUser(USERS.USER.id, ['123', '456']);
+        const subId1 = new mongoose.Types.ObjectId();
+        const subId2 = new mongoose.Types.ObjectId();
+
+        mockSubscriptionFindForUser(USERS.USER.id, [subId1.toHexString(), subId2.toHexString()]);
         const area = await new Area(createArea({ userId: USERS.USER.id })).save();
-        await new Area(createArea({ userId: USERS.USER.id, subscriptionId: '123' })).save();
+        await new Area(createArea({ userId: USERS.USER.id, subscriptionId: subId1.toHexString() })).save();
 
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
@@ -69,9 +74,9 @@ describe('Get areas - V2', () => {
         // eslint-disable-next-line no-unused-expressions
         response.body.data.find((element) => element.id === area.id).should.be.ok;
         // eslint-disable-next-line no-unused-expressions
-        response.body.data.find((element) => element.attributes.subscriptionId === '123').should.be.ok;
+        response.body.data.find((element) => element.attributes.subscriptionId === subId1.toHexString()).should.be.ok;
         // eslint-disable-next-line no-unused-expressions
-        response.body.data.find((element) => element.attributes.subscriptionId === '456').should.be.ok;
+        response.body.data.find((element) => element.attributes.subscriptionId === subId2.toHexString()).should.be.ok;
     });
 
     it('Getting areas sending query param all as an USER/MANAGER should return a 200 OK with only the user areas (query filter is ignored)', async () => {
@@ -93,13 +98,17 @@ describe('Get areas - V2', () => {
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with all the areas (even not owned by the user)', async () => {
+        const subId1 = new mongoose.Types.ObjectId();
+        const subId2 = new mongoose.Types.ObjectId();
+        const subId3 = new mongoose.Types.ObjectId();
+
         const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
         const area2 = await new Area(createArea({ userId: USERS.MANAGER.id })).save();
-        const area3 = await new Area(createArea({ userId: USERS.ADMIN.id, subscriptionId: '123' })).save();
+        const area3 = await new Area(createArea({ userId: USERS.ADMIN.id, subscriptionId: subId1.toHexString() })).save();
 
         // Mock three subscriptions
         mockSubscriptionFindAll(
-            ['123', '456', '789'],
+            [subId1.toHexString(), subId2.toHexString(), subId3.toHexString()],
             [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
         );
 
@@ -115,7 +124,7 @@ describe('Get areas - V2', () => {
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(5);
         getResponse.body.data.map((area) => area.id).should.include.members([area1.id, area2.id, area3.id]);
-        getResponse.body.data.map((area) => area.attributes.subscriptionId).should.include.members(['123', '456', '789']);
+        getResponse.body.data.map((area) => area.attributes.subscriptionId).should.include.members([subId1.toHexString(), subId2.toHexString(), subId3.toHexString()]);
     });
 
     it('Getting areas filtered by application should return a 200 OK with only areas for the application requested', async () => {

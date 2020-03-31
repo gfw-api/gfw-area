@@ -6,7 +6,11 @@ class SubscriptionsService {
 
     static async mergeSubscriptionOverArea(area, subscription) {
         // This is for the serializer to know that it must override the area id with the subscription id
-        area.overrideId = true;
+        if (area.isNew) {
+            area.overrideId = true;
+            area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
+            area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
+        }
 
         // Merge subscription data over the area data
         area.subscriptionId = subscription.id;
@@ -18,8 +22,6 @@ class SubscriptionsService {
         area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
         area.deforestationAlerts = subscription.datasets.includes(config.get('datasets.deforestation'));
         area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
-        area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
-        area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
 
         // Update the status if needed the appropriate status
         if (area.geostore) {
@@ -99,6 +101,8 @@ class SubscriptionsService {
 
         if (area.geostore) {
             body.params = { geostore: area.geostore };
+        } else {
+            body.params = {};
         }
 
         const createdSubscription = await ctRegisterMicroservice.requestToMicroservice({
@@ -112,18 +116,25 @@ class SubscriptionsService {
     }
 
     static async updateSubscriptionFromArea(area) {
+        const body = {
+            name: area.name,
+            datasets: SubscriptionsService.getDatasetsForSubscription(area),
+            language: area.language,
+            resource: SubscriptionsService.getResourceInfoForSubscription(area),
+            userId: area.userId,
+        };
+
+        if (area.geostore) {
+            body.params = { geostore: area.geostore };
+        } else {
+            body.params = {};
+        }
+
         const updatedSubscription = await ctRegisterMicroservice.requestToMicroservice({
             uri: `/subscriptions/${area.subscriptionId}`,
             method: 'PATCH',
             json: true,
-            body: {
-                name: area.name,
-                datasets: SubscriptionsService.getDatasetsForSubscription(area),
-                language: area.language,
-                resource: SubscriptionsService.getResourceInfoForSubscription(area),
-                params: {},
-                userId: area.userId,
-            },
+            body,
         });
 
         return updatedSubscription.data.id;

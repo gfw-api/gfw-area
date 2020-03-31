@@ -68,10 +68,10 @@ describe('Area v2 status', () => {
         response.body.data.attributes.should.have.property('status').and.equal('pending');
     });
 
-    it('Getting an area that does not exist in the areas database returns areas with the correct status - CASE 3', async () => {
+    it('Getting an area that exists in the areas database returns areas with the correct status - CASE 3', async () => {
         // CASE 3: Any other case, test area should have status saved
         const id = new mongoose.Types.ObjectId();
-        const testArea = await new Area(createArea({ userId: USERS.USER.id, subscriptionId: id.toHexString() })).save();
+        const testArea = await new Area(createArea({ userId: USERS.USER.id, status: 'saved', subscriptionId: id.toHexString() })).save();
 
         // Mock the test area
         mockSubscriptionFindByIds([id], { userId: USERS.USER.id, params: { wdpaid: '123' } });
@@ -80,7 +80,7 @@ describe('Area v2 status', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
         response.body.data.attributes.should.have.property('subscriptionId').and.equal(id.toHexString());
-        response.body.data.attributes.should.have.property('wdpaid').and.equal(123);
+        response.body.data.attributes.should.have.property('wdpaid').and.equal(1);
         response.body.data.attributes.should.have.property('status').and.equal('saved');
     });
 
