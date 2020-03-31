@@ -52,6 +52,12 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     return a;
 }, []).join('&');
 
+async function asyncForEach(array, fn) {
+    for (let index = 0; index < array.length; index++) {
+        await fn(array[index], index, array);
+    }
+}
+
 class AreaRouterV2 {
 
     static async getAll(ctx) {
@@ -87,16 +93,16 @@ class AreaRouterV2 {
 
             logger.info(`[AREAS-V2-ROUTER] Obtained ${allSubscriptions.length} subscriptions from MS Subscription`);
             const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
-            subscriptionsToMerge.forEach((sub) => {
+            await asyncForEach(subscriptionsToMerge, async (sub) => {
                 const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
                 const position = returnArray.indexOf(areaForSub);
-                returnArray[position] = SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id });
+                returnArray[position] = await SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id });
             });
 
             // Then with the remaining subscriptions map them to the areas format and concat the two arrays
             const remainingSubscriptions = allSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
-            remainingSubscriptions.forEach((sub) => {
-                returnArray.push(SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
+            await asyncForEach(remainingSubscriptions, async (sub) => {
+                returnArray.push(await SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
             });
 
             // Re-check filters after merging with subscriptions
@@ -124,14 +130,14 @@ class AreaRouterV2 {
                 return;
             }
 
-            area = SubscriptionService.getAreaFromSubscription({ ...subscription.attributes, id: subscription.id });
+            area = await SubscriptionService.getAreaFromSubscription({ ...subscription.attributes, id: subscription.id });
 
         // 2. If area exists
         // if has subscription get subscription also and merge props
         // if it doesn’t have subscription just return the area
         } else if (area.subscriptionId) {
             const [sub] = await SubscriptionService.findByIds([area.subscriptionId]);
-            area = SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
+            area = await SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
         }
 
         const user = (ctx.state.loggedUser && ctx.state.loggedUser.id) || null;
@@ -538,11 +544,13 @@ class AreaRouterV2 {
                     const area = await AreaModel.findOne({ subscriptionId: sub.id });
                     if (area) {
                         syncedAreas += 1;
-                        return SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id },).save();
+                        const mergedArea = await SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
+                        return mergedArea.save();
                     }
 
                     createdAreas += 1;
-                    return SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }).save();
+                    const syncedArea = await SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id });
+                    return syncedArea.save();
                 }));
 
                 logger.info(`[AREAS V2 ROUTER] Synced ${syncedAreas} until now.`);
