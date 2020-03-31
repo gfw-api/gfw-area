@@ -87,7 +87,7 @@ const mockSubscriptionFindByIds = (ids = [], overrideData = {}) => {
                     userId: '5dd7b92abf56ca0011875ae2',
                     resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
                     datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
-                    params: {},
+                    params: { geostore: '123' },
                     confirmed: true,
                     language: 'en',
                     datasetsQuery: [{

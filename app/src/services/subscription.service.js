@@ -4,7 +4,11 @@ const AreaModel = require('models/area.modelV2');
 
 class SubscriptionsService {
 
-    static mergeSubscriptionOverArea(area, subscription) {
+    static async mergeSubscriptionOverArea(area, subscription) {
+        // This is for the serializer to know that it must override the area id with the subscription id
+        area.overrideId = true;
+
+        // Merge subscription data over the area data
         area.subscriptionId = subscription.id;
         area.name = subscription.name || '';
         area.userId = subscription.userId;
@@ -14,12 +18,23 @@ class SubscriptionsService {
         area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
         area.deforestationAlerts = subscription.datasets.includes(config.get('datasets.deforestation'));
         area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
-        area.status = 'saved';
-        area.overrideId = true;
+        area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
+        area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
+
+        // Calculate the appropriate status
+        let status = 'saved';
+        if (area.geostore) {
+            const areas = await AreaModel.find({ $and: [{ status: 'saved' }, { geostore: area.geostore }] });
+            if (areas && areas.length <= 0) {
+                status = 'pending';
+            }
+        }
+
+        area.status = status;
         return area;
     }
 
-    static getAreaFromSubscription(subscription) {
+    static async getAreaFromSubscription(subscription) {
         return SubscriptionsService.mergeSubscriptionOverArea(new AreaModel(), subscription);
     }
 
