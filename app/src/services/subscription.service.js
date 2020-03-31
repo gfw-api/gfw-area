@@ -21,16 +21,19 @@ class SubscriptionsService {
         area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
         area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
 
-        // Calculate the appropriate status
-        let status = 'saved';
+        // Update the status if needed the appropriate status
         if (area.geostore) {
-            const areas = await AreaModel.find({ $and: [{ status: 'saved' }, { geostore: area.geostore }] });
-            if (areas && areas.length <= 0) {
-                status = 'pending';
-            }
+            const areas = await AreaModel.find({
+                status: 'saved',
+                geostore: area.geostore,
+                _id: { $nin: [area.id, area.subscriptionId] }
+            });
+
+            if (areas && areas.length > 0) area.status = 'saved';
+        } else {
+            area.status = 'saved';
         }
 
-        area.status = status;
         return area;
     }
 
