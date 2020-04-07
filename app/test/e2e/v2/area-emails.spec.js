@@ -139,7 +139,7 @@ describe('V2 Area emails', () => {
         sinon.assert.calledOnce(fake);
         sinon.assert.calledWith(
             fake,
-            'subscription-preference-change-en-copy',
+            'subscription-preference-change-en',
             getEmailParameters(response.body.data.id, attributes),
             [{ address: attributes.email }],
             attributes.application,
