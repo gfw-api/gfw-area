@@ -279,7 +279,7 @@ class AreaRouterV2 {
             const { application, status, language } = area;
             const lang = language || 'en';
             await MailService.sendMail(
-                status === 'pending' ? `dashboard-pending-${lang}-copy` : `dashboard-complete-${lang}-copy`,
+                status === 'pending' ? `dashboard-pending-${lang}` : `dashboard-complete-${lang}`,
                 getEmailParametersFromArea(area),
                 [{ address: area.email }],
                 application
@@ -480,7 +480,7 @@ class AreaRouterV2 {
                 }
 
                 return MailService.sendMail(
-                    `dashboard-complete-${lang}-copy`,
+                    `dashboard-complete-${lang}`,
                     getEmailParametersFromArea(area),
                     [{ address: email }],
                     application
