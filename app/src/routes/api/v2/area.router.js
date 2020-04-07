@@ -403,7 +403,7 @@ class AreaRouterV2 {
             const { email, application } = area;
             const lang = area.language || 'en';
             await MailService.sendMail(
-                `subscription-preference-change-${lang}-copy`,
+                `subscription-preference-change-${lang}`,
                 getEmailParametersFromArea(area),
                 [{ address: email }],
                 application
