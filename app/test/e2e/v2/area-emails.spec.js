@@ -65,7 +65,7 @@ describe('V2 Area emails', () => {
         sinon.assert.calledOnce(fake);
         sinon.assert.calledWith(
             fake,
-            'dashboard-complete-en-copy',
+            'dashboard-complete-en',
             getEmailParameters(response.body.data.id, attributes),
             [{ address: attributes.email }],
             attributes.application,
@@ -93,7 +93,7 @@ describe('V2 Area emails', () => {
         sinon.assert.calledOnce(fake);
         sinon.assert.calledWith(
             fake,
-            'dashboard-pending-en-copy',
+            'dashboard-pending-en',
             getEmailParameters(response.body.data.id, attributes),
             [{ address: attributes.email }],
             attributes.application,
@@ -171,7 +171,7 @@ describe('V2 Area emails', () => {
 
         sinon.assert.calledWith(
             fake,
-            'dashboard-complete-en-copy',
+            'dashboard-complete-en',
             getEmailParameters(response.body.data[0].id, area1Attributes),
             [{ address: area1Attributes.email }],
             area1Attributes.application,
@@ -179,7 +179,7 @@ describe('V2 Area emails', () => {
 
         sinon.assert.calledWith(
             fake,
-            'dashboard-complete-en-copy',
+            'dashboard-complete-en',
             getEmailParameters(response.body.data[1].id, area2Attributes),
             [{ address: area2Attributes.email }],
             area2Attributes.application,
