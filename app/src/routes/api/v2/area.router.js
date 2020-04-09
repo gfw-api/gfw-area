@@ -90,7 +90,10 @@ class AreaRouterV2 {
             await Promise.all(subscriptionsToMerge.map(async (sub) => {
                 const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
                 const position = returnArray.indexOf(areaForSub);
-                returnArray[position] = await SubscriptionService.mergeSubscriptionOverArea(areaForSub, { ...sub.attributes, id: sub.id });
+                returnArray[position] = await SubscriptionService.mergeSubscriptionOverArea(areaForSub, {
+                    ...sub.attributes,
+                    id: sub.id
+                });
             }));
 
             // Then with the remaining subscriptions map them to the areas format and concat the two arrays
@@ -124,11 +127,14 @@ class AreaRouterV2 {
                 return;
             }
 
-            area = await SubscriptionService.getAreaFromSubscription({ ...subscription.attributes, id: subscription.id });
+            area = await SubscriptionService.getAreaFromSubscription({
+                ...subscription.attributes,
+                id: subscription.id
+            });
 
-        // 2. If area exists
-        // if has subscription get subscription also and merge props
-        // if it doesn’t have subscription just return the area
+            // 2. If area exists
+            // if has subscription get subscription also and merge props
+            // if it doesn’t have subscription just return the area
         } else if (area.subscriptionId) {
             const [sub] = await SubscriptionService.findByIds([area.subscriptionId]);
             area = await SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
@@ -390,7 +396,7 @@ class AreaRouterV2 {
                 area = await area.save();
             }
 
-        // 2. The area already exists and doesn’t have subscription preferences in the data
+            // 2. The area already exists and doesn’t have subscription preferences in the data
         } else if (previousArea.subscriptionId) {
             await SubscriptionService.deleteSubscription(area.subscriptionId);
             area.subscriptionId = '';
@@ -527,12 +533,18 @@ class AreaRouterV2 {
                     const area = await AreaModel.findOne({ subscriptionId: sub.id });
                     if (area) {
                         syncedAreas += 1;
-                        const mergedArea = await SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
+                        const mergedArea = await SubscriptionService.mergeSubscriptionOverArea(area, {
+                            ...sub.attributes,
+                            id: sub.id
+                        });
                         return mergedArea.save();
                     }
 
                     createdAreas += 1;
-                    const syncedArea = await SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id });
+                    const syncedArea = await SubscriptionService.getAreaFromSubscription({
+                        ...sub.attributes,
+                        id: sub.id
+                    });
                     return syncedArea.save();
                 }));
 

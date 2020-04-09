@@ -71,7 +71,11 @@ describe('Area v2 status', () => {
     it('Getting an area that exists in the areas database returns areas with the correct status - CASE 3', async () => {
         // CASE 3: Any other case, test area should have status saved
         const id = new mongoose.Types.ObjectId();
-        const testArea = await new Area(createArea({ userId: USERS.USER.id, status: 'saved', subscriptionId: id.toHexString() })).save();
+        const testArea = await new Area(createArea({
+            userId: USERS.USER.id,
+            status: 'saved',
+            subscriptionId: id.toHexString()
+        })).save();
 
         // Mock the test area
         mockSubscriptionFindByIds([id], { userId: USERS.USER.id, params: { wdpaid: '123' } });

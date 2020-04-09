@@ -104,7 +104,10 @@ describe('Get areas - V2', () => {
 
         const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
         const area2 = await new Area(createArea({ userId: USERS.MANAGER.id })).save();
-        const area3 = await new Area(createArea({ userId: USERS.ADMIN.id, subscriptionId: subId1.toHexString() })).save();
+        const area3 = await new Area(createArea({
+            userId: USERS.ADMIN.id,
+            subscriptionId: subId1.toHexString()
+        })).save();
 
         // Mock three subscriptions
         mockSubscriptionFindAll(

@@ -7,4 +7,5 @@ class GeostoreNotFound extends Error {
     }
 
 }
+
 module.exports = GeostoreNotFound;

@@ -57,7 +57,10 @@ describe('Create area - V2', () => {
         response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
         response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
         response.body.data.attributes.should.have.property('use').and.deep.equal({ id: 'bbb', name: 'created name' });
-        response.body.data.attributes.should.have.property('iso').and.deep.equal({ country: 'createdCountryIso', region: 'createdRegionIso' });
+        response.body.data.attributes.should.have.property('iso').and.deep.equal({
+            country: 'createdCountryIso',
+            region: 'createdRegionIso'
+        });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
         response.body.data.attributes.datasets[0].should.deep.equal({
@@ -102,7 +105,10 @@ describe('Create area - V2', () => {
         response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
         response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
         response.body.data.attributes.should.have.property('use').and.deep.equal({ id: 'bbb', name: 'created name' });
-        response.body.data.attributes.should.have.property('iso').and.deep.equal({ country: 'createdCountryIso', region: 'createdRegionIso' });
+        response.body.data.attributes.should.have.property('iso').and.deep.equal({
+            country: 'createdCountryIso',
+            region: 'createdRegionIso'
+        });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
         response.body.data.attributes.should.have.property('image').and.include(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}`);

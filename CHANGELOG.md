@@ -1,3 +1,8 @@
+## 09/04/2020
+
+- Add node affinity to kubernetes configuration.
+
+
 # v1.2.0
 
 ## 23/03/2020

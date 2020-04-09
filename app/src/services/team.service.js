@@ -26,4 +26,5 @@ class TeamService {
     }
 
 }
+
 module.exports = TeamService;

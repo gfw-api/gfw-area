@@ -131,7 +131,8 @@ class DownloadService {
                 promises = null;
             }
             // eslint-disable-next-line no-empty
-        } catch (err) {}
+        } catch (err) {
+        }
         await DownloadService.zipFolder(tmpobj.name, `${tmpDownload.name}/download.zip`);
         logger.info('Removing file ', tmpobj.name);
         await DownloadService.removeFolder(tmpobj.name);
