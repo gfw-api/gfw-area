@@ -4,8 +4,6 @@
 
 - Add node affinity to kubernetes configuration.
 
-# v1.2.1
-
 ## 02/04/2020
 
 - Minor fixes in the merging of areas with subscription information (prioritizing information of the area).
