@@ -1,3 +1,5 @@
+# v1.4.0
+
 ## 20/04/2020
 
 - Modify `/v1/area/fw` so it doesn't return areas without geostore id.
