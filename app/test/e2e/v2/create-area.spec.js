@@ -18,7 +18,7 @@ nock.enableNetConnect(process.env.HOST_IP);
 
 const requester = getTestServer();
 
-describe('Create area - V2', () => {
+describe('V2 - Create area', () => {
     before(() => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
