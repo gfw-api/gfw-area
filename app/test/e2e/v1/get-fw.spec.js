@@ -263,6 +263,52 @@ describe('V1 - Get FW areas tests', () => {
         response.body.data[0].attributes.should.have.property('iso').and.be.an('object');
     });
 
+    it('Getting FW areas should hide areas that do not have a geostore id', async () => {
+        const area = await new Area(createArea({
+            userId: USERS.USER.id,
+        })).save();
+
+        await new Area(createArea({
+            userId: USERS.USER.id,
+            geostore: null
+        })).save();
+
+        const areaWithoutGeostore = createArea({
+            userId: USERS.USER.id
+        });
+        delete areaWithoutGeostore.geostore;
+
+        await new Area(areaWithoutGeostore).save();
+
+        nock(process.env.CT_URL)
+            .get(`/v1/teams/user/${USERS.USER.id}`)
+            .reply(200, {});
+
+        const response = await requester
+            .get(`/api/v1/area/fw`)
+            .query({
+                loggedUser: JSON.stringify(USERS.USER)
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(1);
+
+        response.body.data[0].should.have.property('type').and.equal('area');
+        response.body.data[0].should.have.property('id').and.equal(area.id);
+        response.body.data[0].should.have.property('attributes').and.be.an('object');
+
+        response.body.data[0].attributes.should.have.property('name').and.equal(area.name);
+        response.body.data[0].attributes.should.have.property('application').and.equal(area.application);
+        response.body.data[0].attributes.should.have.property('geostore').and.equal(area.geostore);
+        response.body.data[0].attributes.should.have.property('wdpaid').and.equal(area.wdpaid);
+        response.body.data[0].attributes.should.have.property('userId').and.equal(area.userId);
+        response.body.data[0].attributes.should.have.property('createdAt');
+        response.body.data[0].attributes.should.have.property('image').and.equal('');
+        response.body.data[0].attributes.should.have.property('datasets').and.be.an('array').and.length(0);
+        response.body.data[0].attributes.should.have.property('use').and.be.an('object');
+        response.body.data[0].attributes.should.have.property('iso').and.be.an('object');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
