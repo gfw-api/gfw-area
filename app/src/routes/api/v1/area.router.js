@@ -51,7 +51,8 @@ class AreaRouter {
             $or: [
                 { userId },
                 { _id: { $in: teamAreas } }
-            ]
+            ],
+            geostore: { $ne: null }
         };
 
         const areas = await AreaModel.find(query);
