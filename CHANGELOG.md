@@ -1,6 +1,7 @@
 ## 20/04/2020
 
-- Add tests for /v1/area/fw
+- Modify `/v1/area/fw` so it doesn't return areas without geostore id.
+- Add tests for `/v1/area/fw`.
 
 # v1.3.0
 
