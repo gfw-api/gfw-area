@@ -58,30 +58,31 @@ class SubscriptionsService {
             area.fireAlerts = subscription.datasets.includes(config.get('datasets.fires'));
             area.deforestationAlerts = subscription.datasets.includes(config.get('datasets.deforestation'));
             area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
-            area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
-            area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
+        }
 
-            area.use = {};
-            if (subscription.params.use) {
-                area.use.name = subscription.params.use;
-            }
+        area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
+        area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
 
-            if (subscription.params.useid) {
-                area.use.id = subscription.params.useid;
-            }
+        area.use = {};
+        if (subscription.params.use) {
+            area.use.name = subscription.params.use;
+        }
 
-            area.iso = {};
-            if (subscription.params.iso && subscription.params.iso.country) {
-                area.iso.country = subscription.params.iso.country;
-            }
+        if (subscription.params.useid) {
+            area.use.id = subscription.params.useid;
+        }
 
-            if (subscription.params.iso && subscription.params.iso.region) {
-                area.iso.region = subscription.params.iso.region;
-            }
+        area.iso = {};
+        if (subscription.params.iso && subscription.params.iso.country) {
+            area.iso.country = subscription.params.iso.country;
+        }
 
-            if (subscription.params.iso && subscription.params.iso.subregion) {
-                area.iso.subregion = subscription.params.iso.subregion;
-            }
+        if (subscription.params.iso && subscription.params.iso.region) {
+            area.iso.region = subscription.params.iso.region;
+        }
+
+        if (subscription.params.iso && subscription.params.iso.subregion) {
+            area.iso.subregion = subscription.params.iso.subregion;
         }
 
         // Update the status if needed the appropriate status
