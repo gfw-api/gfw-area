@@ -1,3 +1,9 @@
+# v.1.4.1
+
+## 22/04/2020
+
+- Fix so that the correct params are provided to Subscriptions MS when creating the subscription associated to the area
+
 # v1.4.0
 
 ## 20/04/2020

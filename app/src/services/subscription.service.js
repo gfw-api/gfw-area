@@ -4,6 +4,43 @@ const AreaModel = require('models/area.modelV2');
 
 class SubscriptionsService {
 
+    static getRequestBodyForSubscriptionFromArea(area) {
+        const body = {
+            name: area.name,
+            datasets: SubscriptionsService.getDatasetsForSubscription(area),
+            language: area.language,
+            resource: SubscriptionsService.getResourceInfoForSubscription(area),
+            userId: area.userId,
+        };
+
+        // Build subscription params
+        body.params = {};
+
+        if (area.geostore) {
+            body.params = { geostore: area.geostore };
+        }
+
+        if (area.wdpaid) {
+            body.params = { wdpaid: area.wdpaid };
+        }
+
+        if (area.use.name && area.use.id) {
+            body.params = { use: area.use.name, useid: area.use.id };
+        }
+
+        if (area.iso.country) {
+            if (area.iso.region) {
+                body.params = area.iso.subregion
+                    ? { country: area.iso.country, region: area.iso.region, subregion: area.iso.subregion }
+                    : { country: area.iso.country, region: area.iso.region };
+            } else {
+                body.params = { country: area.iso.country };
+            }
+        }
+
+        return body;
+    }
+
     static async mergeSubscriptionOverArea(area, subscription) {
         if (area.isNew) {
             // This is for the serializer to know that it must override the area id with the subscription id
@@ -91,50 +128,22 @@ class SubscriptionsService {
     }
 
     static async createSubscriptionFromArea(area) {
-        const body = {
-            name: area.name,
-            datasets: SubscriptionsService.getDatasetsForSubscription(area),
-            language: area.language,
-            resource: SubscriptionsService.getResourceInfoForSubscription(area),
-            userId: area.userId,
-        };
-
-        if (area.geostore) {
-            body.params = { geostore: area.geostore };
-        } else {
-            body.params = {};
-        }
-
         const createdSubscription = await ctRegisterMicroservice.requestToMicroservice({
             uri: `/subscriptions`,
             method: 'POST',
             json: true,
-            body,
+            body: SubscriptionsService.getRequestBodyForSubscriptionFromArea(area),
         });
 
         return createdSubscription.data.id;
     }
 
     static async updateSubscriptionFromArea(area) {
-        const body = {
-            name: area.name,
-            datasets: SubscriptionsService.getDatasetsForSubscription(area),
-            language: area.language,
-            resource: SubscriptionsService.getResourceInfoForSubscription(area),
-            userId: area.userId,
-        };
-
-        if (area.geostore) {
-            body.params = { geostore: area.geostore };
-        } else {
-            body.params = {};
-        }
-
         const updatedSubscription = await ctRegisterMicroservice.requestToMicroservice({
             uri: `/subscriptions/${area.subscriptionId}`,
             method: 'PATCH',
             json: true,
-            body,
+            body: SubscriptionsService.getRequestBodyForSubscriptionFromArea(area),
         });
 
         return updatedSubscription.data.id;
