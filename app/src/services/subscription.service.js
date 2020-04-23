@@ -40,6 +40,18 @@ class SubscriptionsService {
             }
         }
 
+        if (area.admin.adm0) {
+            body.params = { iso: {} };
+
+            if (area.admin.adm1) {
+                body.params.iso = area.admin.adm2
+                    ? { country: area.admin.adm0, region: area.admin.adm1, subregion: area.admin.adm2 }
+                    : { country: area.admin.adm0, region: area.admin.adm1 };
+            } else {
+                body.params.iso = { country: area.admin.adm0 };
+            }
+        }
+
         return body;
     }
 
