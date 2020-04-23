@@ -29,12 +29,14 @@ class SubscriptionsService {
         }
 
         if (area.iso.country) {
+            body.params = { iso: {} };
+
             if (area.iso.region) {
-                body.params = area.iso.subregion
+                body.params.iso = area.iso.subregion
                     ? { country: area.iso.country, region: area.iso.region, subregion: area.iso.subregion }
                     : { country: area.iso.country, region: area.iso.region };
             } else {
-                body.params = { country: area.iso.country };
+                body.params.iso = { country: area.iso.country };
             }
         }
 
@@ -58,6 +60,28 @@ class SubscriptionsService {
             area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
             area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
             area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
+
+            area.use = {};
+            if (subscription.params.use) {
+                area.use.name = subscription.params.use;
+            }
+
+            if (subscription.params.useid) {
+                area.use.id = subscription.params.useid;
+            }
+
+            area.iso = {};
+            if (subscription.params.iso && subscription.params.iso.country) {
+                area.iso.country = subscription.params.iso.country;
+            }
+
+            if (subscription.params.iso && subscription.params.iso.region) {
+                area.iso.region = subscription.params.iso.region;
+            }
+
+            if (subscription.params.iso && subscription.params.iso.subregion) {
+                area.iso.subregion = subscription.params.iso.subregion;
+            }
         }
 
         // Update the status if needed the appropriate status
