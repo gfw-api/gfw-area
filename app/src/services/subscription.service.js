@@ -29,9 +29,13 @@ class SubscriptionsService {
         }
 
         if (area.iso.country) {
-            body.params = area.iso.region
-                ? { country: area.iso.country, region: area.iso.region }
-                : { country: area.iso.country };
+            if (area.iso.region) {
+                body.params = area.iso.subregion
+                    ? { country: area.iso.country, region: area.iso.region, subregion: area.iso.subregion }
+                    : { country: area.iso.country, region: area.iso.region };
+            } else {
+                body.params = { country: area.iso.country };
+            }
         }
 
         return body;
