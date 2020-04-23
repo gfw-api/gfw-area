@@ -30,7 +30,8 @@ const Area = new Schema({
     iso: {
         _id: false,
         country: { type: String, required: false, trim: true },
-        region: { type: String, required: false, trim: true }
+        region: { type: String, required: false, trim: true },
+        subregion: { type: String, required: false, trim: true },
     },
     admin: {
         _id: false,
