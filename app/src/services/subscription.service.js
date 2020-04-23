@@ -99,10 +99,24 @@ class SubscriptionsService {
             userId: area.userId,
         };
 
+        body.params = {};
+
         if (area.geostore) {
             body.params = { geostore: area.geostore };
-        } else {
-            body.params = {};
+        }
+
+        if (area.wdpaid) {
+            body.params = { wdpaid: area.wdpaid };
+        }
+
+        if (area.use.name && area.use.id) {
+            body.params = { use: area.use.name, useid: area.use.id };
+        }
+
+        if (area.iso.country) {
+            body.params = area.iso.region
+                ? { country: area.iso.country, region: area.iso.region }
+                : { country: area.iso.country };
         }
 
         const createdSubscription = await ctRegisterMicroservice.requestToMicroservice({
