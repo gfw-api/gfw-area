@@ -41,9 +41,9 @@ function getEmailParametersFromArea(area) {
         tags: emailTags,
         image_url: area.image,
         location: name,
-        subscriptions_url: `${config.get('gfw.flagshipUrl')}my-gfw`,
-        dashboard_link: `${config.get('gfw.flagshipUrl')}dashboards/aoi/${id}`,
-        map_link: `${config.get('gfw.flagshipUrl')}map/aoi/${id}`,
+        subscriptions_url: `${config.get('gfw.flagshipUrl')}my-gfw?lang=${area.language}`,
+        dashboard_link: `${config.get('gfw.flagshipUrl')}dashboards/aoi/${id}?lang=${area.language}`,
+        map_link: `${config.get('gfw.flagshipUrl')}map/aoi/${id}?lang=${area.language}`,
     };
 }
 
