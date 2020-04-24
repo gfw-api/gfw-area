@@ -110,6 +110,8 @@ class SubscriptionsService {
             area.status = 'saved';
         }
 
+        area.public = true;
+
         return area;
     }
 
