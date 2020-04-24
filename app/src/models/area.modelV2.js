@@ -50,7 +50,7 @@ const Area = new Schema({
         type: String, trim: true, required: true, default: 'pending'
     },
     public: {
-        type: Boolean, trim: true, required: true, default: false
+        type: Boolean, trim: true, required: true, default: true
     },
     fireAlerts: {
         type: Boolean, trim: true, required: true, default: false
