@@ -25,9 +25,9 @@ const getEmailParameters = (id, attributes) => ({
     tags: attributes.tags && attributes.tags.join(', '),
     image_url: attributes.image,
     location: attributes.name,
-    subscriptions_url: `https://staging.globalforestwatch.org/my-gfw`,
-    dashboard_link: `https://staging.globalforestwatch.org/dashboards/aoi/${id}`,
-    map_link: `https://staging.globalforestwatch.org/map/aoi/${id}`,
+    subscriptions_url: `https://staging.globalforestwatch.org/my-gfw?lang=${attributes.language}`,
+    dashboard_link: `https://staging.globalforestwatch.org/dashboards/aoi/${id}?lang=${attributes.language}`,
+    map_link: `https://staging.globalforestwatch.org/map/aoi/${id}?lang=${attributes.language}`,
 });
 
 describe('V2 - Area emails', () => {
