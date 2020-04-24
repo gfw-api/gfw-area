@@ -1,3 +1,8 @@
+## 24/04/2020
+
+- Modify `/v1/area/fw/:user` so it doesn't return areas without geostore id.
+- Add tests for `/v1/area/fw`.
+
 # v.1.4.1
 
 ## 22/04/2020
