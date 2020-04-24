@@ -84,7 +84,7 @@ describe('V2 - Area status', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
         response.body.data.attributes.should.have.property('subscriptionId').and.equal(id.toHexString());
-        response.body.data.attributes.should.have.property('wdpaid').and.equal(1);
+        response.body.data.attributes.should.have.property('wdpaid').and.equal(123);
         response.body.data.attributes.should.have.property('status').and.equal('saved');
     });
 
