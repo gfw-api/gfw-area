@@ -115,9 +115,10 @@ class AreaRouterV2 {
 
         // 1. Check for area in areas
         let area = await AreaModel.findById(ctx.params.id);
+        const areaExists = area !== null;
 
         // 3. if area doesn’t exist
-        if (area === null) {
+        if (!areaExists) {
             // get from subscriptions and return subscription mapped to have area props keys
             const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
 
@@ -146,7 +147,8 @@ class AreaRouterV2 {
             return;
         }
 
-        if (area.public === true && area.userId !== user) {
+        const shouldHideAreaInfo = area.public === true && area.userId !== user;
+        if (shouldHideAreaInfo) {
             area.tags = null;
             area.userId = null;
             area.monthlySummary = null;
@@ -156,6 +158,9 @@ class AreaRouterV2 {
             area.webhookUrl = null;
             area.email = null;
             area.language = null;
+        }
+
+        if (areaExists && shouldHideAreaInfo) {
             area.subscriptionId = null;
         }
 
