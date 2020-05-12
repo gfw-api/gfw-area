@@ -1,7 +1,7 @@
 {
   "logger": {
     "name": "gfw-area-DEV",
-    "level": "debug",
+    "level": "info",
     "toFile": false,
     "dirLogFile": null
   },
