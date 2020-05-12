@@ -505,7 +505,7 @@ class AreaRouterV2 {
     static async sync(ctx) {
         try {
             // Default interval is the last week
-            let startDate = moment().subtract('1', 'w').hour(0).minute(0);
+            let startDate = moment().subtract('2', 'd').hour(0).minute(0);
             let endDate = moment().hour(0).minute(0);
 
             if (ctx.query.startDate && moment(ctx.query.startDate).isValid()) {
