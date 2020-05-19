@@ -119,6 +119,7 @@ describe('V2 - Sync areas', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('createdAreas').and.equal(0);
         response.body.data.should.have.property('syncedAreas').and.equal(0);
+        response.body.data.should.have.property('totalSubscriptions').and.equal(1);
     });
 
     afterEach(async () => {

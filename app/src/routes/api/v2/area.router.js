@@ -520,6 +520,7 @@ class AreaRouterV2 {
 
             let syncedAreas = 0;
             let createdAreas = 0;
+            let totalSubscriptions = 0;
             let page = 1;
             let hasMoreSubscriptions = true;
             while (hasMoreSubscriptions) {
@@ -532,6 +533,7 @@ class AreaRouterV2 {
                 const subscriptions = response.data;
                 const { links } = response;
                 logger.info(`[AREAS V2 ROUTER - SYNC] Found page ${page} with ${subscriptions.length} subscriptions.`);
+                totalSubscriptions += subscriptions.length;
 
                 // eslint-disable-next-line no-loop-func
                 await Promise.all(subscriptions.map(async (sub) => {
@@ -568,8 +570,8 @@ class AreaRouterV2 {
                 hasMoreSubscriptions = links.self !== links.last;
             }
 
-            logger.info(`[AREAS V2 ROUTER - SYNC] Returning with ${syncedAreas} synced areas and ${createdAreas} created areas.`);
-            ctx.body = { data: { syncedAreas, createdAreas } };
+            logger.info(`[AREAS V2 ROUTER - SYNC] Analyzed a total of ${totalSubscriptions} subscriptions, ${syncedAreas} synced areas and ${createdAreas} created areas.`);
+            ctx.body = { data: { syncedAreas, createdAreas, totalSubscriptions } };
         } catch (err) {
             ctx.throw(400, err.message);
         }
