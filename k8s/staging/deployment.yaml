@@ -51,6 +51,8 @@ spec:
               value: 20cc5eca-8c63-4c41-8e8e-134dcf1e6d76
             - name: VIIRS_DATASET_TABLENAME
               value: vnp14imgtdl_nrt_global_7d
+            - name: MONGO_USE_UNIFIED_TOPOLOGY
+              value: "false"
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
