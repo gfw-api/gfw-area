@@ -1,3 +1,10 @@
+# v1.5.1
+
+## 19/05/2020
+
+- Use secondary mongo nodes for read operations.
+- Disable mongo unified topology.
+
 # v1.5.0
 
 ## 24/04/2020
