@@ -1,3 +1,7 @@
+## 19/05/2020
+
+- Fix problem where an error saving one area would break the whole sync process.
+
 # v1.5.0
 
 ## 24/04/2020

@@ -536,21 +536,29 @@ class AreaRouterV2 {
                 // eslint-disable-next-line no-loop-func
                 await Promise.all(subscriptions.map(async (sub) => {
                     const area = await AreaModel.findOne({ subscriptionId: sub.id });
-                    if (area) {
-                        syncedAreas += 1;
-                        const mergedArea = await SubscriptionService.mergeSubscriptionOverArea(area, {
+                    logger.info(`Executing sync for subscription with ID: ${sub.id}`);
+
+                    const areaToSave = area
+                        ? await SubscriptionService.mergeSubscriptionOverArea(area, {
+                            ...sub.attributes,
+                            id: sub.id
+                        })
+                        : await SubscriptionService.getAreaFromSubscription({
                             ...sub.attributes,
                             id: sub.id
                         });
-                        return mergedArea.save();
-                    }
 
-                    createdAreas += 1;
-                    const syncedArea = await SubscriptionService.getAreaFromSubscription({
-                        ...sub.attributes,
-                        id: sub.id
-                    });
-                    return syncedArea.save();
+                    try {
+                        await areaToSave.save();
+
+                        if (area) {
+                            syncedAreas += 1;
+                        } else {
+                            createdAreas += 1;
+                        }
+                    } catch (e) {
+                        logger.error(`Error saving related to subscription with ID: ${sub.id}`);
+                    }
                 }));
 
                 logger.info(`[AREAS V2 ROUTER] Synced ${syncedAreas} until now.`);

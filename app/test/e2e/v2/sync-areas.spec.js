@@ -95,6 +95,32 @@ describe('V2 - Sync areas', () => {
         getResponse.body.data.find((area) => area.attributes.subscriptionId === '789').attributes.should.have.property('name').and.equal('Updated 3');
     });
 
+    it('Failures syncing areas do not block a successful response', async () => {
+        const subId = new mongoose.Types.ObjectId();
+        await new Area(createArea({ subscriptionId: subId.toHexString(), name: 'Old Name 1' })).save();
+
+        // Return a subscription that will provoke an error when saving
+        mockSubscriptionFindAll(
+            [subId.toHexString()],
+            [{
+                name: 'Updated subscription 1',
+                params: {
+                    geostore: {
+                        status_code: 404,
+                        text: '{"errors":[{"status":404,"detail":"Cannot read property \'geojson\' of null"}]}',
+                        data: null
+                    }
+                }
+            }]
+        );
+
+        const response = await requester.post(`/api/v2/area/sync`).send({ loggedUser: USERS.ADMIN });
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('createdAreas').and.equal(0);
+        response.body.data.should.have.property('syncedAreas').and.equal(0);
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
