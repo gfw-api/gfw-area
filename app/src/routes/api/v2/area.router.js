@@ -516,10 +516,11 @@ class AreaRouterV2 {
                 endDate = moment(ctx.query.endDate);
             }
 
-            logger.info(`[AREAS V2 ROUTER] Starting sync from ${startDate.toISOString()} until ${endDate.toISOString()}`);
+            logger.info(`[AREAS V2 ROUTER - SYNC] Starting sync from ${startDate.toISOString()} until ${endDate.toISOString()}`);
 
             let syncedAreas = 0;
             let createdAreas = 0;
+            let totalSubscriptions = 0;
             let page = 1;
             let hasMoreSubscriptions = true;
             while (hasMoreSubscriptions) {
@@ -531,36 +532,46 @@ class AreaRouterV2 {
                 );
                 const subscriptions = response.data;
                 const { links } = response;
-                logger.info(`[AREAS V2 ROUTER] Found page ${page} with ${subscriptions.length} subscriptions.`);
+                logger.info(`[AREAS V2 ROUTER - SYNC] Found page ${page} with ${subscriptions.length} subscriptions.`);
+                totalSubscriptions += subscriptions.length;
 
                 // eslint-disable-next-line no-loop-func
                 await Promise.all(subscriptions.map(async (sub) => {
                     const area = await AreaModel.findOne({ subscriptionId: sub.id });
-                    if (area) {
-                        syncedAreas += 1;
-                        const mergedArea = await SubscriptionService.mergeSubscriptionOverArea(area, {
+                    logger.info(`[AREAS V2 ROUTER - SYNC] Executing sync for subscription with ID: ${sub.id}`);
+
+                    const areaToSave = area
+                        ? await SubscriptionService.mergeSubscriptionOverArea(area, {
+                            ...sub.attributes,
+                            id: sub.id
+                        })
+                        : await SubscriptionService.getAreaFromSubscription({
                             ...sub.attributes,
                             id: sub.id
                         });
-                        return mergedArea.save();
-                    }
 
-                    createdAreas += 1;
-                    const syncedArea = await SubscriptionService.getAreaFromSubscription({
-                        ...sub.attributes,
-                        id: sub.id
-                    });
-                    return syncedArea.save();
+                    try {
+                        await areaToSave.save();
+
+                        if (area) {
+                            syncedAreas += 1;
+                        } else {
+                            createdAreas += 1;
+                        }
+                    } catch (e) {
+                        logger.error(`[AREAS V2 ROUTER - SYNC] Error saving area for subscription with ID: ${sub.id}`);
+                    }
                 }));
 
-                logger.info(`[AREAS V2 ROUTER] Synced ${syncedAreas} until now.`);
-                logger.info(`[AREAS V2 ROUTER] Created ${createdAreas} until now.`);
+                logger.info(`[AREAS V2 ROUTER - SYNC] Synced ${syncedAreas} so far.`);
+                logger.info(`[AREAS V2 ROUTER - SYNC] Created ${createdAreas} so far.`);
 
                 page++;
                 hasMoreSubscriptions = links.self !== links.last;
             }
 
-            ctx.body = { data: { syncedAreas, createdAreas } };
+            logger.info(`[AREAS V2 ROUTER - SYNC] Analyzed a total of ${totalSubscriptions} subscriptions, ${syncedAreas} synced areas and ${createdAreas} created areas.`);
+            ctx.body = { data: { syncedAreas, createdAreas, totalSubscriptions } };
         } catch (err) {
             ctx.throw(400, err.message);
         }

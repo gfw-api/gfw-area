@@ -4,6 +4,7 @@
 
 - Use secondary mongo nodes for read operations.
 - Disable mongo unified topology.
+- Fix problem where an error saving one area would break the whole sync process.
 
 # v1.5.0
 
