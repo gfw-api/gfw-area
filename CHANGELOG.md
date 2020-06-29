@@ -1,3 +1,7 @@
+## 29/06/2020
+
+- Change nodejs version requirement to v12.17.
+
 # v1.5.1
 
 ## 19/05/2020

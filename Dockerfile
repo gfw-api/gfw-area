@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:12
+FROM mhart/alpine-node:12.17
 MAINTAINER info@vizzuality.com
 
 ENV NAME gfw-area
