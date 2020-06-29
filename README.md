@@ -22,6 +22,7 @@ Dependencies on other Microservices:
 - [Geostore](https://github.com/gfw-api/gfw-geostore-api)
 - [Query](https://github.com/resource-watch/query/)
 - [FW teams](https://github.com/gfw-api/fw-teams)
+- [Subscriptions](https://github.com/gfw-api/gfw-subscription-api)
 
 
 ## Getting started
