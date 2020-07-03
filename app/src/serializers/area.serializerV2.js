@@ -24,6 +24,7 @@ const areaSerializer = new JSONAPISerializer('area', {
         'subscriptionId',
         'email',
         'language',
+        'confirmed',
     ],
     resource: {
         attributes: ['type', 'content']
