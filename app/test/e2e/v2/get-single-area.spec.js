@@ -61,6 +61,7 @@ describe('V2 - Get single area', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
         response.body.data.attributes.should.have.property('subscriptionId').and.equal(id.toHexString());
+        response.body.data.attributes.should.have.property('confirmed').and.equal(true);
     });
 
     it('Getting an area which has an associated subscription returns 200 OK with the correct area info', async () => {
@@ -71,7 +72,12 @@ describe('V2 - Get single area', () => {
             subscriptionId: id.toHexString(),
             name: 'Area name',
         })).save();
-        mockSubscriptionFindByIds([id.toHexString()], { userId: USERS.USER.id, name: 'Subscription name' });
+
+        mockSubscriptionFindByIds([id.toHexString()], {
+            userId: USERS.USER.id,
+            name: 'Subscription name',
+            confirmed: false,
+        });
 
         const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
@@ -79,6 +85,7 @@ describe('V2 - Get single area', () => {
         response.body.data.should.have.property('id').and.equal(area.id);
         response.body.data.should.have.property('attributes').and.be.an('object');
         response.body.data.attributes.should.have.property('name').and.equal('Area name');
+        response.body.data.attributes.should.have.property('confirmed').and.equal(false);
     });
 
     afterEach(async () => {
