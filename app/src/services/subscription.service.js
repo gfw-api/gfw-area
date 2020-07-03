@@ -72,6 +72,7 @@ class SubscriptionsService {
             area.monthlySummary = subscription.datasets.includes(config.get('datasets.monthlySummary'));
         }
 
+        area.confirmed = subscription.confirmed;
         area.geostore = subscription.params && subscription.params.geostore ? subscription.params.geostore : null;
         area.wdpaid = subscription.params && subscription.params.wdpaid ? subscription.params.wdpaid : null;
 
