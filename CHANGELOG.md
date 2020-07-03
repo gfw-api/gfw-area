@@ -1,3 +1,7 @@
+## 03/07/2020
+
+- Map `confirmed` field when merging subscription data over an area.
+
 ## 29/06/2020
 
 - Change nodejs version requirement to v12.16.
