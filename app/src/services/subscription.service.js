@@ -4,6 +4,18 @@ const AreaModel = require('models/area.modelV2');
 
 class SubscriptionsService {
 
+    static async mergeSubscriptionSpecificProps(area) {
+        // Find any subscription only props (such as confirmed) and merge them to the area being returned
+        if (area.subscriptionId) {
+            const [sub] = await SubscriptionsService.findByIds([area.subscriptionId]);
+            return SubscriptionsService.mergeSubscriptionOverArea(area, sub.attributes);
+        }
+
+        // Merge default values and return the area
+        area.confirmed = false;
+        return area;
+    }
+
     static getRequestBodyForSubscriptionFromArea(area) {
         const body = {
             name: area.name,

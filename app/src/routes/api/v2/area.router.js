@@ -24,8 +24,7 @@ function getFilters(ctx) {
     }
 
     if (ctx.query.public) {
-        const publicFilter = ctx.query.public.trim().toLowerCase() === 'true';
-        filter.public = publicFilter;
+        filter.public = ctx.query.public.trim().toLowerCase() === 'true';
     }
 
     return filter;
@@ -72,6 +71,8 @@ class AreaRouterV2 {
             const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
             const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
             const areas = await AreaModel.paginate(filter, { page, limit, sort: 'id' });
+
+            await Promise.all(areas.docs.map(SubscriptionService.mergeSubscriptionSpecificProps));
             ctx.body = AreaSerializerV2.serialize(areas, link);
         } else {
             // Parse areas and get all subscription IDs
@@ -106,6 +107,8 @@ class AreaRouterV2 {
             logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (before filters)`);
             const result = returnArray.filter((area) => Object.keys(filter).every((field) => area[field] === filter[field]));
             logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (after filters)`);
+
+            await Promise.all(result.map(SubscriptionService.mergeSubscriptionSpecificProps));
             ctx.body = AreaSerializerV2.serialize(result);
         }
     }
@@ -164,6 +167,7 @@ class AreaRouterV2 {
             area.subscriptionId = null;
         }
 
+        area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
         ctx.body = AreaSerializerV2.serialize(area);
     }
 
@@ -284,6 +288,7 @@ class AreaRouterV2 {
             }
         }
 
+        area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
         ctx.body = AreaSerializerV2.serialize(area);
 
         if (email) {
@@ -408,6 +413,7 @@ class AreaRouterV2 {
             area = await area.save();
         }
 
+        area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
         ctx.body = AreaSerializerV2.serialize(area);
 
         if (area.email && area.status === 'saved') {
