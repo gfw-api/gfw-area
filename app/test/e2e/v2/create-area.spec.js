@@ -11,7 +11,7 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { mockSubscriptionCreation } = require('../utils/helpers');
+const { mockSubscriptionCreation, mockSubscriptionFindByIds } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -125,6 +125,7 @@ describe('V2 - Create area', () => {
 
     it('Creating an area with fires alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
         const response = await requester.post(`/api/v2/area`).send({
             loggedUser: USERS.USER,
@@ -142,6 +143,7 @@ describe('V2 - Create area', () => {
 
     it('Creating an area with deforestation alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
         const response = await requester.post(`/api/v2/area`).send({
             loggedUser: USERS.USER,
@@ -159,6 +161,7 @@ describe('V2 - Create area', () => {
 
     it('Creating an area with monthly summary alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
         const response = await requester.post(`/api/v2/area`).send({
             loggedUser: USERS.USER,

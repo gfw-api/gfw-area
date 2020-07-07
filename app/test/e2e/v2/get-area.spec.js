@@ -10,7 +10,11 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { mockSubscriptionFindForUser, mockSubscriptionFindAll } = require('../utils/helpers');
+const {
+    mockSubscriptionFindForUser,
+    mockSubscriptionFindAll,
+    mockSubscriptionFindByIds,
+} = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -48,15 +52,21 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas having some subscriptions should return a 200 OK with all the areas and subscriptions for the current user', async () => {
-        mockSubscriptionFindForUser(USERS.USER.id, ['123', '456']);
+        const id1 = new mongoose.Types.ObjectId();
+        const id2 = new mongoose.Types.ObjectId();
+
+        mockSubscriptionFindForUser(USERS.USER.id, [id1.toString(), id2.toString()]);
+        mockSubscriptionFindByIds([id1.toString()], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id2.toString()], { userId: USERS.USER.id });
+
         const createdArea = await new Area(createArea({ userId: USERS.USER.id })).save();
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(3);
 
         response.body.data.find((area) => area.id === createdArea.id).should.be.an('object');
-        response.body.data.find((area) => area.id === '123').should.be.an('object');
-        response.body.data.find((area) => area.id === '456').should.be.an('object');
+        response.body.data.find((area) => area.id === id1.toString()).should.be.an('object');
+        response.body.data.find((area) => area.id === id2.toString()).should.be.an('object');
     });
 
     it('Getting areas having some subscriptions related to areas should return a 200 OK with all the areas and subscriptions for the current user', async () => {
@@ -64,6 +74,9 @@ describe('V2 - Get areas', () => {
         const subId2 = new mongoose.Types.ObjectId();
 
         mockSubscriptionFindForUser(USERS.USER.id, [subId1.toHexString(), subId2.toHexString()]);
+        mockSubscriptionFindByIds([subId1.toString()], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId2.toString()], { userId: USERS.USER.id });
+
         const area = await new Area(createArea({ userId: USERS.USER.id })).save();
         await new Area(createArea({ userId: USERS.USER.id, subscriptionId: subId1.toHexString() })).save();
 
@@ -84,13 +97,18 @@ describe('V2 - Get areas', () => {
         await new Area(createArea({ userId: USERS.MANAGER.id })).save();
         await new Area(createArea({ userId: USERS.ADMIN.id })).save();
 
-        mockSubscriptionFindForUser(USERS.USER.id, ['123']);
+        const id1 = new mongoose.Types.ObjectId().toString();
+        const id2 = new mongoose.Types.ObjectId().toString();
+        mockSubscriptionFindForUser(USERS.USER.id, [id1]);
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
+
         const userResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&all=true`);
         userResponse.status.should.equal(200);
         // USER area + the subscription
         userResponse.body.should.have.property('data').and.be.an('array').and.have.length(2);
 
-        mockSubscriptionFindForUser(USERS.MANAGER.id, ['456']);
+        mockSubscriptionFindForUser(USERS.MANAGER.id, [id2]);
+        mockSubscriptionFindByIds([id2], { userId: USERS.USER.id });
         const managerResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.MANAGER)}&all=true`);
         managerResponse.status.should.equal(200);
         // MANAGER area + the subscription
@@ -122,6 +140,10 @@ describe('V2 - Get areas', () => {
         response.body.data.should.have.property('syncedAreas').and.equal(1);
         response.body.data.should.have.property('createdAreas').and.equal(2);
 
+        mockSubscriptionFindByIds([subId1.toString()], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId2.toString()], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId3.toString()], { userId: USERS.USER.id });
+
         // Get all areas
         const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         getResponse.status.should.equal(200);
@@ -148,16 +170,21 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas filtered by status should return a 200 OK with only areas for the status requested', async () => {
+        const id1 = new mongoose.Types.ObjectId().toString();
+        const id2 = new mongoose.Types.ObjectId().toString();
+
         await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();
         await new Area(createArea({ userId: USERS.USER.id, status: 'pending' })).save();
 
-        mockSubscriptionFindForUser(USERS.USER.id, ['123']);
+        mockSubscriptionFindForUser(USERS.USER.id, [id1]);
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
+
         const savedResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&status=saved`);
         savedResponse.status.should.equal(200);
         savedResponse.body.should.have.property('data').and.be.an('array');
         savedResponse.body.data.every((area) => area.attributes.status === 'saved').should.be.true;
 
-        mockSubscriptionFindForUser(USERS.USER.id, ['456']);
+        mockSubscriptionFindForUser(USERS.USER.id, [id2]);
         const pendingResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&status=pending`);
         pendingResponse.status.should.equal(200);
         pendingResponse.body.should.have.property('data').and.be.an('array');
@@ -165,16 +192,21 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas filtered by public should return a 200 OK with only public areas', async () => {
+        const id1 = new mongoose.Types.ObjectId().toString();
+        const id2 = new mongoose.Types.ObjectId().toString();
+
         await new Area(createArea({ userId: USERS.USER.id, public: true })).save();
         await new Area(createArea({ userId: USERS.USER.id, public: false })).save();
 
-        mockSubscriptionFindForUser(USERS.USER.id, ['123']);
+        mockSubscriptionFindForUser(USERS.USER.id, [id1]);
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
+
         const publicResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&public=true`);
         publicResponse.status.should.equal(200);
         publicResponse.body.should.have.property('data').and.be.an('array');
         publicResponse.body.data.every((area) => area.attributes.public === true).should.be.true;
 
-        mockSubscriptionFindForUser(USERS.USER.id, ['456']);
+        mockSubscriptionFindForUser(USERS.USER.id, [id2]);
         const privateResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&public=false`);
         privateResponse.status.should.equal(200);
         privateResponse.body.should.have.property('data').and.be.an('array');
@@ -182,11 +214,15 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with ALL the areas and ALL the subscriptions', async () => {
+        const id1 = new mongoose.Types.ObjectId().toString();
+        const id2 = new mongoose.Types.ObjectId().toString();
+        const id3 = new mongoose.Types.ObjectId().toString();
+
         await new Area(createArea({ userId: USERS.USER.id })).save();
         await new Area(createArea({ userId: USERS.MANAGER.id })).save();
 
         mockSubscriptionFindAll(
-            ['123', '456', '789'],
+            [id1, id2, id3],
             [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
         );
 
@@ -197,17 +233,22 @@ describe('V2 - Get areas', () => {
         response.body.data.should.have.property('syncedAreas').and.equal(0);
         response.body.data.should.have.property('createdAreas').and.equal(3);
 
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id }, 3);
         const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(5);
     });
 
     it('Getting areas sending query param all along with other filters should return a 200 OK with the correct data', async () => {
+        const id1 = new mongoose.Types.ObjectId().toString();
+        const id2 = new mongoose.Types.ObjectId().toString();
+        const id3 = new mongoose.Types.ObjectId().toString();
+
         await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();
         await new Area(createArea({ userId: USERS.MANAGER.id, status: 'pending' })).save();
 
         mockSubscriptionFindAll(
-            ['123', '456', '789'],
+            [id1, id2, id3],
             [{ userId: USERS.USER.id }, { userId: USERS.MANAGER.id }, { userId: USERS.ADMIN.id }]
         );
 
@@ -219,11 +260,15 @@ describe('V2 - Get areas', () => {
         syncResponse.body.data.should.have.property('createdAreas').and.equal(3);
 
         // Requesting all areas => should return 5 areas
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id }, 3);
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(5);
 
         // Requesting all areas with status saved => should return 1 area
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id2], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id3], { userId: USERS.USER.id });
         const savedResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&status=saved`);
         savedResponse.status.should.equal(200);
         savedResponse.body.should.have.property('data').and.be.an('array').and.have.length(4);

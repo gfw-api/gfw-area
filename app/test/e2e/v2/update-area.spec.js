@@ -159,6 +159,7 @@ describe('V2 - Update area', () => {
         testArea.should.have.property('subscriptionId').and.equal('');
 
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
@@ -180,6 +181,7 @@ describe('V2 - Update area', () => {
         testArea.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe1444');
 
         mockSubscriptionEdition('5e3bf82fad36f4001abe1444');
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1444'], { userId: USERS.USER.id });
 
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
@@ -234,6 +236,7 @@ describe('V2 - Update area', () => {
     it('Updating an area that didn\'t exist (existing subscription) creates a new area and PATCHes subscription, returning a 200 HTTP code and the updated area object', async () => {
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1333']);
         mockSubscriptionEdition('5e3bf82fad36f4001abe1333');
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1333'], { userId: USERS.USER.id });
 
         const response = await requester
             .patch(`/api/v2/area/5e3bf82fad36f4001abe1333`)

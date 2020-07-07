@@ -8,7 +8,7 @@ class SubscriptionsService {
         // Find any subscription only props (such as confirmed) and merge them to the area being returned
         if (area.subscriptionId) {
             const [sub] = await SubscriptionsService.findByIds([area.subscriptionId]);
-            return SubscriptionsService.mergeSubscriptionOverArea(area, sub.attributes);
+            return SubscriptionsService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
         }
 
         // Merge default values and return the area

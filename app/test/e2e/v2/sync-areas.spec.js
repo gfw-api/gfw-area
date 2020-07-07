@@ -9,7 +9,7 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { mockSubscriptionFindAll } = require('../utils/helpers');
+const { mockSubscriptionFindAll, mockSubscriptionFindByIds } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -60,6 +60,9 @@ describe('V2 - Sync areas', () => {
         response.body.data.should.have.property('syncedAreas').and.equal(3);
 
         // Getting the subscription now returns the synced information
+        mockSubscriptionFindByIds([subId1], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId2], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId3], { userId: USERS.USER.id });
         const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(3);
@@ -69,12 +72,16 @@ describe('V2 - Sync areas', () => {
     });
 
     it('Sync areas as an ADMIN creates new areas in the database with subscriptions that do not have a match with an existing area, returning the number of created areas', async () => {
+        const id1 = new mongoose.Types.ObjectId().toString();
+        const id2 = new mongoose.Types.ObjectId().toString();
+        const id3 = new mongoose.Types.ObjectId().toString();
+
         const area1 = await new Area(createArea({ name: 'Old Name 1' })).save();
         const area2 = await new Area(createArea({ name: 'Old Name 2' })).save();
         const area3 = await new Area(createArea({ name: 'Old Name 3' })).save();
 
         mockSubscriptionFindAll(
-            ['123', '456', '789'],
+            [id1, id2, id3],
             [{ name: 'Updated 1' }, { name: 'Updated 2' }, { name: 'Updated 3' }]
         );
 
@@ -84,15 +91,18 @@ describe('V2 - Sync areas', () => {
         response.body.data.should.have.property('createdAreas').and.equal(3);
 
         // Getting the subscription now returns the synced information
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id2], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id3], { userId: USERS.USER.id });
         const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(6);
         getResponse.body.data.find((area) => area.id === area1.id).attributes.should.have.property('name').and.equal('Old Name 1');
         getResponse.body.data.find((area) => area.id === area2.id).attributes.should.have.property('name').and.equal('Old Name 2');
         getResponse.body.data.find((area) => area.id === area3.id).attributes.should.have.property('name').and.equal('Old Name 3');
-        getResponse.body.data.find((area) => area.attributes.subscriptionId === '123').attributes.should.have.property('name').and.equal('Updated 1');
-        getResponse.body.data.find((area) => area.attributes.subscriptionId === '456').attributes.should.have.property('name').and.equal('Updated 2');
-        getResponse.body.data.find((area) => area.attributes.subscriptionId === '789').attributes.should.have.property('name').and.equal('Updated 3');
+        getResponse.body.data.find((area) => area.attributes.subscriptionId === id1).attributes.should.have.property('name').and.equal('Updated 1');
+        getResponse.body.data.find((area) => area.attributes.subscriptionId === id2).attributes.should.have.property('name').and.equal('Updated 2');
+        getResponse.body.data.find((area) => area.attributes.subscriptionId === id3).attributes.should.have.property('name').and.equal('Updated 3');
     });
 
     it('Failures syncing areas do not block a successful response', async () => {
