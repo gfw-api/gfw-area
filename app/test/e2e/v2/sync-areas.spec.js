@@ -41,16 +41,16 @@ describe('V2 - Sync areas', () => {
     });
 
     it('Sync areas as an ADMIN updates the areas in the database with overwrite information from associated subscriptions, returning the number of synced areas', async () => {
-        const subId1 = new mongoose.Types.ObjectId();
-        const subId2 = new mongoose.Types.ObjectId();
-        const subId3 = new mongoose.Types.ObjectId();
+        const subId1 = new mongoose.Types.ObjectId().toString();
+        const subId2 = new mongoose.Types.ObjectId().toString();
+        const subId3 = new mongoose.Types.ObjectId().toString();
 
-        const area1 = await new Area(createArea({ subscriptionId: subId1.toHexString(), name: 'Old Name 1' })).save();
-        const area2 = await new Area(createArea({ subscriptionId: subId2.toHexString(), name: 'Old Name 2' })).save();
-        const area3 = await new Area(createArea({ subscriptionId: subId3.toHexString(), name: 'Old Name 3' })).save();
+        const area1 = await new Area(createArea({ subscriptionId: subId1, name: 'Old Name 1' })).save();
+        const area2 = await new Area(createArea({ subscriptionId: subId2, name: 'Old Name 2' })).save();
+        const area3 = await new Area(createArea({ subscriptionId: subId3, name: 'Old Name 3' })).save();
 
         mockSubscriptionFindAll(
-            [subId1.toHexString(), subId2.toHexString(), subId3.toHexString()],
+            [subId1, subId2, subId3],
             [{ name: 'Updated subscription 1' }, { name: 'Updated subscription 2' }, { name: 'Updated subscription 3' }]
         );
 
@@ -106,12 +106,12 @@ describe('V2 - Sync areas', () => {
     });
 
     it('Failures syncing areas do not block a successful response', async () => {
-        const subId = new mongoose.Types.ObjectId();
-        await new Area(createArea({ subscriptionId: subId.toHexString(), name: 'Old Name 1' })).save();
+        const subId = new mongoose.Types.ObjectId().toString();
+        await new Area(createArea({ subscriptionId: subId, name: 'Old Name 1' })).save();
 
         // Return a subscription that will provoke an error when saving
         mockSubscriptionFindAll(
-            [subId.toHexString()],
+            [subId],
             [{
                 name: 'Updated subscription 1',
                 params: {

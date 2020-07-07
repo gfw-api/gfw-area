@@ -54,26 +54,26 @@ describe('V2 - Get single area', () => {
     });
 
     it('Getting an area that does not exist in the areas database, but corresponds to an user subscription returns 200 OK with the subscription info', async () => {
-        const id = new mongoose.Types.ObjectId();
+        const id = new mongoose.Types.ObjectId().toString();
         mockSubscriptionFindByIds([id], { userId: USERS.USER.id }, 2);
         const response = await requester.get(`/api/v2/area/${id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('subscriptionId').and.equal(id.toHexString());
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal(id);
         response.body.data.attributes.should.have.property('confirmed').and.equal(true);
     });
 
     it('Getting an area which has an associated subscription returns 200 OK with the correct area info', async () => {
-        const id = new mongoose.Types.ObjectId();
+        const id = new mongoose.Types.ObjectId().toString();
         const area = await new Area(createArea({
             public: false,
             userId: USERS.USER.id,
-            subscriptionId: id.toHexString(),
+            subscriptionId: id,
             name: 'Area name',
         })).save();
 
-        mockSubscriptionFindByIds([id.toHexString()], {
+        mockSubscriptionFindByIds([id], {
             userId: USERS.USER.id,
             name: 'Subscription name',
             confirmed: false,
