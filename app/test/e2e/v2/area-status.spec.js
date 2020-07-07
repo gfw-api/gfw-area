@@ -43,13 +43,13 @@ describe('V2 - Area status', () => {
         await new Area(createArea({ userId: USERS.USER.id, geostore: '123', status: 'saved' })).save();
 
         // Mock the test area
-        const id = new mongoose.Types.ObjectId();
+        const id = new mongoose.Types.ObjectId().toString();
         mockSubscriptionFindByIds([id], { userId: USERS.USER.id }, 2);
         const response = await requester.get(`/api/v2/area/${id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('subscriptionId').and.equal(id.toHexString());
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal(id);
         response.body.data.attributes.should.have.property('status').and.equal('saved');
     });
 
@@ -58,23 +58,23 @@ describe('V2 - Area status', () => {
         // Test area should have status pending
 
         // Mock the test area
-        const id = new mongoose.Types.ObjectId();
+        const id = new mongoose.Types.ObjectId().toString();
         mockSubscriptionFindByIds([id], { userId: USERS.USER.id }, 2);
         const response = await requester.get(`/api/v2/area/${id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('subscriptionId').and.equal(id.toHexString());
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal(id);
         response.body.data.attributes.should.have.property('status').and.equal('pending');
     });
 
     it('Getting an area that exists in the areas database returns areas with the correct status - CASE 3', async () => {
         // CASE 3: Any other case, test area should have status saved
-        const id = new mongoose.Types.ObjectId();
+        const id = new mongoose.Types.ObjectId().toString();
         const testArea = await new Area(createArea({
             userId: USERS.USER.id,
             status: 'saved',
-            subscriptionId: id.toHexString()
+            subscriptionId: id,
         })).save();
 
         // Mock the test area
@@ -83,27 +83,27 @@ describe('V2 - Area status', () => {
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('subscriptionId').and.equal(id.toHexString());
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal(id);
         response.body.data.attributes.should.have.property('wdpaid').and.equal(123);
         response.body.data.attributes.should.have.property('status').and.equal('saved');
     });
 
     it('Getting an area that has status \'pending\' in the database but has geostore and attached subscription should return the correct status - pending', async () => {
-        const subId = new mongoose.Types.ObjectId();
+        const subId = new mongoose.Types.ObjectId().toString();
         const testArea = await new Area(createArea({
             userId: USERS.USER.id,
             status: 'pending',
             geostore: '123',
-            subscriptionId: subId.toHexString(),
+            subscriptionId: subId,
         })).save();
 
         // Mock the test area
-        mockSubscriptionFindByIds([subId.toHexString()], { userId: USERS.USER.id }, 2);
+        mockSubscriptionFindByIds([subId], { userId: USERS.USER.id }, 2);
         const response = await requester.get(`/api/v2/area/${testArea.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('subscriptionId').and.equal(subId.toHexString());
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal(subId);
         response.body.data.attributes.should.have.property('status').and.equal('pending');
     });
 
