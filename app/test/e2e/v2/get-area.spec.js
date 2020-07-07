@@ -52,12 +52,12 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas having some subscriptions should return a 200 OK with all the areas and subscriptions for the current user', async () => {
-        const id1 = new mongoose.Types.ObjectId();
-        const id2 = new mongoose.Types.ObjectId();
+        const id1 = new mongoose.Types.ObjectId().toString();
+        const id2 = new mongoose.Types.ObjectId().toString();
 
-        mockSubscriptionFindForUser(USERS.USER.id, [id1.toString(), id2.toString()]);
-        mockSubscriptionFindByIds([id1.toString()], { userId: USERS.USER.id });
-        mockSubscriptionFindByIds([id2.toString()], { userId: USERS.USER.id });
+        mockSubscriptionFindForUser(USERS.USER.id, [id1, id2]);
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id2], { userId: USERS.USER.id });
 
         const createdArea = await new Area(createArea({ userId: USERS.USER.id })).save();
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}`);
@@ -65,8 +65,8 @@ describe('V2 - Get areas', () => {
         response.body.should.have.property('data').and.be.an('array').and.have.length(3);
 
         response.body.data.find((area) => area.id === createdArea.id).should.be.an('object');
-        response.body.data.find((area) => area.id === id1.toString()).should.be.an('object');
-        response.body.data.find((area) => area.id === id2.toString()).should.be.an('object');
+        response.body.data.find((area) => area.id === id1).should.be.an('object');
+        response.body.data.find((area) => area.id === id2).should.be.an('object');
     });
 
     it('Getting areas having some subscriptions related to areas should return a 200 OK with all the areas and subscriptions for the current user', async () => {
