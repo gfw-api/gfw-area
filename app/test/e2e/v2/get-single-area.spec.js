@@ -55,7 +55,7 @@ describe('V2 - Get single area', () => {
 
     it('Getting an area that does not exist in the areas database, but corresponds to an user subscription returns 200 OK with the subscription info', async () => {
         const id = new mongoose.Types.ObjectId();
-        mockSubscriptionFindByIds([id], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id], { userId: USERS.USER.id }, 2);
         const response = await requester.get(`/api/v2/area/${id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -77,7 +77,7 @@ describe('V2 - Get single area', () => {
             userId: USERS.USER.id,
             name: 'Subscription name',
             confirmed: false,
-        });
+        }, 2);
 
         const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);

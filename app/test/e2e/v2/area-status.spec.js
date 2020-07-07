@@ -44,7 +44,7 @@ describe('V2 - Area status', () => {
 
         // Mock the test area
         const id = new mongoose.Types.ObjectId();
-        mockSubscriptionFindByIds([id], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id], { userId: USERS.USER.id }, 2);
         const response = await requester.get(`/api/v2/area/${id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -59,7 +59,7 @@ describe('V2 - Area status', () => {
 
         // Mock the test area
         const id = new mongoose.Types.ObjectId();
-        mockSubscriptionFindByIds([id], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id], { userId: USERS.USER.id }, 2);
         const response = await requester.get(`/api/v2/area/${id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -78,7 +78,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         // Mock the test area
-        mockSubscriptionFindByIds([id], { userId: USERS.USER.id, params: { wdpaid: '123' } });
+        mockSubscriptionFindByIds([id], { userId: USERS.USER.id, params: { wdpaid: '123' } }, 2);
         const response = await requester.get(`/api/v2/area/${testArea.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -98,7 +98,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         // Mock the test area
-        mockSubscriptionFindByIds([subId.toHexString()], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId.toHexString()], { userId: USERS.USER.id }, 2);
         const response = await requester.get(`/api/v2/area/${testArea.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');

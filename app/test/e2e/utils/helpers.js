@@ -74,9 +74,10 @@ const mockSubscriptionDeletion = (id = '123') => {
     nock(process.env.CT_URL).delete(`/v1/subscriptions/${id}`).reply(200);
 };
 
-const mockSubscriptionFindByIds = (ids = [], overrideData = {}) => {
+const mockSubscriptionFindByIds = (ids = [], overrideData = {}, times = 1) => {
     nock(process.env.CT_URL)
         .post(`/v1/subscriptions/find-by-ids`)
+        .times(times)
         .reply(200, () => ({
             data: ids.map((id) => ({
                 type: 'subscription',
