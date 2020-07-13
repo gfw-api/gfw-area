@@ -210,6 +210,17 @@ describe('V2 - Get areas', () => {
         privateResponse.body.data.every((area) => area.attributes.public === false).should.be.true;
     });
 
+    it('Getting private areas as an ADMIN user should return a 200 OK response with all areas', async () => {
+        mockSubscriptionFindForUser(USERS.ADMIN.id, []);
+        const area = await new Area(createArea({ userId: USERS.USER.id, public: false })).save();
+
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array');
+        response.body.should.have.property('data').and.be.an('array').and.have.length(1);
+        response.body.data.map((a) => a.id).should.include.members([area._id.toString()]);
+    });
+
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with ALL the areas and ALL the subscriptions', async () => {
         const id1 = new mongoose.Types.ObjectId().toString();
         const id2 = new mongoose.Types.ObjectId().toString();

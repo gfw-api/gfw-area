@@ -13,7 +13,10 @@ const MailService = require('services/mail.service');
 const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
 
 function getFilters(ctx) {
-    const filter = shouldUseAllFilter(ctx) ? {} : { userId: ctx.state.loggedUser.id };
+    let filter = {};
+    if (!shouldUseAllFilter(ctx) && ctx.state.loggedUser.role !== 'ADMIN') {
+        filter = { userId: ctx.state.loggedUser.id };
+    }
 
     if (ctx.query.application) {
         filter.application = ctx.query.application.split(',').map((el) => el.trim());
@@ -144,13 +147,13 @@ class AreaRouterV2 {
             area = await SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
         }
 
-        const user = (ctx.state.loggedUser && ctx.state.loggedUser.id) || null;
-        if (area.public === false && area.userId !== user) {
+        const user = ctx.state.loggedUser || null;
+        if (area.public === false && area.userId !== user.id && user.role !== 'ADMIN') {
             ctx.throw(401, 'Area private');
             return;
         }
 
-        const shouldHideAreaInfo = area.public === true && area.userId !== user;
+        const shouldHideAreaInfo = area.public === true && area.userId !== user.id && user.role !== 'ADMIN';
         if (shouldHideAreaInfo) {
             area.tags = null;
             area.userId = null;
