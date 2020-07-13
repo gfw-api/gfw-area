@@ -210,11 +210,9 @@ describe('V2 - Get areas', () => {
         privateResponse.body.data.every((area) => area.attributes.public === false).should.be.true;
     });
 
-    it('Getting private areas as an ADMIN user should return a 200 OK response with all areas', async () => {
-        mockSubscriptionFindForUser(USERS.ADMIN.id, []);
+    it('Getting private areas as an ADMIN user providing all=true should return a 200 OK response with all areas', async () => {
         const area = await new Area(createArea({ userId: USERS.USER.id, public: false })).save();
-
-        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}`);
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array');
         response.body.should.have.property('data').and.be.an('array').and.have.length(1);
