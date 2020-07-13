@@ -1,9 +1,10 @@
-# v1.5.2
+# v1.6.0
 
-## 03/07/2020
+## 13/07/2020
 
 - Map `confirmed` field when merging subscription data over an area.
 - Change nodejs version requirement to v12.16.
+- Add override for ADMIN users to be able to view private areas.
 
 # v1.5.1
 

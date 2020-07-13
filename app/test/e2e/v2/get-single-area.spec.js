@@ -45,6 +45,14 @@ describe('V2 - Get single area', () => {
         response.body.errors[0].should.have.property('detail').and.equal(`Area private`);
     });
 
+    it('Getting a private area that exists in the areas database as an ADMIN user returns 200 OK with the area info', async () => {
+        const area = await new Area(createArea({ public: false })).save();
+        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.ADMIN)}`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('id').and.equal(area._id.toString());
+    });
+
     it('Getting a public area that exists in the areas database but does not belong to the user returns 200 OK with the area info', async () => {
         const area = await new Area(createArea({ public: true })).save();
         const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
