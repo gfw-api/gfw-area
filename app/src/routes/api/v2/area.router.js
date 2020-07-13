@@ -13,10 +13,7 @@ const MailService = require('services/mail.service');
 const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
 
 function getFilters(ctx) {
-    let filter = {};
-    if (!shouldUseAllFilter(ctx) && ctx.state.loggedUser.role !== 'ADMIN') {
-        filter = { userId: ctx.state.loggedUser.id };
-    }
+    const filter = shouldUseAllFilter(ctx) ? {} : { userId: ctx.state.loggedUser.id };
 
     if (ctx.query.application) {
         filter.application = ctx.query.application.split(',').map((el) => el.trim());
