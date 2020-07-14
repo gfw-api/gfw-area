@@ -313,6 +313,18 @@ describe('V2 - Get areas', () => {
         response.body.data.map((area) => area.id).should.have.members([area3.id, area4.id]);
     });
 
+    it('Getting areas with all=true when there are inconsistencies between areas and subs returns the correct paginated result', async () => {
+        const fakeId = new mongoose.Types.ObjectId().toString();
+        const area = await new Area(createArea({ subscriptionId: fakeId })).save();
+        mockSubscriptionFindByIds([]);
+
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').with.lengthOf(1);
+        response.body.should.have.property('links').and.be.an('object');
+        response.body.data.map((a) => a.id).should.have.members([area.id]);
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
