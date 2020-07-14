@@ -1,5 +1,7 @@
 const nock = require('nock');
 const chai = require('chai');
+const mongoose = require('mongoose');
+
 const Area = require('models/area.modelV2');
 const { createArea } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
@@ -58,6 +60,20 @@ describe('V2 - Delete area', () => {
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1111']);
         mockSubscriptionDeletion('5e3bf82fad36f4001abe1111');
         const response = await requester.delete(`/api/v2/area/5e3bf82fad36f4001abe1111?loggedUser=${JSON.stringify(USERS.USER)}`);
+        response.status.should.equal(200);
+    });
+
+    it('Deleting an area that is associated with an invalid sub does not throw an error, returning a 200 HTTP code and the updated area object', async () => {
+        const fakeId = new mongoose.Types.ObjectId().toString();
+        const area = await new Area(createArea({
+            userId: USERS.USER.id,
+            fireAlerts: true,
+            deforestationAlerts: true,
+            subscriptionId: fakeId,
+        })).save();
+        mockSubscriptionFindByIds([]);
+
+        const response = await requester.delete(`/api/v2/area/${area._id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
     });
 

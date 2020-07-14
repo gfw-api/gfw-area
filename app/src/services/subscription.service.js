@@ -1,18 +1,20 @@
 const ctRegisterMicroservice = require('ct-register-microservice-node');
 const config = require('config');
+const logger = require('logger');
 const AreaModel = require('models/area.modelV2');
 
 class SubscriptionsService {
 
     static async mergeSubscriptionSpecificProps(area) {
+        // Set default values
+        area.confirmed = false;
+
         // Find any subscription only props (such as confirmed) and merge them to the area being returned
         if (area.subscriptionId) {
             const [sub] = await SubscriptionsService.findByIds([area.subscriptionId]);
-            return SubscriptionsService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
+            return sub ? SubscriptionsService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id }) : area;
         }
 
-        // Merge default values and return the area
-        area.confirmed = false;
         return area;
     }
 
@@ -191,14 +193,19 @@ class SubscriptionsService {
     }
 
     static async updateSubscriptionFromArea(area) {
-        const updatedSubscription = await ctRegisterMicroservice.requestToMicroservice({
-            uri: `/subscriptions/${area.subscriptionId}`,
-            method: 'PATCH',
-            json: true,
-            body: SubscriptionsService.getRequestBodyForSubscriptionFromArea(area),
-        });
+        try {
+            const updatedSubscription = await ctRegisterMicroservice.requestToMicroservice({
+                uri: `/subscriptions/${area.subscriptionId}`,
+                method: 'PATCH',
+                json: true,
+                body: SubscriptionsService.getRequestBodyForSubscriptionFromArea(area),
+            });
 
-        return updatedSubscription.data.id;
+            return updatedSubscription.data.id;
+        } catch (e) {
+            logger.warn(`Error while updating subscription with id ${area.subscriptionId} associated with area with id ${area._id}.`);
+            return null;
+        }
     }
 
     static async deleteSubscription(id) {

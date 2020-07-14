@@ -140,8 +140,7 @@ class AreaRouterV2 {
             // if has subscription get subscription also and merge props
             // if it doesn’t have subscription just return the area
         } else if (area.subscriptionId) {
-            const [sub] = await SubscriptionService.findByIds([area.subscriptionId]);
-            area = await SubscriptionService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id });
+            area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
         }
 
         const user = ctx.state.loggedUser || null;

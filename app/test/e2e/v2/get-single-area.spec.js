@@ -96,6 +96,21 @@ describe('V2 - Get single area', () => {
         response.body.data.attributes.should.have.property('confirmed').and.equal(false);
     });
 
+    it('Getting an area that is associated with an invalid sub returns the correct result', async () => {
+        const fakeId = new mongoose.Types.ObjectId().toString();
+        const area = await new Area(createArea({
+            userId: USERS.USER.id,
+            subscriptionId: fakeId,
+        })).save();
+        mockSubscriptionFindByIds([], {}, 2);
+
+        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('id').and.equal(area.id);
+        response.body.data.should.have.property('attributes').and.be.an('object');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
