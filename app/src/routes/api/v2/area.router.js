@@ -509,7 +509,7 @@ class AreaRouterV2 {
 
     static async sync(ctx) {
         try {
-            // Default interval is the last week
+            // Default interval is the last 2 days
             let startDate = moment().subtract('2', 'd').hour(0).minute(0);
             let endDate = moment().hour(0).minute(0);
 
@@ -528,6 +528,7 @@ class AreaRouterV2 {
             let totalSubscriptions = 0;
             let page = 1;
             let hasMoreSubscriptions = true;
+            const affectedAreaIds = [];
             while (hasMoreSubscriptions) {
                 const response = await SubscriptionService.getAllSubscriptions(
                     page,
@@ -563,6 +564,8 @@ class AreaRouterV2 {
                         } else {
                             createdAreas += 1;
                         }
+
+                        affectedAreaIds.push(areaToSave._id);
                     } catch (e) {
                         logger.error(`[AREAS V2 ROUTER - SYNC] Error saving area for subscription with ID: ${sub.id}`);
                     }
@@ -576,7 +579,15 @@ class AreaRouterV2 {
             }
 
             logger.info(`[AREAS V2 ROUTER - SYNC] Analyzed a total of ${totalSubscriptions} subscriptions, ${syncedAreas} synced areas and ${createdAreas} created areas.`);
-            ctx.body = { data: { syncedAreas, createdAreas, totalSubscriptions } };
+            logger.info(`[AREAS V2 ROUTER - SYNC] Affected area ids: ${affectedAreaIds}`);
+            ctx.body = {
+                data: {
+                    syncedAreas,
+                    createdAreas,
+                    totalSubscriptions,
+                    affectedAreaIds,
+                }
+            };
         } catch (err) {
             ctx.throw(400, err.message);
         }
