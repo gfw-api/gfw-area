@@ -16,6 +16,18 @@ nock.enableNetConnect(process.env.HOST_IP);
 
 const requester = getTestServer();
 
+const validateSyncSuccessResponse = (response, syncedAreas, createdAreas, totalSubscriptions, affectedAreaIds = undefined) => {
+    response.status.should.equal(200);
+    response.body.should.have.property('data').and.be.an('object');
+    response.body.data.should.have.property('syncedAreas').and.equal(syncedAreas);
+    response.body.data.should.have.property('createdAreas').and.equal(createdAreas);
+    response.body.data.should.have.property('totalSubscriptions').and.equal(totalSubscriptions);
+    if (affectedAreaIds) {
+        response.body.data.should.have.property('affectedAreaIds').and.be.an('array');
+        response.body.data.affectedAreaIds.should.include.members(affectedAreaIds);
+    }
+};
+
 describe('V2 - Sync areas', () => {
     before(() => {
         if (process.env.NODE_ENV !== 'test') {
@@ -55,13 +67,7 @@ describe('V2 - Sync areas', () => {
         );
 
         const response = await requester.post(`/api/v2/area/sync`).send({ loggedUser: USERS.ADMIN });
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('syncedAreas').and.equal(3);
-        response.body.data.should.have.property('createdAreas').and.equal(0);
-        response.body.data.should.have.property('totalSubscriptions').and.equal(3);
-        response.body.data.should.have.property('affectedAreaIds').and.be.an('array');
-        response.body.data.affectedAreaIds.should.include.members([area1.id, area2.id, area3.id]);
+        validateSyncSuccessResponse(response, 3, 0, 3, [area1.id, area2.id, area3.id]);
 
         // Getting the subscription now returns the synced information
         mockSubscriptionFindByIds([subId1], { userId: USERS.USER.id });
@@ -90,13 +96,7 @@ describe('V2 - Sync areas', () => {
         );
 
         const response = await requester.post(`/api/v2/area/sync`).send({ loggedUser: USERS.ADMIN });
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('syncedAreas').and.equal(0);
-        response.body.data.should.have.property('createdAreas').and.equal(3);
-        response.body.data.should.have.property('totalSubscriptions').and.equal(3);
-        response.body.data.should.have.property('affectedAreaIds').and.be.an('array');
-        response.body.data.affectedAreaIds.should.have.length(3).and.not.include.members([area1.id, area2.id, area3.id]);
+        validateSyncSuccessResponse(response, 0, 3, 3);
 
         // Getting the subscription now returns the synced information
         mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
@@ -111,6 +111,32 @@ describe('V2 - Sync areas', () => {
         getResponse.body.data.find((area) => area.attributes.subscriptionId === id1).attributes.should.have.property('name').and.equal('Updated 1');
         getResponse.body.data.find((area) => area.attributes.subscriptionId === id2).attributes.should.have.property('name').and.equal('Updated 2');
         getResponse.body.data.find((area) => area.attributes.subscriptionId === id3).attributes.should.have.property('name').and.equal('Updated 3');
+    });
+
+    it('Running sync areas with dryRun flag set to true does not apply the updates to the areas in the database', async () => {
+        const id1 = new mongoose.Types.ObjectId().toString();
+        const id2 = new mongoose.Types.ObjectId().toString();
+        const id3 = new mongoose.Types.ObjectId().toString();
+
+        const area1 = await new Area(createArea({ name: 'Old Name 1' })).save();
+        const area2 = await new Area(createArea({ name: 'Old Name 2' })).save();
+        const area3 = await new Area(createArea({ name: 'Old Name 3' })).save();
+
+        mockSubscriptionFindAll(
+            [id1, id2, id3],
+            [{ name: 'Updated 1' }, { name: 'Updated 2' }, { name: 'Updated 3' }]
+        );
+
+        const response = await requester.post(`/api/v2/area/sync?dryRun=true`).send({ loggedUser: USERS.ADMIN });
+        validateSyncSuccessResponse(response, 0, 3, 3);
+
+        // Getting the subscription should just return the previously existing subs (not the ones that should have been created)
+        const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        getResponse.status.should.equal(200);
+        getResponse.body.should.have.property('data').and.be.an('array').and.have.length(3);
+        getResponse.body.data.find((area) => area.id === area1.id).attributes.should.have.property('name').and.equal('Old Name 1');
+        getResponse.body.data.find((area) => area.id === area2.id).attributes.should.have.property('name').and.equal('Old Name 2');
+        getResponse.body.data.find((area) => area.id === area3.id).attributes.should.have.property('name').and.equal('Old Name 3');
     });
 
     it('Failures syncing areas do not block a successful response', async () => {
@@ -133,12 +159,7 @@ describe('V2 - Sync areas', () => {
         );
 
         const response = await requester.post(`/api/v2/area/sync`).send({ loggedUser: USERS.ADMIN });
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('syncedAreas').and.equal(0);
-        response.body.data.should.have.property('createdAreas').and.equal(0);
-        response.body.data.should.have.property('totalSubscriptions').and.equal(1);
-        response.body.data.should.have.property('affectedAreaIds').and.be.an('array').and.have.length(0);
+        validateSyncSuccessResponse(response, 0, 0, 1, []);
     });
 
     afterEach(async () => {

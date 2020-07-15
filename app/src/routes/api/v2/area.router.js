@@ -521,7 +521,9 @@ class AreaRouterV2 {
                 endDate = moment(ctx.query.endDate);
             }
 
-            logger.info(`[AREAS V2 ROUTER - SYNC] Starting sync from ${startDate.toISOString()} until ${endDate.toISOString()}`);
+            const dryRun = ctx.query.dryRun === 'true';
+
+            logger.info(`[AREAS V2 ROUTER - SYNC] Starting sync from ${startDate.toISOString()} until ${endDate.toISOString()} (dry run: ${dryRun})`);
 
             let syncedAreas = 0;
             let createdAreas = 0;
@@ -557,7 +559,9 @@ class AreaRouterV2 {
                         });
 
                     try {
-                        await areaToSave.save();
+                        if (!dryRun) {
+                            await areaToSave.save();
+                        }
 
                         if (area) {
                             syncedAreas += 1;
