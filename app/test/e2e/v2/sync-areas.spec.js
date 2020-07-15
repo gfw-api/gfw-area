@@ -58,6 +58,10 @@ describe('V2 - Sync areas', () => {
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('syncedAreas').and.equal(3);
+        response.body.data.should.have.property('createdAreas').and.equal(0);
+        response.body.data.should.have.property('totalSubscriptions').and.equal(3);
+        response.body.data.should.have.property('affectedAreaIds').and.be.an('array');
+        response.body.data.affectedAreaIds.should.include.members([area1.id, area2.id, area3.id]);
 
         // Getting the subscription now returns the synced information
         mockSubscriptionFindByIds([subId1], { userId: USERS.USER.id });
@@ -88,7 +92,11 @@ describe('V2 - Sync areas', () => {
         const response = await requester.post(`/api/v2/area/sync`).send({ loggedUser: USERS.ADMIN });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('syncedAreas').and.equal(0);
         response.body.data.should.have.property('createdAreas').and.equal(3);
+        response.body.data.should.have.property('totalSubscriptions').and.equal(3);
+        response.body.data.should.have.property('affectedAreaIds').and.be.an('array');
+        response.body.data.affectedAreaIds.should.have.length(3).and.not.include.members([area1.id, area2.id, area3.id]);
 
         // Getting the subscription now returns the synced information
         mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
@@ -127,9 +135,10 @@ describe('V2 - Sync areas', () => {
         const response = await requester.post(`/api/v2/area/sync`).send({ loggedUser: USERS.ADMIN });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('createdAreas').and.equal(0);
         response.body.data.should.have.property('syncedAreas').and.equal(0);
+        response.body.data.should.have.property('createdAreas').and.equal(0);
         response.body.data.should.have.property('totalSubscriptions').and.equal(1);
+        response.body.data.should.have.property('affectedAreaIds').and.be.an('array').and.have.length(0);
     });
 
     afterEach(async () => {
