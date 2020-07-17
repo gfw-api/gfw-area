@@ -562,7 +562,6 @@ class AreaRouterV2 {
                 await Promise.all(subscriptions.map(async (sub) => {
                     const area = await AreaModel.findOne({ subscriptionId: sub.id });
                     logger.info(`[AREAS V2 ROUTER - SYNC] Executing sync for subscription with ID: ${sub.id}`);
-
                     const areaToSave = area
                         ? await SubscriptionService.mergeSubscriptionOverArea(area, {
                             ...sub.attributes,
@@ -575,6 +574,22 @@ class AreaRouterV2 {
 
                     try {
                         if (!dryRun) {
+                            // check area geostore for status=saved
+                            if (areaToSave && areaToSave.geostore) {
+                                // check if it exists in db with status=saved
+                                const { geostore } = areaToSave;
+                                const query = {
+                                    $and: [
+                                        { status: 'saved' },
+                                        { geostore }
+                                    ]
+                                };
+                                logger.info(`Checking if data created already for geostore ${geostore}`);
+                                const savedAreas = await AreaModel.find(query);
+                                if (savedAreas && savedAreas.length > 0) {
+                                    areaToSave.status = 'saved';
+                                }
+                            }
                             await areaToSave.save();
                         }
 
