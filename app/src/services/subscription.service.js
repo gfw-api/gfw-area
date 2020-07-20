@@ -209,11 +209,15 @@ class SubscriptionsService {
     }
 
     static async deleteSubscription(id) {
-        return ctRegisterMicroservice.requestToMicroservice({
-            uri: `/subscriptions/${id}`,
-            method: 'DELETE',
-            json: true,
-        });
+        try {
+            await ctRegisterMicroservice.requestToMicroservice({
+                uri: `/subscriptions/${id}`,
+                method: 'DELETE',
+                json: true,
+            });
+        } catch (e) {
+            logger.warn(`Error while deleting subscription with id ${id}.`);
+        }
     }
 
 }
