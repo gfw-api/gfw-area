@@ -266,7 +266,7 @@ describe('V2 - Update area', () => {
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
     });
 
-    it('Updating an area that is associated with an invalid sub does not throw an error, returning a 200 HTTP code and the updated area object', async () => {
+    it('Updating an area that is associated with an invalid sub does not throw an error (sub to update not found), returning a 200 HTTP code and the updated area object', async () => {
         const fakeId = new mongoose.Types.ObjectId().toString();
         const area = await new Area(createArea({
             userId: USERS.USER.id,
@@ -290,6 +290,31 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal(area._id.toString());
         response.body.data.attributes.should.have.property('subscriptionId').and.equal(fakeId);
+        response.body.data.attributes.should.have.property('fireAlerts').and.equal(false);
+    });
+
+    it('Updating an area that is associated with an invalid sub does not throw an error (sub to delete not found), returning a 200 HTTP code and the updated area object', async () => {
+        const fakeId = new mongoose.Types.ObjectId().toString();
+        const area = await new Area(createArea({
+            userId: USERS.USER.id,
+            fireAlerts: true,
+            subscriptionId: fakeId,
+        })).save();
+
+        // Mock failed update on subscription
+        nock(process.env.CT_URL)
+            .delete(`/v1/subscriptions/${fakeId}`)
+            .reply(404, () => ({ errors: {} }));
+
+        const response = await requester
+            .patch(`/api/v2/area/${area._id}`)
+            .send({ loggedUser: USERS.USER, fireAlerts: false });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id').and.equal(area._id.toString());
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
         response.body.data.attributes.should.have.property('fireAlerts').and.equal(false);
     });
 
