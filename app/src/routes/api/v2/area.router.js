@@ -347,6 +347,10 @@ class AreaRouterV2 {
             const savedAreas = await AreaModel.find(query);
             if (savedAreas && savedAreas.length > 0) isSaved = true;
             area.geostore = ctx.request.body.geostore;
+
+            // Update status to saved if geostore already exists with status=saved
+            area.status = isSaved ? 'saved' : 'pending';
+            logger.info(`Updating area with id ${ctx.params.id} to status ${isSaved ? 'saved' : 'pending'}`);
         }
         if (ctx.request.body.wdpaid) {
             area.wdpaid = ctx.request.body.wdpaid;
@@ -376,17 +380,8 @@ class AreaRouterV2 {
         if (ctx.request.body.tags) {
             area.tags = ctx.request.body.tags;
         }
-        // Update status to saved if geostore already exists with status=saved
-        if (ctx.request.body.status || isSaved) {
-            const status = isSaved ? 'saved' : ctx.request.body.status;
-            logger.info(`Updating area with id ${ctx.params.id} to status ${status}`);
-            area.status = status;
-        }
         if (ctx.request.body.public) {
             area.public = ctx.request.body.public;
-        }
-        if (ctx.request.body.status) {
-            area.status = ctx.request.body.status;
         }
         const updateKeys = ctx.request.body && Object.keys(ctx.request.body);
         area.public = updateKeys.includes('public') ? ctx.request.body.public : area.public;
