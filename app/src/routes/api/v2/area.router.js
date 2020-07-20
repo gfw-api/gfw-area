@@ -392,7 +392,7 @@ class AreaRouterV2 {
         area.subscriptionId = updateKeys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
         area.email = updateKeys.includes('email') ? ctx.request.body.email : area.email;
         area.language = updateKeys.includes('language') ? ctx.request.body.language : area.language;
-        area.status = updateKeys.includes('status') ? ctx.request.body.status : area.status;
+        area.status = updateKeys.includes('status') && ctx.state.loggedUser.role === 'ADMIN' ? ctx.request.body.status : area.status;
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
