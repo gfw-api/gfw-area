@@ -37,6 +37,21 @@ describe('V2 - Area status', () => {
         pendingResponse.body.data.attributes.should.have.property('status').and.equal('pending');
     });
 
+    it('Getting pending or saved areas always returns the correct response', async () => {
+        const savedArea = await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();
+        const pendingArea = await new Area(createArea({ userId: USERS.USER.id, status: 'pending' })).save();
+
+        const savedResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&status=saved`);
+        savedResponse.status.should.equal(200);
+        savedResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
+        savedResponse.body.data.map((a) => a.id).should.include.members([savedArea.id]);
+
+        const pendingResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&status=pending`);
+        pendingResponse.status.should.equal(200);
+        pendingResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
+        pendingResponse.body.data.map((a) => a.id).should.include.members([pendingArea.id]);
+    });
+
     it('Getting an area that does not exist in the areas database returns areas with the correct status - CASE 1', async () => {
         // CASE 1: Test area refers to a geostore, and exists at least one area for the same geostore with status saved
         // Test area should have status saved
@@ -105,6 +120,172 @@ describe('V2 - Area status', () => {
         response.body.data.should.have.property('attributes').and.be.an('object');
         response.body.data.attributes.should.have.property('subscriptionId').and.equal(subId);
         response.body.data.attributes.should.have.property('status').and.equal('pending');
+    });
+
+    it('Creating an area should set the status to saved if there is an area with the same geostore already with status saved', async () => {
+        await new Area(createArea({ status: 'saved', geostore: '456' })).save();
+
+        // Update area1 - it should automatically update the status to saved
+        const response = await requester.post(`/api/v2/area`)
+            .send({
+                loggedUser: USERS.USER,
+                name: 'AREA 123',
+                geostore: '456'
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostore').and.equal('456');
+        response.body.data.attributes.should.have.property('status').and.equal('saved');
+    });
+
+    it('Creating an area should set the status to pending if there isn\'t an area with the same geostore already with status saved', async () => {
+        // Update area1 - it should automatically update the status to saved
+        const response = await requester.post(`/api/v2/area`)
+            .send({
+                loggedUser: USERS.USER,
+                name: 'AREA 123',
+                geostore: '456'
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostore').and.equal('456');
+        response.body.data.attributes.should.have.property('status').and.equal('pending');
+    });
+
+    it('Updating the geostore field of a saved area should set the status to saved if there is an area with the same geostore already with status saved', async () => {
+        const area1 = await new Area(createArea({
+            userId: USERS.USER.id,
+            status: 'saved',
+            geostore: '123',
+        })).save();
+
+        await new Area(createArea({ status: 'saved', geostore: '456' })).save();
+
+        // Update area1 - it should automatically update the status to saved
+        const response = await requester
+            .patch(`/api/v2/area/${area1.id}`)
+            .send({
+                loggedUser: USERS.USER,
+                name: 'AREA 123',
+                geostore: '456'
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostore').and.equal('456');
+        response.body.data.attributes.should.have.property('status').and.equal('saved');
+    });
+
+    it('Updating the geostore field of a pending area should set the status to saved if there is an area with the same geostore already with status saved', async () => {
+        const area1 = await new Area(createArea({
+            userId: USERS.USER.id,
+            status: 'pending',
+            geostore: '123',
+        })).save();
+
+        await new Area(createArea({ status: 'saved', geostore: '456' })).save();
+
+        // Update area1 - it should automatically update the status to saved
+        const response = await requester
+            .patch(`/api/v2/area/${area1.id}`)
+            .send({
+                loggedUser: USERS.USER,
+                name: 'AREA 123',
+                geostore: '456'
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostore').and.equal('456');
+        response.body.data.attributes.should.have.property('status').and.equal('saved');
+    });
+
+    it('Updating the geostore field of a saved area should set the status to pending if there isn\' an area with the same geostore already with status saved', async () => {
+        const area1 = await new Area(createArea({
+            userId: USERS.USER.id,
+            status: 'saved',
+            geostore: '123',
+        })).save();
+
+        // Update area1 - it should automatically update the status to saved
+        const response = await requester
+            .patch(`/api/v2/area/${area1.id}`)
+            .send({
+                loggedUser: USERS.USER,
+                name: 'AREA 123',
+                geostore: '456'
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostore').and.equal('456');
+        response.body.data.attributes.should.have.property('status').and.equal('pending');
+    });
+
+    it('Updating the geostore field of a pending area should set the status to pending if there isn\' an area with the same geostore already with status saved', async () => {
+        const area1 = await new Area(createArea({
+            userId: USERS.USER.id,
+            status: 'pending',
+            geostore: '123',
+        })).save();
+
+        // Update area1 - it should automatically update the status to saved
+        const response = await requester
+            .patch(`/api/v2/area/${area1.id}`)
+            .send({
+                loggedUser: USERS.USER,
+                name: 'AREA 123',
+                geostore: '456'
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostore').and.equal('456');
+        response.body.data.attributes.should.have.property('status').and.equal('pending');
+    });
+
+    it('Only admin users should be able to manually edit the status field of an area', async () => {
+        const userArea = await new Area(createArea({ userId: USERS.USER.id, status: 'pending' })).save();
+        const managerArea = await new Area(createArea({ userId: USERS.MANAGER.id, status: 'pending' })).save();
+        const adminArea = await new Area(createArea({ userId: USERS.ADMIN.id, status: 'pending' })).save();
+
+        // USER users should NOT be able to manually change the status field
+        const userResponse = await requester.patch(`/api/v2/area/${userArea.id}`)
+            .send({ loggedUser: USERS.USER, status: 'saved' });
+        userResponse.status.should.equal(200);
+        userResponse.body.should.have.property('data').and.be.an('object');
+        userResponse.body.data.should.have.property('attributes').and.be.an('object');
+        userResponse.body.data.attributes.should.have.property('status').and.equal('pending');
+
+        // MANAGER users should NOT be able to manually change the status field
+        const managerResponse = await requester.patch(`/api/v2/area/${managerArea.id}`)
+            .send({ loggedUser: USERS.MANAGER, status: 'saved' });
+        managerResponse.status.should.equal(200);
+        managerResponse.body.should.have.property('data').and.be.an('object');
+        managerResponse.body.data.should.have.property('attributes').and.be.an('object');
+        managerResponse.body.data.attributes.should.have.property('status').and.equal('pending');
+
+        // ADMIN users should be able to manually change the status field
+        const adminResponse = await requester.patch(`/api/v2/area/${adminArea.id}`)
+            .send({ loggedUser: USERS.ADMIN, status: 'saved' });
+        adminResponse.status.should.equal(200);
+        adminResponse.body.should.have.property('data').and.be.an('object');
+        adminResponse.body.data.should.have.property('attributes').and.be.an('object');
+        adminResponse.body.data.attributes.should.have.property('status').and.equal('saved');
     });
 
     afterEach(async () => {

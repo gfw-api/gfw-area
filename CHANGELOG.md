@@ -1,3 +1,9 @@
+# v1.6.1
+
+## 20/07/2020
+
+- Adjust automatic `status` update behavior and tests for it.
+
 # v1.6.0
 
 ## 13/07/2020

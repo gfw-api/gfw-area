@@ -179,7 +179,7 @@ class AreaRouterV2 {
         if (ctx.request.files && ctx.request.files.image) {
             image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
         }
-
+        //  check geostore exists already with status=saved
         const geostore = (ctx.request.body && ctx.request.body.geostore) || null;
         const query = {
             $and: [
@@ -333,8 +333,24 @@ class AreaRouterV2 {
         if (ctx.request.body.name) {
             area.name = ctx.request.body.name;
         }
+        let isSaved = false;
         if (ctx.request.body.geostore) {
+            // check if it exists in db with status=saved
+            const { geostore } = ctx.request.body;
+            const query = {
+                $and: [
+                    { status: 'saved' },
+                    { geostore }
+                ]
+            };
+            logger.info(`Checking if data created already for geostore ${geostore}`);
+            const savedAreas = await AreaModel.find(query);
+            if (savedAreas && savedAreas.length > 0) isSaved = true;
             area.geostore = ctx.request.body.geostore;
+
+            // Update status to saved if geostore already exists with status=saved
+            area.status = isSaved ? 'saved' : 'pending';
+            logger.info(`Updating area with id ${ctx.params.id} to status ${isSaved ? 'saved' : 'pending'}`);
         }
         if (ctx.request.body.wdpaid) {
             area.wdpaid = ctx.request.body.wdpaid;
@@ -364,14 +380,8 @@ class AreaRouterV2 {
         if (ctx.request.body.tags) {
             area.tags = ctx.request.body.tags;
         }
-        if (ctx.request.body.status) {
-            area.status = ctx.request.body.status;
-        }
         if (ctx.request.body.public) {
             area.public = ctx.request.body.public;
-        }
-        if (ctx.request.body.status) {
-            area.status = ctx.request.body.status;
         }
         const updateKeys = ctx.request.body && Object.keys(ctx.request.body);
         area.public = updateKeys.includes('public') ? ctx.request.body.public : area.public;
@@ -382,7 +392,7 @@ class AreaRouterV2 {
         area.subscriptionId = updateKeys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
         area.email = updateKeys.includes('email') ? ctx.request.body.email : area.email;
         area.language = updateKeys.includes('language') ? ctx.request.body.language : area.language;
-        area.status = updateKeys.includes('status') ? ctx.request.body.status : area.status;
+        area.status = updateKeys.includes('status') && ctx.state.loggedUser.role === 'ADMIN' ? ctx.request.body.status : area.status;
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
@@ -547,7 +557,6 @@ class AreaRouterV2 {
                 await Promise.all(subscriptions.map(async (sub) => {
                     const area = await AreaModel.findOne({ subscriptionId: sub.id });
                     logger.info(`[AREAS V2 ROUTER - SYNC] Executing sync for subscription with ID: ${sub.id}`);
-
                     const areaToSave = area
                         ? await SubscriptionService.mergeSubscriptionOverArea(area, {
                             ...sub.attributes,
@@ -560,6 +569,22 @@ class AreaRouterV2 {
 
                     try {
                         if (!dryRun) {
+                            // check area geostore for status=saved
+                            if (areaToSave && areaToSave.geostore) {
+                                // check if it exists in db with status=saved
+                                const { geostore } = areaToSave;
+                                const query = {
+                                    $and: [
+                                        { status: 'saved' },
+                                        { geostore }
+                                    ]
+                                };
+                                logger.info(`Checking if data created already for geostore ${geostore}`);
+                                const savedAreas = await AreaModel.find(query);
+                                if (savedAreas && savedAreas.length > 0) {
+                                    areaToSave.status = 'saved';
+                                }
+                            }
                             await areaToSave.save();
                         }
 
