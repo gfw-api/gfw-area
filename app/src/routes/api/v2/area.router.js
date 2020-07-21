@@ -144,12 +144,12 @@ class AreaRouterV2 {
         }
 
         const user = ctx.state.loggedUser || null;
-        if (area.public === false && user && area.userId !== user.id && user.role !== 'ADMIN') {
+        if (area.public === false && (!user || (user && area.userId !== user.id && user.role !== 'ADMIN'))) {
             ctx.throw(401, 'Area private');
             return;
         }
 
-        const shouldHideAreaInfo = area.public !== true && user && area.userId !== user.id && user.role !== 'ADMIN';
+        const shouldHideAreaInfo = !user || (user && area.userId !== user.id && user.role !== 'ADMIN');
         if (shouldHideAreaInfo) {
             area.tags = null;
             area.userId = null;
