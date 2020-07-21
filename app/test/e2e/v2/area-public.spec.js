@@ -11,6 +11,13 @@ nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 const requester = getTestServer();
 
+const assertValidAreaResponse = (response, email) => {
+    response.status.should.equal(200);
+    response.body.should.have.property('data').and.be.an('object');
+    response.body.data.should.have.property('attributes').and.be.an('object');
+    response.body.data.attributes.should.have.property('email').and.equal(email);
+};
+
 describe('V2 - Area status', () => {
     before(async () => {
         if (process.env.NODE_ENV !== 'test') {
@@ -26,10 +33,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('email').and.equal('test@example.com');
+        assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a private area as the owner should return all the area info', async () => {
@@ -40,10 +44,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('email').and.equal('test@example.com');
+        assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a public area as an ADMIN should return all the area info', async () => {
@@ -54,10 +55,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.ADMIN)}`);
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('email').and.equal('test@example.com');
+        assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a private area as an ADMIN should return all the area info', async () => {
@@ -68,10 +66,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.ADMIN)}`);
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('email').and.equal('test@example.com');
+        assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a public area without auth should return the area info except sensitive info', async () => {
@@ -81,8 +76,8 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}`);
-        response.status.should.equal(401); // Area private
+        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=null`);
+        assertValidAreaResponse(response, null);
     });
 
     it('Getting a private area without auth should return not found', async () => {
@@ -92,8 +87,10 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}`);
-        response.status.should.equal(401); // Area private
+        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=null`);
+        response.status.should.equal(401);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.equal('Area private');
     });
 
     afterEach(async () => {
