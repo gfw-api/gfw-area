@@ -149,7 +149,7 @@ class AreaRouterV2 {
             return;
         }
 
-        const shouldHideAreaInfo = area.public === true && area.userId !== user.id && user.role !== 'ADMIN';
+        const shouldHideAreaInfo = area.public === true && user && area.userId !== user.id && user.role !== 'ADMIN';
         if (shouldHideAreaInfo) {
             area.tags = null;
             area.userId = null;
