@@ -51,6 +51,9 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     return a;
 }, []).join('&');
 
+const SUPPORTED_LANG_CODES = ['en', 'fr', 'es_MX', 'pt_BR', 'zh', 'id'];
+const DEFAULT_LANG_CODE = 'en';
+
 class AreaRouterV2 {
 
     static async getAll(ctx) {
@@ -273,7 +276,7 @@ class AreaRouterV2 {
             deforestationAlerts: deforAlertSub,
             webhookUrl,
             monthlySummary: summarySub,
-            language: ctx.request.body.language,
+            language: SUPPORTED_LANG_CODES.includes(ctx.request.body.language) ? ctx.request.body.language : DEFAULT_LANG_CODE,
             email
         }).save();
 
@@ -391,8 +394,10 @@ class AreaRouterV2 {
         area.monthlySummary = updateKeys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
         area.subscriptionId = updateKeys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
         area.email = updateKeys.includes('email') ? ctx.request.body.email : area.email;
-        area.language = updateKeys.includes('language') ? ctx.request.body.language : area.language;
         area.status = updateKeys.includes('status') && ctx.state.loggedUser.role === 'ADMIN' ? ctx.request.body.status : area.status;
+        if (updateKeys.includes('language')) {
+            area.language = SUPPORTED_LANG_CODES.includes(ctx.request.body.language) ? ctx.request.body.language : DEFAULT_LANG_CODE;
+        }
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }

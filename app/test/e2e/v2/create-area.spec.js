@@ -177,6 +177,30 @@ describe('V2 - Create area', () => {
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
     });
 
+    it('Creating an area with an invalid language code will default the language to \'en\' and return a 200 HTTP code and the created area object', async () => {
+        const requestAndValidateAreaWithLangCode = async (requestLang, responseLang) => {
+            const response = await requester.post(`/api/v2/area`).send({
+                loggedUser: USERS.USER,
+                name: 'Portugal area',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                language: requestLang,
+            });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.attributes.should.have.property('language').and.equal(responseLang);
+        };
+
+        await requestAndValidateAreaWithLangCode('en', 'en');
+        await requestAndValidateAreaWithLangCode('fr', 'fr');
+        await requestAndValidateAreaWithLangCode('zh', 'zh');
+        await requestAndValidateAreaWithLangCode('id', 'id');
+        await requestAndValidateAreaWithLangCode('pt_BR', 'pt_BR');
+        await requestAndValidateAreaWithLangCode('es_MX', 'es_MX');
+        await requestAndValidateAreaWithLangCode('ru', 'en');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
