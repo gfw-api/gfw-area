@@ -318,6 +318,31 @@ describe('V2 - Update area', () => {
         response.body.data.attributes.should.have.property('fireAlerts').and.equal(false);
     });
 
+    it('Updating an area providing an invalid language code will default the language to \'en\' and return a 200 HTTP code and the updated area object', async () => {
+        const requestAndValidateAreaWithLangCode = async (requestLang, responseLang, initialLang = 'en') => {
+            const area = await new Area(createArea({ userId: USERS.USER.id, language: initialLang })).save();
+            const response = await requester.patch(`/api/v2/area/${area._id}`).send({
+                loggedUser: USERS.USER,
+                name: 'Portugal area',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                language: requestLang,
+            });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.attributes.should.have.property('language').and.equal(responseLang);
+        };
+
+        await requestAndValidateAreaWithLangCode('en', 'en');
+        await requestAndValidateAreaWithLangCode('fr', 'fr');
+        await requestAndValidateAreaWithLangCode('zh', 'zh');
+        await requestAndValidateAreaWithLangCode('id', 'id');
+        await requestAndValidateAreaWithLangCode('pt_BR', 'pt_BR');
+        await requestAndValidateAreaWithLangCode('es_MX', 'es_MX');
+        await requestAndValidateAreaWithLangCode('ru', 'en');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
