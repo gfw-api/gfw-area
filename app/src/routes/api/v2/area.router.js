@@ -503,7 +503,8 @@ class AreaRouterV2 {
             const areas = await AreaModel.find({ geostore: { $in: geostores } });
             ctx.body = AreaSerializerV2.serialize(areas);
 
-            await Promise.all(areas.map((area) => {
+            const areasToNotify = areas.filter((a) => a.status === 'saved');
+            await Promise.all(areasToNotify.map((area) => {
                 const { email, application } = area;
                 const lang = area.language || 'en';
                 if (!email) {
