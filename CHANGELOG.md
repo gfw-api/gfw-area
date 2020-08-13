@@ -1,3 +1,7 @@
+## 13/08/2020
+
+- For the `/area/fw/:userId` endpoint, automatically set `application` field to `fw` if not set.
+
 # v1.6.1
 
 ## 20/07/2020

@@ -82,6 +82,11 @@ class AreaRouter {
     }
 
     static async saveByUserId(ctx) {
+        // We are assuming here that the user has 'fw' in their application list
+        // To be safer, we could call the user MS and check
+        if (!ctx.request.body.application) {
+            ctx.request.body.application = 'fw';
+        }
         await AreaRouter.saveArea(ctx, ctx.params.userId);
     }
 
@@ -280,7 +285,7 @@ router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidator.create, Are
 router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
 router.get('/fw', loggedUserToState, AreaRouter.getFWAreas);
-router.post('/fw/:userId', loggedUserToState, AreaValidator.create, AreaRouter.saveByUserId);
+router.post('/fw/:userId', loggedUserToState, unwrapJSONStrings, AreaValidator.create, AreaRouter.saveByUserId);
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouter.getFWAreasByUserId);
 router.get('/:id', loggedUserToState, AreaRouter.get);
 router.get('/:id/alerts', loggedUserToState, AreaRouter.getAlertsOfArea);

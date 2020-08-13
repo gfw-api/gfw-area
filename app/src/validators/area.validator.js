@@ -28,6 +28,7 @@ class AreaValidator {
         ctx.checkBody('use').optional().check((use) => AreaValidator.isObject(use), 'must be an object');
 
         if (ctx.errors) {
+            logger.debug(`Area validation failed with error: ${JSON.stringify(ctx.errors)}`);
             ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
             ctx.status = 400;
             return;
