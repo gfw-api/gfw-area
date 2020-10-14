@@ -1,13 +1,22 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: gfw
   labels:
-    name: area
     app: gfw
+    name: area
   name: area
+  namespace: gfw
 spec:
+  progressDeadlineSeconds: 2147483647
   revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      name: area
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -23,17 +32,7 @@ spec:
                     values:
                       - apps
       containers:
-        - name: area
-          image: vizzuality/area
-          imagePullPolicy: Always
-          resources:
-            requests:
-              cpu: "0.25"
-              memory: "256M"
-            limits:
-              cpu: "1"
-              memory: "512M"
-          args:
+        - args:
             - start
           env:
             - name: PORT
@@ -55,50 +54,50 @@ spec:
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
-                  name: dbsecrets
                   key: AREA_MONGO_URI
+                  name: dbsecrets
             - name: CT_URL
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: CT_URL
+                  name: mssecrets
             - name: CT_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: CT_TOKEN
+                  name: mssecrets
             - name: CT_REGISTER_MODE
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: CT_REGISTER_MODE
+                  name: mssecrets
             - name: API_VERSION
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: API_VERSION
+                  name: mssecrets
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: AREA_S3_ACCESS_KEY_ID
+                  name: mssecrets
             - name: S3_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: AREA_S3_SECRET_ACCESS_KEY
+                  name: mssecrets
             - name: S3_BUCKET
               value: forest-watcher-files
             - name: AOI_DATA_S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: AREA_AOI_DATA_S3_ACCESS_KEY_ID
+                  name: mssecrets
             - name: AOI_DATA_S3_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: AREA_AOI_DATA_S3_SECRET_ACCESS_KEY
+                  name: mssecrets
             - name: AOI_DATA_S3_BUCKET
               value: gfw-pipelines
             - name: DEFORESTATION_ALERTS_DATASET_ID
@@ -110,27 +109,46 @@ spec:
             - name: SPARKPOST_KEY
               valueFrom:
                 secretKeyRef:
-                  name: mssecrets
                   key: SPARKPOST_KEY
-
+                  name: mssecrets
+          image: vizzuality/area
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthcheck
+              port: 4100
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: area
           ports:
             - containerPort: 4100
+              protocol: TCP
           readinessProbe:
-            httpGet:
-              scheme: HTTP
-              path: /healthcheck
-              port: 4100
-            initialDelaySeconds: 30
-            timeoutSeconds: 5
-            periodSeconds: 15
-          livenessProbe:
-            httpGet:
-              scheme: HTTP
-              path: /healthcheck
-              port: 4100
             failureThreshold: 3
+            httpGet:
+              path: /healthcheck
+              port: 4100
+              scheme: HTTP
             initialDelaySeconds: 30
-            timeoutSeconds: 5
             periodSeconds: 15
-
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512M
+            requests:
+              cpu: 250m
+              memory: 256M
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
       restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status: {}
