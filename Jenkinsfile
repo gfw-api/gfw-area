@@ -45,7 +45,6 @@ node {
           sh("kubectl apply -f k8s/services/")
           sh("kubectl apply -f k8s/dev/")
           sh("kubectl set image deployment ${appName} ${appName}=${imageTag} --record -n gfw")
-          sh("kubectl set image deployment ${appName}-cron ${appName}-cron=${imageTag} --record -n gfw")
           break
 
         // Roll out to staging
@@ -55,7 +54,6 @@ node {
           sh("kubectl apply -f k8s/services/")
           sh("kubectl apply -f k8s/staging/")
           sh("kubectl set image deployment ${appName} ${appName}=${imageTag} --record -n gfw")
-          sh("kubectl set image deployment ${appName}-cron ${appName}-cron=${imageTag} --record -n gfw")
           break
 
         // Roll out to production
@@ -84,7 +82,6 @@ node {
             sh("kubectl apply -f k8s/services/")
             sh("kubectl apply -f k8s/production/")
             sh("kubectl set image deployment ${appName} ${appName}=${imageTag} --record -n gfw")
-            sh("kubectl set image deployment ${appName}-cron ${appName}-cron=${imageTag} --record -n gfw")
           } else {
             sh("echo NOT DEPLOYED")
             currentBuild.result = 'SUCCESS'
