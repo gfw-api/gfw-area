@@ -15,10 +15,12 @@ nock.enableNetConnect(process.env.HOST_IP);
 const requester = getTestServer();
 
 describe('V1 - Create area FW', () => {
-    before(() => {
+    before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        await Area.deleteMany({}).exec();
     });
 
     it('Creating an area without being logged in should return a 401 - "Not logged" error', async () => {

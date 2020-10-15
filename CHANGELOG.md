@@ -1,5 +1,6 @@
 ## 15/10/2020
 
+- Add pagination and sorting to areas v1.
 - Add `updatedAt` field to areas v1 and v2.
 
 ## 13/08/2020

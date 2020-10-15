@@ -5,22 +5,36 @@ const AreaModel = require('models/area.model');
 const AreaValidator = require('validators/area.validator');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
+const AreaService = require('services/area.service');
 const s3Service = require('services/s3.service');
 
 const router = new Router({
     prefix: '/area',
 });
 
+const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
+    a.push(`${k}=${encodeURIComponent(obj[k])}`);
+    return a;
+}, []).join('&');
+
 class AreaRouter {
 
     static async getAll(ctx) {
+        const { query } = ctx;
+
         logger.info('Obtaining all areas of the user ', ctx.state.loggedUser.id);
-        const filter = { userId: ctx.state.loggedUser.id };
-        if (ctx.query.application) {
-            filter.application = ctx.query.application.split(',').map((el) => el.trim());
-        }
-        const areas = await AreaModel.find(filter);
-        ctx.body = AreaSerializer.serialize(areas);
+
+        const areas = await AreaService.getAll(query, ctx.state.loggedUser);
+
+        const clonedQuery = { ...query };
+        delete clonedQuery['page[size]'];
+        delete clonedQuery['page[number]'];
+        delete clonedQuery.ids;
+        const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
+        const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
+        const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
+
+        ctx.body = AreaSerializer.serialize(areas, link);
     }
 
     static async get(ctx) {
