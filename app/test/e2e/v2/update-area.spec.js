@@ -88,6 +88,8 @@ describe('V2 - Update area', () => {
             region: 'updatedRegionIso'
         });
         response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
         response.body.data.attributes.datasets[0].should.deep.equal({
             cache: true,
@@ -142,6 +144,8 @@ describe('V2 - Update area', () => {
             region: 'updatedRegionIso'
         });
         response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
         response.body.data.attributes.should.have.property('image').and.include(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}`);
         response.body.data.attributes.datasets[0].should.deep.equal({
@@ -172,6 +176,9 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal(testArea.id);
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
     });
 
     it('Updating an area that had a subscription attached but now with different values updates the subscription and should return a 200 HTTP code and the updated area object', async () => {
@@ -194,6 +201,9 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal(testArea.id);
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe1444');
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
     });
 
     it('Updating an area that had a subscription attached to not having deletes the subscription and should return a 200 HTTP code and the updated area object', async () => {
@@ -215,6 +225,9 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal(testArea.id);
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
     });
 
     it('Updating an area that didn\'t have subscription attached to continue not having does nothing to subscriptions and should return a 200 HTTP code and the updated area object', async () => {
@@ -233,6 +246,9 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal(testArea.id);
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
     });
 
     it('Updating an area that didn\'t exist (existing subscription) creates a new area and PATCHes subscription, returning a 200 HTTP code and the updated area object', async () => {
@@ -249,6 +265,9 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal('5e3bf82fad36f4001abe1333');
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe1333');
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
     });
 
     it('Updating an area that didn\'t exist (existing subscription) creates a new area and DELETEs subscription, returning a 200 HTTP code and the updated area object', async () => {
@@ -264,6 +283,9 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal('5e3bf82fad36f4001abe1333');
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
     });
 
     it('Updating an area that is associated with an invalid sub does not throw an error (sub to update not found), returning a 200 HTTP code and the updated area object', async () => {
@@ -291,6 +313,9 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('id').and.equal(area._id.toString());
         response.body.data.attributes.should.have.property('subscriptionId').and.equal(fakeId);
         response.body.data.attributes.should.have.property('fireAlerts').and.equal(false);
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
     });
 
     it('Updating an area that is associated with an invalid sub does not throw an error (sub to delete not found), returning a 200 HTTP code and the updated area object', async () => {
@@ -316,6 +341,9 @@ describe('V2 - Update area', () => {
         response.body.data.should.have.property('id').and.equal(area._id.toString());
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('');
         response.body.data.attributes.should.have.property('fireAlerts').and.equal(false);
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
     });
 
     it('Updating an area providing an invalid language code will default the language to \'en\' and return a 200 HTTP code and the updated area object', async () => {
@@ -332,6 +360,9 @@ describe('V2 - Update area', () => {
             response.body.should.have.property('data').and.be.an('object');
             response.body.data.should.have.property('type').and.equal('area');
             response.body.data.attributes.should.have.property('language').and.equal(responseLang);
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            response.body.data.attributes.updatedAt.should.not.equal(response.body.data.attributes.createdAt);
         };
 
         await requestAndValidateAreaWithLangCode('en', 'en');

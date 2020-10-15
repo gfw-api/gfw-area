@@ -404,7 +404,7 @@ class AreaRouterV2 {
         if (typeof ctx.request.body.templateId !== 'undefined') {
             area.templateId = ctx.request.body.templateId;
         }
-        area.updatedDate = Date.now();
+        area.updatedAt = Date.now();
         await area.save();
 
         // Update associated subscription after updating the area
@@ -493,7 +493,7 @@ class AreaRouterV2 {
         logger.info('Updating with params: ', updateParams);
 
         try {
-            updateParams.updatedDate = Date.now();
+            updateParams.updatedAt = Date.now();
             const response = await AreaModel.updateMany(
                 { geostore: { $in: geostores } },
                 { $set: updateParams }

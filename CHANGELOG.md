@@ -1,3 +1,7 @@
+## 15/10/2020
+
+- Add `updatedAt` field to areas v1 and v2.
+
 ## 13/08/2020
 
 - For the `/area/fw/:userId` endpoint, automatically set `application` field to `fw` if not set.

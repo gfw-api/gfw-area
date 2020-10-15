@@ -8,6 +8,7 @@ const areaSerializer = new JSONAPISerializer('area', {
         'wdpaid',
         'userId',
         'createdAt',
+        'updatedAt',
         'image',
         'datasets',
         'use',
