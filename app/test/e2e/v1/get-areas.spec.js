@@ -41,6 +41,7 @@ describe('V1 - Get areas tests', () => {
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
+        response.body.should.have.property('links').and.be.an('object');
     });
 
     it('Getting areas should return local areas owned by the current user (happy case)', async () => {
