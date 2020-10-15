@@ -71,6 +71,8 @@ describe('V1 - Create area FW', () => {
             region: 'createdRegionIso'
         });
         response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.equal(response.body.data.attributes.createdAt);
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
         response.body.data.attributes.datasets[0].should.deep.equal({
             cache: true,
@@ -148,6 +150,8 @@ describe('V1 - Create area FW', () => {
             region: 'createdRegionIso'
         });
         response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        response.body.data.attributes.updatedAt.should.equal(response.body.data.attributes.createdAt);
         response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
         response.body.data.attributes.should.have.property('image').and.include(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}`);
         response.body.data.attributes.datasets[0].should.deep.equal({

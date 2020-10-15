@@ -10,6 +10,7 @@ const createArea = (anotherData = {}) => ({
     datasets: [],
     image: '',
     createdAt: new Date(),
+    updatedAt: new Date(),
     wdpaid: 1,
     ...anotherData
 });

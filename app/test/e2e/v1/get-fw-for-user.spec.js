@@ -115,6 +115,7 @@ describe('V1 - Get FW areas for a user tests', () => {
         response.body.data[0].attributes.should.have.property('wdpaid').and.equal(area.wdpaid);
         response.body.data[0].attributes.should.have.property('userId').and.equal(USERS.USER.id);
         response.body.data[0].attributes.should.have.property('createdAt');
+        response.body.data[0].attributes.should.have.property('updatedAt');
         response.body.data[0].attributes.should.have.property('image').and.equal('');
         response.body.data[0].attributes.should.have.property('datasets').and.be.an('array').and.length(0);
         response.body.data[0].attributes.should.have.property('use').and.be.an('object');
@@ -178,6 +179,7 @@ describe('V1 - Get FW areas for a user tests', () => {
         response.body.data[0].attributes.should.have.property('wdpaid').and.equal(area.wdpaid);
         response.body.data[0].attributes.should.have.property('userId').and.equal(area.userId);
         response.body.data[0].attributes.should.have.property('createdAt');
+        response.body.data[0].attributes.should.have.property('updatedAt');
         response.body.data[0].attributes.should.have.property('image').and.equal('');
         response.body.data[0].attributes.should.have.property('datasets').and.be.an('array').and.length(0);
         response.body.data[0].attributes.should.have.property('use').and.be.an('object');
@@ -297,6 +299,7 @@ describe('V1 - Get FW areas for a user tests', () => {
         response.body.data[0].attributes.should.have.property('wdpaid').and.equal(area.wdpaid);
         response.body.data[0].attributes.should.have.property('userId').and.equal(area.userId);
         response.body.data[0].attributes.should.have.property('createdAt');
+        response.body.data[0].attributes.should.have.property('updatedAt');
         response.body.data[0].attributes.should.have.property('image').and.equal('');
         response.body.data[0].attributes.should.have.property('datasets').and.be.an('array').and.length(0);
         response.body.data[0].attributes.should.have.property('use').and.be.an('object');
@@ -343,6 +346,7 @@ describe('V1 - Get FW areas for a user tests', () => {
         response.body.data[0].attributes.should.have.property('wdpaid').and.equal(area.wdpaid);
         response.body.data[0].attributes.should.have.property('userId').and.equal(area.userId);
         response.body.data[0].attributes.should.have.property('createdAt');
+        response.body.data[0].attributes.should.have.property('updatedAt');
         response.body.data[0].attributes.should.have.property('image').and.equal('');
         response.body.data[0].attributes.should.have.property('datasets').and.be.an('array').and.length(0);
         response.body.data[0].attributes.should.have.property('use').and.be.an('object');

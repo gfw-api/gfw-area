@@ -165,7 +165,7 @@ class AreaRouter {
         if (typeof ctx.request.body.templateId !== 'undefined') {
             area.templateId = ctx.request.body.templateId;
         }
-        area.updatedDate = Date.now;
+        area.updatedAt = Date.now();
 
         await area.save();
         ctx.body = AreaSerializer.serialize(area);

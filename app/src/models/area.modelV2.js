@@ -41,6 +41,7 @@ const Area = new Schema({
     },
     datasets: [Dataset],
     createdAt: { type: Date, required: true, default: Date.now },
+    updatedAt: { type: Date, required: true, default: Date.now },
     image: { type: String, required: false, trim: true },
     templateId: { type: String, trim: true, required: false },
     tags: {
