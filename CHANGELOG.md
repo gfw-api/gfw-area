@@ -1,3 +1,7 @@
+## 05/11/2020
+
+- Fix issue in filtering v2 areas by application.
+
 ## 15/10/2020
 
 - Add pagination and sorting to areas v1.
