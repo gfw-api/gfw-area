@@ -108,7 +108,14 @@ class AreaRouterV2 {
 
             // Re-check filters after merging with subscriptions
             logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (before filters)`);
-            const result = returnArray.filter((area) => Object.keys(filter).every((field) => area[field] === filter[field]));
+            const result = returnArray.filter((area) => Object.keys(filter).every((field) => {
+                if (Array.isArray(filter[field])) {
+                    return filter[field].includes(area[field]);
+                }
+
+                return area[field] === filter[field];
+            }));
+
             logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (after filters)`);
 
             await Promise.all(result.map(SubscriptionService.mergeSubscriptionSpecificProps));
