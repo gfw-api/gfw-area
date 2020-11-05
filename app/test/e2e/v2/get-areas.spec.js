@@ -156,13 +156,13 @@ describe('V2 - Get areas', () => {
         mockSubscriptionFindForUser(USERS.USER.id, ['123']);
         const rwResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&application=rw`);
         rwResponse.status.should.equal(200);
-        rwResponse.body.should.have.property('data').and.be.an('array');
+        rwResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         rwResponse.body.data.every((area) => area.attributes.application === 'rw').should.be.true;
 
         mockSubscriptionFindForUser(USERS.USER.id, ['456']);
         const gfwResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&application=gfw`);
         gfwResponse.status.should.equal(200);
-        gfwResponse.body.should.have.property('data').and.be.an('array');
+        gfwResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         gfwResponse.body.data.every((area) => area.attributes.application === 'gfw').should.be.true;
     });
 
@@ -178,13 +178,13 @@ describe('V2 - Get areas', () => {
 
         const savedResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&status=saved`);
         savedResponse.status.should.equal(200);
-        savedResponse.body.should.have.property('data').and.be.an('array');
+        savedResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         savedResponse.body.data.every((area) => area.attributes.status === 'saved').should.be.true;
 
         mockSubscriptionFindForUser(USERS.USER.id, [id2]);
         const pendingResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&status=pending`);
         pendingResponse.status.should.equal(200);
-        pendingResponse.body.should.have.property('data').and.be.an('array');
+        pendingResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         pendingResponse.body.data.every((area) => area.attributes.status === 'pending').should.be.true;
     });
 
@@ -200,13 +200,13 @@ describe('V2 - Get areas', () => {
 
         const publicResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&public=true`);
         publicResponse.status.should.equal(200);
-        publicResponse.body.should.have.property('data').and.be.an('array');
+        publicResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         publicResponse.body.data.every((area) => area.attributes.public === true).should.be.true;
 
         mockSubscriptionFindForUser(USERS.USER.id, [id2]);
         const privateResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&public=false`);
         privateResponse.status.should.equal(200);
-        privateResponse.body.should.have.property('data').and.be.an('array');
+        privateResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         privateResponse.body.data.every((area) => area.attributes.public === false).should.be.true;
     });
 
@@ -214,7 +214,6 @@ describe('V2 - Get areas', () => {
         const area = await new Area(createArea({ userId: USERS.USER.id, public: false })).save();
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array');
         response.body.should.have.property('data').and.be.an('array').and.have.length(1);
         response.body.data.map((a) => a.id).should.include.members([area._id.toString()]);
     });
