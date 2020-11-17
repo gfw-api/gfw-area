@@ -1,14 +1,10 @@
-## 05/11/2020
+# v1.6.2
+
+## 17/11/2020
 
 - Fix issue in filtering v2 areas by application.
-
-## 15/10/2020
-
 - Add pagination and sorting to areas v1.
 - Add `updatedAt` field to areas v1 and v2.
-
-## 13/08/2020
-
 - For the `/area/fw/:userId` endpoint, automatically set `application` field to `fw` if not set.
 
 # v1.6.1
