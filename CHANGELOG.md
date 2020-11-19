@@ -1,3 +1,7 @@
+## 19/11/2020
+
+- Remove area creation per subscription on getting area v2 for user
+
 # v1.6.2
 
 ## 17/11/2020

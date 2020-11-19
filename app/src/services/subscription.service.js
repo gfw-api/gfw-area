@@ -160,16 +160,6 @@ class SubscriptionsService {
         });
     }
 
-    static async getUserSubscriptions(userId) {
-        const response = await ctRegisterMicroservice.requestToMicroservice({
-            uri: `/subscriptions/user/${userId}`,
-            method: 'GET',
-            json: true,
-        });
-
-        return response.data;
-    }
-
     static async findByIds(ids) {
         const result = await ctRegisterMicroservice.requestToMicroservice({
             uri: `/subscriptions/find-by-ids`,
