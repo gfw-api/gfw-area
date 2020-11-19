@@ -34,13 +34,13 @@ describe('V2 - Get areas', () => {
         response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
     });
 
-    it('Getting areas being logged in should return a 200 OK with all the areas for the current user', async () => {
+    it('Getting areas being logged in should return a 200 OK with all the areas for the current user -- no areas', async () => {
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(0);
     });
 
-    it('Getting areas having no subscriptions should return a 200 OK with all the areas and subscriptions for the current user', async () => {
+    it('Getting areas being logged in should return a 200 OK with all the areas for the current user -- areas belonging to the current user', async () => {
         const area = await new Area(createArea({ userId: USERS.USER.id })).save();
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
@@ -48,47 +48,35 @@ describe('V2 - Get areas', () => {
         response.body.data[0].should.have.property('id').and.equal(area.id);
     });
 
-    it('Getting areas having some subscriptions should return a 200 OK with all the areas and subscriptions for the current user', async () => {
-        const createdArea = await new Area(createArea({ userId: USERS.USER.id })).save();
-        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}`);
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.have.length(1);
-
-        response.body.data.find((area) => area.id === createdArea.id).should.be.an('object');
-    });
-
     it('Getting areas having some subscriptions related to areas should return a 200 OK with all the areas and subscriptions for the current user', async () => {
-        const subId1 = new mongoose.Types.ObjectId().toString();
+        const subId = new mongoose.Types.ObjectId().toString();
+        const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area2 = await new Area(createArea({ userId: USERS.USER.id, subscriptionId: subId })).save();
 
-        mockSubscriptionFindByIds([subId1], { userId: USERS.USER.id });
-
-        const area = await new Area(createArea({ userId: USERS.USER.id })).save();
-        await new Area(createArea({ userId: USERS.USER.id, subscriptionId: subId1 })).save();
-
+        mockSubscriptionFindByIds([subId], { userId: USERS.USER.id });
         const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(2);
 
-        // eslint-disable-next-line no-unused-expressions
-        response.body.data.find((element) => element.id === area.id).should.be.ok;
-        // eslint-disable-next-line no-unused-expressions
-        response.body.data.find((element) => element.attributes.subscriptionId === subId1).should.be.ok;
+        response.body.data.find((element) => element.id === area1.id).should.be.ok;
+        response.body.data.find((element) => element.id === area2.id).should.be.ok;
+        response.body.data.find((element) => element.attributes.subscriptionId === subId).should.be.ok;
     });
 
     it('Getting areas sending query param all as an USER/MANAGER should return a 200 OK with only the user areas (query filter is ignored)', async () => {
-        await new Area(createArea({ userId: USERS.USER.id })).save();
-        await new Area(createArea({ userId: USERS.MANAGER.id })).save();
+        const userArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const managerArea = await new Area(createArea({ userId: USERS.MANAGER.id })).save();
         await new Area(createArea({ userId: USERS.ADMIN.id })).save();
 
         const userResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&all=true`);
         userResponse.status.should.equal(200);
-        // USER area + the subscription
         userResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
+        userResponse.body.data.find((element) => element.id === userArea.id).should.be.ok;
 
         const managerResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.MANAGER)}&all=true`);
         managerResponse.status.should.equal(200);
-        // MANAGER area + the subscription
         managerResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
+        managerResponse.body.data.find((element) => element.id === managerArea.id).should.be.ok;
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with all the areas (even not owned by the user)', async () => {
@@ -126,17 +114,19 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas filtered by application should return a 200 OK with only areas for the application requested', async () => {
-        await new Area(createArea({ userId: USERS.USER.id, application: 'rw' })).save();
-        await new Area(createArea({ userId: USERS.USER.id, application: 'gfw' })).save();
+        const rwArea = await new Area(createArea({ userId: USERS.USER.id, application: 'rw' })).save();
+        const gfwArea = await new Area(createArea({ userId: USERS.USER.id, application: 'gfw' })).save();
 
         const rwResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&application=rw`);
         rwResponse.status.should.equal(200);
         rwResponse.body.should.have.property('data').and.be.an('array').and.length(1);
+        rwResponse.body.data.find((element) => element.id === rwArea.id).should.be.ok;
         rwResponse.body.data.every((area) => area.attributes.application === 'rw').should.be.true;
 
         const gfwResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&application=gfw`);
         gfwResponse.status.should.equal(200);
         gfwResponse.body.should.have.property('data').and.be.an('array').and.length(1);
+        gfwResponse.body.data.find((element) => element.id === gfwArea.id).should.be.ok;
         gfwResponse.body.data.every((area) => area.attributes.application === 'gfw').should.be.true;
     });
 
@@ -193,7 +183,7 @@ describe('V2 - Get areas', () => {
         response.body.data.map((a) => a.id).should.include.members([area._id.toString()]);
     });
 
-    it('Getting areas sending query param all as an ADMIN should return a 200 OK with ALL the areas and ALL the subscriptions', async () => {
+    it('Getting areas sending query param all as an ADMIN should return a 200 OK with ALL the areas', async () => {
         const id1 = new mongoose.Types.ObjectId().toString();
         const id2 = new mongoose.Types.ObjectId().toString();
         const id3 = new mongoose.Types.ObjectId().toString();
@@ -259,44 +249,34 @@ describe('V2 - Get areas', () => {
         pendingResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
     });
 
-    it('Getting areas with all=true filter returns the correct paginated result', async () => {
-        const area1 = await new Area(createArea()).save();
-        const area2 = await new Area(createArea()).save();
-        const area3 = await new Area(createArea()).save();
-        await new Area(createArea()).save();
-        await new Area(createArea()).save();
+    it('Getting areas returns the correct paginated result', async () => {
+        const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area2 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area3 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area4 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area5 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const sortedAreaIds = [area1.id, area2.id, area3.id, area4.id, area5.id].sort();
 
-        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&page[size]=3`);
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&page[size]=3`);
         response.status.should.equal(200);
         response.body.should.have.property('data').with.lengthOf(3);
         response.body.should.have.property('links').and.be.an('object');
-        response.body.data.map((area) => area.id).should.have.members([area1.id, area2.id, area3.id]);
+        response.body.data.map((area) => area.id).should.have.members(sortedAreaIds.slice(0, 3));
     });
 
-    it('Getting areas with all=true and requesting the second page returns the correct paginated result', async () => {
-        await new Area(createArea()).save();
-        await new Area(createArea()).save();
-        const area3 = await new Area(createArea()).save();
-        const area4 = await new Area(createArea()).save();
-        await new Area(createArea()).save();
+    it('Getting areas requesting the second page returns the correct paginated result', async () => {
+        const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area2 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area3 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area4 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area5 = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const sortedAreaIds = [area1.id, area2.id, area3.id, area4.id, area5.id].sort();
 
-        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true&page[number]=2&page[size]=2`);
+        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.USER)}&page[number]=2&page[size]=2`);
         response.status.should.equal(200);
         response.body.should.have.property('data').with.lengthOf(2);
         response.body.should.have.property('links').and.be.an('object');
-        response.body.data.map((area) => area.id).should.have.members([area3.id, area4.id]);
-    });
-
-    it('Getting areas with all=true when there are inconsistencies between areas and subs returns the correct paginated result', async () => {
-        const fakeId = new mongoose.Types.ObjectId().toString();
-        const area = await new Area(createArea({ subscriptionId: fakeId })).save();
-        mockSubscriptionFindByIds([]);
-
-        const response = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
-        response.status.should.equal(200);
-        response.body.should.have.property('data').with.lengthOf(1);
-        response.body.should.have.property('links').and.be.an('object');
-        response.body.data.map((a) => a.id).should.have.members([area.id]);
+        response.body.data.map((area) => area.id).should.have.members(sortedAreaIds.slice(2, 4));
     });
 
     afterEach(async () => {
