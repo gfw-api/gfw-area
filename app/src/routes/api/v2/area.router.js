@@ -59,68 +59,23 @@ class AreaRouterV2 {
     static async getAll(ctx) {
         logger.info('[AREAS-V2-ROUTER] Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
         const filter = getFilters(ctx);
-        const useAllFilter = shouldUseAllFilter(ctx);
 
-        logger.info(`[AREAS-V2-ROUTER] Going to find subscriptions - should use all filter = ${useAllFilter}`);
-        if (useAllFilter) {
-            const page = ctx.query['page[number]'] ? parseInt(ctx.query['page[number]'], 10) : 1;
-            const limit = ctx.query['page[size]'] ? parseInt(ctx.query['page[size]'], 10) : 10;
+        logger.info(`[AREAS-V2-ROUTER] Going to find subscriptions`);
+        const page = ctx.query['page[number]'] ? parseInt(ctx.query['page[number]'], 10) : 1;
+        const limit = ctx.query['page[size]'] ? parseInt(ctx.query['page[size]'], 10) : 100;
 
-            const clonedQuery = { ...ctx.query };
-            delete clonedQuery['page[size]'];
-            delete clonedQuery['page[number]'];
-            const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
+        const clonedQuery = { ...ctx.query };
+        delete clonedQuery['page[size]'];
+        delete clonedQuery['page[number]'];
+        const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
 
-            const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
-            const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
-            const areas = await AreaModel.paginate(filter, { page, limit, sort: 'id' });
+        const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
+        const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
+        const areas = await AreaModel.paginate(filter, { page, limit, sort: 'id' });
 
-            await Promise.all(areas.docs.map(SubscriptionService.mergeSubscriptionSpecificProps));
-            ctx.body = AreaSerializerV2.serialize(areas, link);
-        } else {
-            // Parse areas and get all subscription IDs
-            const returnArray = [];
-            const areas = await AreaModel.find(filter);
-            const subscriptionIds = areas.map((area) => area.subscriptionId).filter((id) => id);
-            logger.info(`[AREAS-V2-ROUTER] Found ${areas.length} areas in the Areas collection`);
+        await Promise.all(areas.docs.map(SubscriptionService.mergeSubscriptionSpecificProps));
+        ctx.body = AreaSerializerV2.serialize(areas, link);
 
-            // Add areas to the return array
-            areas.forEach((area) => returnArray.push(area));
-
-            const allSubscriptions = await SubscriptionService.getUserSubscriptions(ctx.state.loggedUser.id);
-
-            logger.info(`[AREAS-V2-ROUTER] Obtained ${allSubscriptions.length} subscriptions from MS Subscription`);
-            const subscriptionsToMerge = allSubscriptions.filter((sub) => subscriptionIds.includes(sub.id));
-            await Promise.all(subscriptionsToMerge.map(async (sub) => {
-                const areaForSub = areas.find((area) => area.subscriptionId === sub.id);
-                const position = returnArray.indexOf(areaForSub);
-                returnArray[position] = await SubscriptionService.mergeSubscriptionOverArea(areaForSub, {
-                    ...sub.attributes,
-                    id: sub.id
-                });
-            }));
-
-            // Then with the remaining subscriptions map them to the areas format and concat the two arrays
-            const remainingSubscriptions = allSubscriptions.filter((sub) => !subscriptionIds.includes(sub.id));
-            await Promise.all(remainingSubscriptions.map(async (sub) => {
-                returnArray.push(await SubscriptionService.getAreaFromSubscription({ ...sub.attributes, id: sub.id }));
-            }));
-
-            // Re-check filters after merging with subscriptions
-            logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (before filters)`);
-            const result = returnArray.filter((area) => Object.keys(filter).every((field) => {
-                if (Array.isArray(filter[field])) {
-                    return filter[field].includes(area[field]);
-                }
-
-                return area[field] === filter[field];
-            }));
-
-            logger.info(`[AREAS-V2-ROUTER] Preparing to return ${returnArray.length} areas (after filters)`);
-
-            await Promise.all(result.map(SubscriptionService.mergeSubscriptionSpecificProps));
-            ctx.body = AreaSerializerV2.serialize(result);
-        }
     }
 
     static async get(ctx) {
