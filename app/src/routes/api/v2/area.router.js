@@ -60,7 +60,7 @@ class AreaRouterV2 {
         logger.info('[AREAS-V2-ROUTER] Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
         const filter = getFilters(ctx);
 
-        logger.info(`[AREAS-V2-ROUTER] Going to find subscriptions`);
+        logger.info(`[AREAS-V2-ROUTER] Going to find areas`);
         const page = ctx.query['page[number]'] ? parseInt(ctx.query['page[number]'], 10) : 1;
         const limit = ctx.query['page[size]'] ? parseInt(ctx.query['page[size]'], 10) : 100;
 
@@ -71,11 +71,10 @@ class AreaRouterV2 {
 
         const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
         const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
-        const areas = await AreaModel.paginate(filter, { page, limit, sort: 'id' });
+        const areas = await AreaModel.paginate(filter, { page, limit, sort: '_id' });
 
         await Promise.all(areas.docs.map(SubscriptionService.mergeSubscriptionSpecificProps));
         ctx.body = AreaSerializerV2.serialize(areas, link);
-
     }
 
     static async get(ctx) {
