@@ -30,6 +30,24 @@ function getFilters(ctx) {
     return filter;
 }
 
+function getFilteredSort(sort) {
+    const sortParams = sort.split(',');
+    const filteredSort = {};
+    const areaAttributes = Object.keys(AreaModel.schema.obj);
+    sortParams.forEach((param) => {
+        let sign = param.substr(0, 1);
+        let signlessParam = param.substr(1);
+        if (sign !== '-' && sign !== '+') {
+            signlessParam = param;
+            sign = '+';
+        }
+        if (areaAttributes.indexOf(signlessParam) >= 0) {
+            filteredSort[signlessParam] = parseInt(sign + 1, 10);
+        }
+    });
+    return filteredSort;
+}
+
 function getEmailParametersFromArea(area) {
     const { id, name } = area;
     const emailTags = area.tags && area.tags.join(', ');
@@ -58,6 +76,8 @@ class AreaRouterV2 {
 
     static async getAll(ctx) {
         logger.info('[AREAS-V2-ROUTER] Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
+        const sort = ctx.query.sort || '_id';
+
         const filter = getFilters(ctx);
 
         logger.info(`[AREAS-V2-ROUTER] Going to find areas`);
@@ -71,7 +91,9 @@ class AreaRouterV2 {
 
         const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
         const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
-        const areas = await AreaModel.paginate(filter, { page, limit, sort: '_id' });
+        const filteredSort = getFilteredSort(sort);
+
+        const areas = await AreaModel.paginate(filter, { page, limit, sort: filteredSort });
 
         await Promise.all(areas.docs.map(SubscriptionService.mergeSubscriptionSpecificProps));
         ctx.body = AreaSerializerV2.serialize(areas, link);
