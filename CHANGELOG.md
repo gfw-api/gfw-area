@@ -1,5 +1,6 @@
 ## 19/11/2020
 
+- Add support for sorting on getting areas v2
 - Remove area creation per subscription on getting area v2 for user
 
 # v1.6.2
