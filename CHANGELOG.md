@@ -2,6 +2,7 @@
 
 - Add support for sorting on getting areas v2
 - Remove area creation per subscription on getting area v2 for user
+- Remove hexadecimal validation on area's `geostore` field.
 
 # v1.6.2
 

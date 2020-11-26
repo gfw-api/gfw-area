@@ -39,7 +39,7 @@ class AreaValidatorV2 {
         logger.debug('Validating body for create area');
         ctx.checkBody('name').notEmpty().len(1, 100);
         ctx.checkBody('application').optional().check((application) => AreaValidatorV2.notEmptyString(application), 'cannot be empty');
-        ctx.checkBody('geostore').optional().isHexadecimal();
+        ctx.checkBody('geostore').optional();
         ctx.checkBody('wdpaid').optional().isInt().toInt();
         ctx.checkBody('datasets').optional().isJSON();
         ctx.checkBody('iso').optional().check((iso) => AreaValidatorV2.isObject(iso), 'must be an object');
@@ -66,7 +66,7 @@ class AreaValidatorV2 {
         logger.debug('Validating body for update area');
         ctx.checkBody('name').optional().len(2, 100);
         ctx.checkBody('application').optional().check((application) => AreaValidatorV2.notEmptyString(application), 'cannot be empty');
-        ctx.checkBody('geostore').optional().isHexadecimal();
+        ctx.checkBody('geostore').optional();
         ctx.checkBody('wdpaid').optional().isInt();
         ctx.checkBody('datasets').optional().isJSON();
         ctx.checkBody('iso').optional().check((iso) => AreaValidatorV2.isObject(iso), 'must be an object');
