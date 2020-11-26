@@ -205,6 +205,32 @@ describe('V2 - Create area', () => {
         await requestAndValidateAreaWithLangCode('ru', 'en');
     });
 
+    it('Create an area with a non hexadecimal geostore ID should return 200 OK and the created area', async () => {
+        const response = await requester.post(`/api/v2/area`).send({
+            loggedUser: USERS.USER,
+            application: 'gfw',
+            deforestationAlerts: false,
+            email: 'test@vizzuality.com',
+            fireAlerts: false,
+            geostore: 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221',
+            id: null,
+            language: 'en',
+            monthlySummary: false,
+            name: 'Area in Pará, Brazil',
+            public: true,
+            status: 'saved',
+            tags: [],
+            type: 'wdpa',
+            wdpaid: 351819,
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.attributes.should.have.property('geostore')
+            .and.equal('bd4ddc38-c4ae-0da0-ac0e-0a03e4567221');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
