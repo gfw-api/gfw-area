@@ -5,6 +5,7 @@ const areaSerializer = new JSONAPISerializer('area', {
         'name',
         'application',
         'geostore',
+        'geostoreDataApi',
         'wdpaid',
         'userId',
         'createdAt',

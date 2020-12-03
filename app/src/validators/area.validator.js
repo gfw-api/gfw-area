@@ -4,17 +4,11 @@ const ErrorSerializer = require('serializers/error.serializer');
 class AreaValidator {
 
     static isObject(property) {
-        if (property instanceof Object && property.length === undefined) {
-            return true;
-        }
-        return false;
+        return property instanceof Object && property.length === undefined;
     }
 
     static notEmptyString(property) {
-        if (typeof property === 'string' && property.length > 0) {
-            return true;
-        }
-        return false;
+        return typeof property === 'string' && property.length > 0;
     }
 
     static async create(ctx, next) {
