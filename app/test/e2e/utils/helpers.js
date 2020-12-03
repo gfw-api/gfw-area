@@ -2,7 +2,7 @@ const nock = require('nock');
 
 const getUUID = () => Math.random().toString(36).substring(7);
 
-const createArea = (anotherData = {}) => ({
+const createArea = (override = {}) => ({
     application: 'gfw',
     name: 'SA',
     geostore: '258ef3125a382157453b26176a1320a9',
@@ -12,7 +12,21 @@ const createArea = (anotherData = {}) => ({
     createdAt: new Date(),
     updatedAt: new Date(),
     wdpaid: 1,
-    ...anotherData
+    ...override
+});
+
+const getDefaultSubscription = (override = {}) => ({
+    name: 'Subscription Name',
+    createdAt: '2020-02-06T11:27:43.751Z',
+    userId: '5dd7b92abf56ca0011875ae2',
+    resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
+    datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
+    params: {},
+    confirmed: true,
+    language: 'en',
+    datasetsQuery: [],
+    env: 'production',
+    ...override
 });
 
 const mockSubscriptionCreation = (id = '123') => {
@@ -22,23 +36,7 @@ const mockSubscriptionCreation = (id = '123') => {
             data: {
                 type: 'subscription',
                 id,
-                attributes: {
-                    name: 'Subscription Name',
-                    createdAt: '2020-02-06T11:27:43.751Z',
-                    userId: '5dd7b92abf56ca0011875ae2',
-                    resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
-                    datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
-                    params: {},
-                    confirmed: true,
-                    language: 'en',
-                    datasetsQuery: [{
-                        threshold: 1,
-                        lastSentDate: '2020-02-06T11:27:43.751Z',
-                        historical: [],
-                        type: 'undefined'
-                    }],
-                    env: 'production'
-                }
+                attributes: getDefaultSubscription()
             }
         }));
 };
@@ -50,23 +48,7 @@ const mockSubscriptionEdition = (id = '123') => {
             data: {
                 type: 'subscription',
                 id,
-                attributes: {
-                    name: 'Subscription Name',
-                    createdAt: '2020-02-06T11:27:43.751Z',
-                    userId: '5dd7b92abf56ca0011875ae2',
-                    resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
-                    datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
-                    params: {},
-                    confirmed: true,
-                    language: 'en',
-                    datasetsQuery: [{
-                        threshold: 1,
-                        lastSentDate: '2020-02-06T11:27:43.751Z',
-                        historical: [],
-                        type: 'undefined'
-                    }],
-                    env: 'production'
-                }
+                attributes: getDefaultSubscription()
             }
         }));
 };
@@ -83,24 +65,7 @@ const mockSubscriptionFindByIds = (ids = [], overrideData = {}, times = 1) => {
             data: ids.map((id) => ({
                 type: 'subscription',
                 id,
-                attributes: {
-                    name: 'Subscription Name',
-                    createdAt: '2020-02-06T11:27:43.751Z',
-                    userId: '5dd7b92abf56ca0011875ae2',
-                    resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
-                    datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
-                    params: { geostore: '123' },
-                    confirmed: true,
-                    language: 'en',
-                    datasetsQuery: [{
-                        threshold: 1,
-                        lastSentDate: '2020-02-06T11:27:43.751Z',
-                        historical: [],
-                        type: 'undefined'
-                    }],
-                    env: 'production',
-                    ...overrideData
-                }
+                attributes: getDefaultSubscription(overrideData),
             }))
         }));
 };
@@ -137,24 +102,7 @@ const mockSubscriptionFindAll = (
                 return {
                     type: 'subscription',
                     id,
-                    attributes: {
-                        name: 'Subscription Name',
-                        createdAt: '2020-02-06T11:27:43.751Z',
-                        userId: '5dd7b92abf56ca0011875ae2',
-                        resource: { type: 'EMAIL', content: 'henrique.pacheco@vizzuality.com' },
-                        datasets: ['63f34231-7369-4622-81f1-28a144d17835'],
-                        params: {},
-                        confirmed: true,
-                        language: 'en',
-                        datasetsQuery: [{
-                            threshold: 1,
-                            lastSentDate: '2020-02-06T11:27:43.751Z',
-                            historical: [],
-                            type: 'undefined'
-                        }],
-                        env: 'production',
-                        ...overrideData
-                    }
+                    attributes: getDefaultSubscription(overrideData),
                 };
             }),
             links: {

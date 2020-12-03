@@ -74,7 +74,7 @@ describe('V2 - Area status', () => {
 
         // Mock the test area
         const id = new mongoose.Types.ObjectId().toString();
-        mockSubscriptionFindByIds([id], { userId: USERS.USER.id }, 2);
+        mockSubscriptionFindByIds([id], { userId: USERS.USER.id, params: { geostore: '123' } }, 2);
         const response = await requester.get(`/api/v2/area/${id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -113,7 +113,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         // Mock the test area
-        mockSubscriptionFindByIds([subId], { userId: USERS.USER.id }, 2);
+        mockSubscriptionFindByIds([subId], { userId: USERS.USER.id, params: { geostore: '123' } }, 2);
         const response = await requester.get(`/api/v2/area/${testArea.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
