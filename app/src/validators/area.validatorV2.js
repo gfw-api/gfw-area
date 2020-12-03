@@ -4,24 +4,15 @@ const ErrorSerializer = require('serializers/error.serializer');
 class AreaValidatorV2 {
 
     static isObject(property) {
-        if (property instanceof Object && property.length === undefined) {
-            return true;
-        }
-        return false;
+        return property instanceof Object && property.length === undefined;
     }
 
     static isBool(property) {
-        if (typeof property === 'boolean') {
-            return true;
-        }
-        return false;
+        return typeof property === 'boolean';
     }
 
     static notEmptyString(property) {
-        if (typeof property === 'string' && property.length > 0) {
-            return true;
-        }
-        return false;
+        return typeof property === 'string' && property.length > 0;
     }
 
     static isArray(property) {
@@ -39,7 +30,12 @@ class AreaValidatorV2 {
         logger.debug('Validating body for create area');
         ctx.checkBody('name').notEmpty().len(1, 100);
         ctx.checkBody('application').optional().check((application) => AreaValidatorV2.notEmptyString(application), 'cannot be empty');
-        ctx.checkBody('geostore').optional().isHexadecimal();
+
+        // Validate geostore field as hexadecimal only if present
+        ctx.checkBody('geostore').optional();
+        if (ctx.request.body.geostore) { ctx.checkBody('geostore').isHexadecimal(); }
+        ctx.checkBody('geostoreDataApi').optional();
+
         ctx.checkBody('wdpaid').optional().isInt().toInt();
         ctx.checkBody('datasets').optional().isJSON();
         ctx.checkBody('iso').optional().check((iso) => AreaValidatorV2.isObject(iso), 'must be an object');
@@ -66,7 +62,12 @@ class AreaValidatorV2 {
         logger.debug('Validating body for update area');
         ctx.checkBody('name').optional().len(2, 100);
         ctx.checkBody('application').optional().check((application) => AreaValidatorV2.notEmptyString(application), 'cannot be empty');
-        ctx.checkBody('geostore').optional().isHexadecimal();
+
+        // Validate geostore field as hexadecimal only if present
+        ctx.checkBody('geostore').optional();
+        if (ctx.request.body.geostore) { ctx.checkBody('geostore').isHexadecimal(); }
+        ctx.checkBody('geostoreDataApi').optional();
+
         ctx.checkBody('wdpaid').optional().isInt();
         ctx.checkBody('datasets').optional().isJSON();
         ctx.checkBody('iso').optional().check((iso) => AreaValidatorV2.isObject(iso), 'must be an object');

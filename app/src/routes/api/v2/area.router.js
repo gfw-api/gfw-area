@@ -245,6 +245,7 @@ class AreaRouterV2 {
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
             geostore: ctx.request.body.geostore,
+            geostoreDataApi: ctx.request.body.geostoreDataApi,
             wdpaid,
             userId: userId || ctx.state.loggedUser.id,
             use,
@@ -337,7 +338,14 @@ class AreaRouterV2 {
             // Update status to saved if geostore already exists with status=saved
             area.status = isSaved ? 'saved' : 'pending';
             logger.info(`Updating area with id ${ctx.params.id} to status ${isSaved ? 'saved' : 'pending'}`);
+        } else if (ctx.request.body.geostore === null) {
+            area.geostore = null;
         }
+
+        if (ctx.request.body.geostoreDataApi) {
+            area.geostoreDataApi = ctx.request.body.geostoreDataApi;
+        }
+
         if (ctx.request.body.wdpaid) {
             area.wdpaid = ctx.request.body.wdpaid;
         }

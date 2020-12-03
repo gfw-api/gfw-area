@@ -19,6 +19,7 @@ const Area = new Schema({
     application: {
         type: String, required: true, trim: true, default: 'gfw'
     },
+    geostoreDataApi: { type: String, required: false, trim: true },
     geostore: { type: String, required: false, trim: true },
     wdpaid: { type: Number, required: false, trim: true },
     userId: { type: String, required: false, trim: true },

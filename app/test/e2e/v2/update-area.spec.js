@@ -332,9 +332,10 @@ describe('V2 - Update area', () => {
             .delete(`/v1/subscriptions/${fakeId}`)
             .reply(404, () => ({ errors: {} }));
 
-        const response = await requester
-            .patch(`/api/v2/area/${area._id}`)
-            .send({ loggedUser: USERS.USER, fireAlerts: false });
+        const response = await requester.patch(`/api/v2/area/${area._id}`).send({
+            loggedUser: USERS.USER,
+            fireAlerts: false,
+        });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -345,6 +346,116 @@ describe('V2 - Update area', () => {
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');
         new Date(response.body.data.attributes.updatedAt).should.afterTime(new Date(response.body.data.attributes.createdAt));
+    });
+
+    it('Updating an area with multiple geostore IDs (one for the RW API and another for the Data API) returns 200 OK and the updated area object', async () => {
+        const geostore = '713899292fc118a915741728ef84a2a7';
+        const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
+        const area = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+        const response = await requester.patch(`/api/v2/area/${area._id}`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            geostore,
+            geostoreDataApi,
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+        response.body.data.attributes.should.have.property('geostore').and.equal(geostore);
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+    });
+
+    it('Updating an area only with a geostore ID for the Data API returns 200 OK and the updated area object', async () => {
+        const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
+        const area = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+        const response = await requester.patch(`/api/v2/area/${area._id}`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            geostore: null,
+            geostoreDataApi,
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+        response.body.data.attributes.should.have.property('geostore').and.equal(null);
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+    });
+
+    it('Updating an area with fire alerts and multiple geostore IDs returns 200 OK and the updated area object', async () => {
+        const geostore = '713899292fc118a915741728ef84a2a7';
+        const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
+        const subId = '5e3bf82fad36f4001abe1333';
+        const area = await new Area(createArea({
+            userId: USERS.USER.id,
+            fireAlerts: true,
+            subscriptionId: subId,
+        })).save();
+
+        const override = { userId: USERS.USER.id, params: { geostoreDataApi, geostore } };
+        mockSubscriptionEdition(subId, override);
+        mockSubscriptionFindByIds([subId], override);
+
+        const response = await requester.patch(`/api/v2/area/${area._id}`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            geostore,
+            geostoreDataApi,
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+        response.body.data.attributes.should.have.property('geostore').and.equal(geostore);
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal(subId);
+    });
+
+    it('Updating an area with fire alerts and a geostore ID for the Data API returns 200 OK and the updated area object', async () => {
+        const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
+        const subId = '5e3bf82fad36f4001abe1333';
+        const area = await new Area(createArea({
+            userId: USERS.USER.id,
+            fireAlerts: true,
+            subscriptionId: subId,
+        })).save();
+
+        const override = { userId: USERS.USER.id, params: { geostoreDataApi } };
+        mockSubscriptionEdition(subId, override);
+        mockSubscriptionFindByIds([subId], override);
+
+        const response = await requester.patch(`/api/v2/area/${area._id}`).send({
+            loggedUser: USERS.USER,
+            name: 'Portugal area',
+            geostore: null,
+            geostoreDataApi,
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+        response.body.data.attributes.should.have.property('geostore').and.equal(null);
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal(subId);
     });
 
     it('Updating an area providing an invalid language code will default the language to \'en\' and return a 200 HTTP code and the updated area object', async () => {
