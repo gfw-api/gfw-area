@@ -205,25 +205,20 @@ describe('V2 - Create area', () => {
         await requestAndValidateAreaWithLangCode('ru', 'en');
     });
 
-    it('Creating an area with multiple geostore IDs (one for the RW API and another for the Data API) returns 200 OK and the created area object', async () => {
+    it('Providing non-empty values for geostore and geostoreDataApi throws a 400 Bad Request error', async () => {
         const geostore = '713899292fc118a915741728ef84a2a7';
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
+
         const response = await requester.post(`/api/v2/area`).send({
             loggedUser: USERS.USER,
-            name: 'Portugal area',
+            name: 'Area',
             geostore,
-            geostoreDataApi,
+            geostoreDataApi
         });
 
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('type').and.equal('area');
-        response.body.data.should.have.property('id');
-        response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
-        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
-        response.body.data.attributes.should.have.property('geostore').and.equal(geostore);
-        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.equal(`geostore and geostoreDataApi are mutually exclusive, cannot provide both at the same time`);
     });
 
     it('Creating an area only with a geostore ID for the Data API returns 200 OK and the created area object', async () => {
@@ -244,33 +239,6 @@ describe('V2 - Create area', () => {
         response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
         response.body.data.attributes.should.have.property('geostore').and.equal(null);
         response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
-    });
-
-    it('Creating an area with fire alerts and multiple geostore IDs returns 200 OK and the created area object', async () => {
-        const geostore = '713899292fc118a915741728ef84a2a7';
-        const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
-        const override = { userId: USERS.USER.id, params: { geostoreDataApi, geostore } };
-        mockSubscriptionCreation('5e3bf82fad36f4001abe150e', override);
-        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], override);
-
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            geostore,
-            geostoreDataApi,
-            fireAlerts: true,
-        });
-
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('type').and.equal('area');
-        response.body.data.should.have.property('id');
-        response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
-        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
-        response.body.data.attributes.should.have.property('geostore').and.equal(geostore);
-        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
-        response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
     });
 
     it('Creating an area with fire alerts and a geostore ID for the Data API returns 200 OK and the created area object', async () => {
