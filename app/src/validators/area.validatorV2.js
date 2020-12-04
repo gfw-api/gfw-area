@@ -36,6 +36,16 @@ class AreaValidatorV2 {
         if (ctx.request.body.geostore) { ctx.checkBody('geostore').isHexadecimal(); }
         ctx.checkBody('geostoreDataApi').optional();
 
+        // Validate geostore and geostoreDataApi were not provided at the same time
+        if (
+            ctx.request.body.geostore
+            && ctx.request.body.geostore.length > 0
+            && ctx.request.body.geostoreDataApi
+            && ctx.request.body.geostoreDataApi.length > 0
+        ) {
+            ctx.throw(400, 'geostore and geostoreDataApi are mutually exclusive, cannot provide both at the same time');
+        }
+
         ctx.checkBody('wdpaid').optional().isInt().toInt();
         ctx.checkBody('datasets').optional().isJSON();
         ctx.checkBody('iso').optional().check((iso) => AreaValidatorV2.isObject(iso), 'must be an object');
@@ -67,6 +77,16 @@ class AreaValidatorV2 {
         ctx.checkBody('geostore').optional();
         if (ctx.request.body.geostore) { ctx.checkBody('geostore').isHexadecimal(); }
         ctx.checkBody('geostoreDataApi').optional();
+
+        // Validate geostore and geostoreDataApi were not provided at the same time
+        if (
+            ctx.request.body.geostore
+            && ctx.request.body.geostore.length > 0
+            && ctx.request.body.geostoreDataApi
+            && ctx.request.body.geostoreDataApi.length > 0
+        ) {
+            ctx.throw(400, 'geostore and geostoreDataApi are mutually exclusive, cannot provide both at the same time');
+        }
 
         ctx.checkBody('wdpaid').optional().isInt();
         ctx.checkBody('datasets').optional().isJSON();

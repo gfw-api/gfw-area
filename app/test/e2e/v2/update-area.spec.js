@@ -348,10 +348,10 @@ describe('V2 - Update area', () => {
         new Date(response.body.data.attributes.updatedAt).should.afterTime(new Date(response.body.data.attributes.createdAt));
     });
 
-    it('Updating an area with multiple geostore IDs (one for the RW API and another for the Data API) returns 200 OK and the updated area object', async () => {
+    it('Providing non-empty values for geostore and geostoreDataApi throws a 400 Bad Request error', async () => {
         const geostore = '713899292fc118a915741728ef84a2a7';
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
-        const area = await new Area(createArea({ userId: USERS.USER.id })).save();
+        const area = await new Area(createArea({ userId: USERS.USER.id, geostore: null, geostoreDataApi })).save();
 
         const response = await requester.patch(`/api/v2/area/${area._id}`).send({
             loggedUser: USERS.USER,
@@ -360,15 +360,9 @@ describe('V2 - Update area', () => {
             geostoreDataApi,
         });
 
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('type').and.equal('area');
-        response.body.data.should.have.property('id');
-        response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
-        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
-        response.body.data.attributes.should.have.property('geostore').and.equal(geostore);
-        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.equal(`geostore and geostoreDataApi are mutually exclusive, cannot provide both at the same time`);
     });
 
     it('Updating an area only with a geostore ID for the Data API returns 200 OK and the updated area object', async () => {
@@ -415,7 +409,7 @@ describe('V2 - Update area', () => {
         response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(null);
     });
 
-    it('Updating an area with fire alerts and multiple geostore IDs returns 200 OK and the updated area object', async () => {
+    it('Updating an area with fire alerts and multiple geostore IDs returns 400 Bad Request with the correct error message', async () => {
         const geostore = '713899292fc118a915741728ef84a2a7';
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
         const subId = '5e3bf82fad36f4001abe1333';
@@ -425,10 +419,6 @@ describe('V2 - Update area', () => {
             subscriptionId: subId,
         })).save();
 
-        const override = { userId: USERS.USER.id, params: { geostoreDataApi, geostore } };
-        mockSubscriptionEdition(subId, override);
-        mockSubscriptionFindByIds([subId], override);
-
         const response = await requester.patch(`/api/v2/area/${area._id}`).send({
             loggedUser: USERS.USER,
             name: 'Portugal area',
@@ -436,16 +426,9 @@ describe('V2 - Update area', () => {
             geostoreDataApi,
         });
 
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('object');
-        response.body.data.should.have.property('type').and.equal('area');
-        response.body.data.should.have.property('id');
-        response.body.data.should.have.property('attributes').and.be.an('object');
-        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
-        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
-        response.body.data.attributes.should.have.property('geostore').and.equal(geostore);
-        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
-        response.body.data.attributes.should.have.property('subscriptionId').and.equal(subId);
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.equal(`geostore and geostoreDataApi are mutually exclusive, cannot provide both at the same time`);
     });
 
     it('Updating an area with fire alerts and a geostore ID for the Data API returns 200 OK and the updated area object', async () => {
