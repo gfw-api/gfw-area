@@ -342,10 +342,8 @@ class AreaRouterV2 {
             area.geostore = null;
         }
 
-        if (ctx.request.body.geostoreDataApi) {
+        if (Object.keys(ctx.request.body).includes('geostoreDataApi')) {
             area.geostoreDataApi = ctx.request.body.geostoreDataApi;
-        } else if (ctx.request.body.geostoreDataApi === null) {
-            area.geostoreDataApi = null;
         }
 
         if (ctx.request.body.wdpaid) {

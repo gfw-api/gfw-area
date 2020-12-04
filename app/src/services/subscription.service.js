@@ -128,7 +128,7 @@ class SubscriptionsService {
         } else if (area.geostoreDataApi) {
             const areas = await AreaModel.find({
                 status: 'saved',
-                geostore: area.geostoreDataApi,
+                geostoreDataApi: area.geostoreDataApi,
                 _id: { $nin: [area.id, area.subscriptionId] }
             });
 
