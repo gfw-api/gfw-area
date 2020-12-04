@@ -165,19 +165,17 @@ class AreaRouterV2 {
         if (ctx.request.files && ctx.request.files.image) {
             image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
         }
-        //  check geostore exists already with status=saved
+
+        // Check geostore exists already with status=saved
         const geostore = (ctx.request.body && ctx.request.body.geostore) || null;
-        const query = {
-            $and: [
-                { status: 'saved' },
-                { geostore }
-            ]
-        };
         logger.info(`Checking if data created already for geostore ${geostore}`);
-        const areas = await AreaModel.find(query);
-        if (geostore && areas && areas.length > 0) {
-            isSaved = true;
-        }
+        if (await AreaModel.existsSavedAreaForGeostore(geostore)) isSaved = true;
+
+        // Check geostoreDataApi exists already with status=saved
+        const geostoreDataApi = (ctx.request.body && ctx.request.body.geostoreDataApi) || null;
+        logger.info(`Checking if data created already for geostoreDataApi ${geostoreDataApi}`);
+        if (await AreaModel.existsSavedAreaForGeostoreDataApi(geostoreDataApi)) isSaved = true;
+
         let datasets = [];
         if (ctx.request.body.datasets) {
             datasets = JSON.parse(ctx.request.body.datasets);
@@ -320,19 +318,14 @@ class AreaRouterV2 {
         if (ctx.request.body.name) {
             area.name = ctx.request.body.name;
         }
+
         let isSaved = false;
+
         if (ctx.request.body.geostore) {
             // check if it exists in db with status=saved
             const { geostore } = ctx.request.body;
-            const query = {
-                $and: [
-                    { status: 'saved' },
-                    { geostore }
-                ]
-            };
             logger.info(`Checking if data created already for geostore ${geostore}`);
-            const savedAreas = await AreaModel.find(query);
-            if (savedAreas && savedAreas.length > 0) isSaved = true;
+            if (await AreaModel.existsSavedAreaForGeostore(geostore)) isSaved = true;
             area.geostore = ctx.request.body.geostore;
 
             // Update status to saved if geostore already exists with status=saved
@@ -343,7 +336,16 @@ class AreaRouterV2 {
         }
 
         if (Object.keys(ctx.request.body).includes('geostoreDataApi')) {
-            area.geostoreDataApi = ctx.request.body.geostoreDataApi;
+            const { geostoreDataApi } = ctx.request.body;
+            area.geostoreDataApi = geostoreDataApi;
+
+            // check if it exists in db with status=saved
+            logger.info(`Checking if data created already for geostoreDataApi ${geostoreDataApi}`);
+            if (await AreaModel.existsSavedAreaForGeostoreDataApi(geostoreDataApi)) isSaved = true;
+
+            // Update status to saved if geostoreDataApi already exists with status=saved
+            area.status = isSaved ? 'saved' : 'pending';
+            logger.info(`Updating area with id ${ctx.params.id} to status ${isSaved ? 'saved' : 'pending'}`);
         }
 
         if (ctx.request.body.wdpaid) {
