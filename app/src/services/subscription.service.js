@@ -30,6 +30,10 @@ class SubscriptionsService {
         // Build subscription params
         body.params = {};
 
+        if (area.geostoreDataApi) {
+            body.params = { geostoreDataApi: area.geostoreDataApi };
+        }
+
         if (area.geostore) {
             body.params = { geostore: area.geostore };
         }
@@ -117,6 +121,14 @@ class SubscriptionsService {
             const areas = await AreaModel.find({
                 status: 'saved',
                 geostore: area.geostore,
+                _id: { $nin: [area.id, area.subscriptionId] }
+            });
+
+            if (areas && areas.length > 0) area.status = 'saved';
+        } else if (area.geostoreDataApi) {
+            const areas = await AreaModel.find({
+                status: 'saved',
+                geostore: area.geostoreDataApi,
                 _id: { $nin: [area.id, area.subscriptionId] }
             });
 

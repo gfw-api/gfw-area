@@ -13,7 +13,6 @@ class MailService {
         } else {
             logger.info('Skipping init of Sparkpost client due to missing API key.');
         }
-        this.publicUrl = publicUrl;
         this.disableEmailSending = disableEmailSending;
     }
 
