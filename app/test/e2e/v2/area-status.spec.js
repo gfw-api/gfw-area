@@ -288,6 +288,104 @@ describe('V2 - Area status', () => {
         adminResponse.body.data.attributes.should.have.property('status').and.equal('saved');
     });
 
+    it('Creating an area should set the status to saved if there is an area with the same geostoreDataApi already with status saved', async () => {
+        const geostoreDataApi = '456';
+        await new Area(createArea({ status: 'saved', geostoreDataApi })).save();
+
+        const response = await requester
+            .post(`/api/v2/area`)
+            .send({ loggedUser: USERS.USER, name: 'AREA 123', geostoreDataApi });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.body.data.attributes.should.have.property('status').and.equal('saved');
+    });
+
+    it('Creating an area should set the status to pending if there isn\'t an area with the same geostoreDataApi already with status saved', async () => {
+        const geostoreDataApi = '456';
+
+        const response = await requester
+            .post(`/api/v2/area`)
+            .send({ loggedUser: USERS.USER, name: 'AREA 123', geostoreDataApi });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.body.data.attributes.should.have.property('status').and.equal('pending');
+    });
+
+    it('Updating the geostoreDataApi field of a saved area should set the status to saved if there is an area with the same geostoreDataApi already with status saved', async () => {
+        const geostoreDataApi = '456';
+        const area1 = await new Area(createArea({ userId: USERS.USER.id, status: 'saved', geostoreDataApi: '123' })).save();
+        await new Area(createArea({ status: 'saved', geostoreDataApi })).save();
+
+        const response = await requester
+            .patch(`/api/v2/area/${area1.id}`)
+            .send({ loggedUser: USERS.USER, name: 'AREA 123', geostoreDataApi });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.body.data.attributes.should.have.property('status').and.equal('saved');
+    });
+
+    it('Updating the geostoreDataApi field of a pending area should set the status to saved if there is an area with the same geostoreDataApi already with status saved', async () => {
+        const geostoreDataApi = '456';
+        const area1 = await new Area(createArea({ userId: USERS.USER.id, status: 'pending', geostoreDataApi: '123' })).save();
+
+        await new Area(createArea({ status: 'saved', geostoreDataApi })).save();
+
+        const response = await requester
+            .patch(`/api/v2/area/${area1.id}`)
+            .send({ loggedUser: USERS.USER, name: 'AREA 123', geostoreDataApi });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.body.data.attributes.should.have.property('status').and.equal('saved');
+    });
+
+    it('Updating the geostoreDataApi field of a saved area should set the status to pending if there isn\'t an area with the same geostoreDataApi already with status saved', async () => {
+        const geostoreDataApi = '456';
+        const area1 = await new Area(createArea({ userId: USERS.USER.id, status: 'saved', geostoreDataApi: '123' })).save();
+
+        const response = await requester
+            .patch(`/api/v2/area/${area1.id}`)
+            .send({ loggedUser: USERS.USER, name: 'AREA 123', geostoreDataApi });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.body.data.attributes.should.have.property('status').and.equal('pending');
+    });
+
+    it('Updating the geostoreDataApi field of a pending area should set the status to pending if there isn\' an area with the same geostoreDataApi already with status saved', async () => {
+        const geostoreDataApi = '456';
+        const area1 = await new Area(createArea({ userId: USERS.USER.id, status: 'pending', geostoreDataApi })).save();
+
+        const response = await requester
+            .patch(`/api/v2/area/${area1.id}`)
+            .send({ loggedUser: USERS.USER, name: 'AREA 123', geostoreDataApi });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('attributes').and.be.an('object');
+        response.body.data.attributes.should.have.property('name').and.equal('AREA 123');
+        response.body.data.attributes.should.have.property('geostoreDataApi').and.equal(geostoreDataApi);
+        response.body.data.attributes.should.have.property('status').and.equal('pending');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);

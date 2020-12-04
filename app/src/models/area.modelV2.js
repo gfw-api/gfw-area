@@ -77,6 +77,16 @@ const Area = new Schema({
     },
 });
 
+Area.statics.existsSavedAreaForGeostore = async function existsSavedAreaForGeostore(geostore) {
+    const savedAreas = await this.find({ $and: [{ status: 'saved' }, { geostore }] });
+    return savedAreas && savedAreas.length > 0;
+};
+
+Area.statics.existsSavedAreaForGeostoreDataApi = async function existsSavedAreaForGeostoreDataApi(geostoreDataApi) {
+    const savedAreas = await this.find({ $and: [{ status: 'saved' }, { geostoreDataApi }] });
+    return savedAreas && savedAreas.length > 0;
+};
+
 Area.plugin(mongooseHistory);
 Area.plugin(mongoosePaginate);
 
