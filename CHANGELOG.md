@@ -1,9 +1,8 @@
-## 03/12/2020
+# v1.7.0
+
+## 09/12/2020
 
 - Add new field `geostoreDataApi` to store geostore IDs for the Data API (alongside RW API geostore IDs).
-
-## 19/11/2020
-
 - Add support for sorting on getting areas v2
 - Remove area creation per subscription on getting area v2 for user
 

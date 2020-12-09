@@ -1,7 +1,7 @@
 {
   "name": "gfw-areas",
-  "version": "1.6.2",
-  "description": "",
+  "version": "1.7.0",
+  "description": "Area of Interest service for the RW API.",
   "main": "index.js",
   "scripts": {
     "dev": "CT_URL=http://mymachine:9000 LOCAL_URL=http://mymachine:3005 NODE_PATH=app/src PORT=3005 node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js",
