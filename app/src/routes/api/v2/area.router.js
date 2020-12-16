@@ -239,7 +239,8 @@ class AreaRouterV2 {
         }
 
         // First save the area - if there is any data missing, we break here
-        let area = await new AreaModel({
+
+        const areaData = {
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
             geostore: ctx.request.body.geostore,
@@ -260,7 +261,10 @@ class AreaRouterV2 {
             monthlySummary: summarySub,
             language: SUPPORTED_LANG_CODES.includes(ctx.request.body.language) ? ctx.request.body.language : DEFAULT_LANG_CODE,
             email
-        }).save();
+        };
+        logger.info(`Creating v2 area with the following data: ${JSON.stringify(areaData)}`);
+
+        let area = await new AreaModel(areaData).save();
 
         // If no datasets to register, no need to create a subscription
         if (area.fireAlerts || area.deforestationAlerts || area.monthlySummary) {
