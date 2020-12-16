@@ -238,7 +238,7 @@ class AreaRouterV2 {
             email = ctx.request.body.email;
         }
 
-        // First save the area - if there is any data missing, we break here
+        logger.info(`Building areaData`);
 
         const areaData = {
             name: ctx.request.body.name,
