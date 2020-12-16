@@ -38,6 +38,8 @@ spec:
           env:
             - name: PORT
               value: "4100"
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=1024"
             - name: NODE_ENV
               value: staging
             - name: NODE_PATH
