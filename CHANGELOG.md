@@ -1,3 +1,9 @@
+# v1.7.1
+
+## 11/01/2021
+
+- Fix performance issue when saving and updating areas.
+
 # v1.7.0
 
 ## 09/12/2020
