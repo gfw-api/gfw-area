@@ -84,7 +84,9 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}`);
+        const response = await requester
+            .get(`/api/v2/area/${area.id}`);
+
         assertValidAreaResponse(response, null);
     });
 

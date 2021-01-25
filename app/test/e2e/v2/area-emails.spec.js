@@ -42,10 +42,12 @@ describe('V2 - Area emails', () => {
     });
 
     it('Creating an area with status saved triggers sending a dashboard ready email', async () => {
+        mockGetUserFromToken(USERS.USER);
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
         const response = await requester
             .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
             .send({
                 name: 'Portugal area',
                 application: 'gfw',
@@ -74,11 +76,13 @@ describe('V2 - Area emails', () => {
     });
 
     it('Creating an area with status pending triggers sending a dashboard in construction email', async () => {
+        mockGetUserFromToken(USERS.USER);
 
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
         const response = await requester
             .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
             .send({
                 name: 'Portugal area',
                 application: 'gfw',
