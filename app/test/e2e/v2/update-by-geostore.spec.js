@@ -1,7 +1,7 @@
 const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.modelV2');
-const { createArea } = require('../utils/helpers');
+const { createArea, mockGetUserFromToken } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
@@ -21,32 +21,38 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating areas by geostore can only be performed by ADMIN users, returning 401 Unauthorized otherwise', async () => {
+        mockGetUserFromToken(USERS.USER);
+        mockGetUserFromToken(USERS.MANAGER);
+
         const response1 = await requester.post(`/api/v2/area/update`).send();
         response1.status.should.equal(401);
         response1.body.should.have.property('errors').and.be.an('array');
         response1.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
 
-        const response2 = await requester.post(`/api/v2/area/update`).send({ loggedUser: USERS.USER });
+        const response2 = await requester.post(`/api/v2/area/update`).set('Authorization', 'Bearer abcd');
         response2.status.should.equal(401);
         response2.body.should.have.property('errors').and.be.an('array');
         response2.body.errors[0].should.have.property('detail').and.equal(`Not authorized`);
 
-        const response3 = await requester.post(`/api/v2/area/update`).send({ loggedUser: USERS.MANAGER });
+        const response3 = await requester.post(`/api/v2/area/update`).set('Authorization', 'Bearer abcd');
         response3.status.should.equal(401);
         response3.body.should.have.property('errors').and.be.an('array');
         response3.body.errors[0].should.have.property('detail').and.equal(`Not authorized`);
     });
 
     it('Updating areas by geostore as an ADMIN user is correctly applied, returning the updated areas', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
+
         await new Area(createArea({ geostore: 1, name: 'Old Name', status: 'pending' })).save();
         await new Area(createArea({ geostore: 2, name: 'Old Name', status: 'pending' })).save();
         await new Area(createArea({ geostore: 3, name: 'Old Name', status: 'pending' })).save();
 
-        const response = await requester.post(`/api/v2/area/update`).send({
-            loggedUser: USERS.ADMIN,
-            geostores: [1, 2],
-            update_params: { status: 'saved', name: 'Updated Area' }
-        });
+        const response = await requester.post(`/api/v2/area/update`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                geostores: [1, 2],
+                update_params: { status: 'saved', name: 'Updated Area' }
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(2);
 
@@ -60,14 +66,17 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating areas by geostore as an ADMIN user providing invalid data should fail with 400 Bad Request and an appropriate error message', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
+
         await new Area(createArea({ geostore: 1, name: 'Old Name', status: 'pending' })).save();
         await new Area(createArea({ geostore: 2, name: 'Old Name', status: 'pending' })).save();
 
-        const response = await requester.post(`/api/v2/area/update`).send({
-            loggedUser: USERS.ADMIN,
-            geostores: [1, 2],
-            update_params: { application: [1, 2] }
-        });
+        const response = await requester.post(`/api/v2/area/update`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                geostores: [1, 2],
+                update_params: { application: [1, 2] }
+            });
         response.status.should.equal(400);
         response.body.should.have.property('errors').and.be.an('array').and.have.length(1);
         response.body.errors[0].should.have.property('detail').and.equal('Cast to string failed for value "[ 1, 2 ]" at path "application"');
