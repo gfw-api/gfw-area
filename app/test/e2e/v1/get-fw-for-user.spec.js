@@ -73,7 +73,7 @@ describe('V1 - Get FW areas for a user tests', () => {
     });
 
     it('Getting FW areas for a user while being logged in with role MICROSERVICE should return a 2ßß (happy case)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockGetUserFromToken(USERS.MICROSERVICE);
 
         nock(process.env.CT_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
@@ -89,7 +89,7 @@ describe('V1 - Get FW areas for a user tests', () => {
     });
 
     it('Getting FW areas should return local areas owned by the current user (happy case)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockGetUserFromToken(USERS.MICROSERVICE);
 
         nock(process.env.CT_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
@@ -188,7 +188,7 @@ describe('V1 - Get FW areas for a user tests', () => {
     });
 
     it('Getting FW areas should combine both user-owned and team-owned areas', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockGetUserFromToken(USERS.MICROSERVICE);
 
         const userArea = await new Area(createArea({
             userId: USERS.USER.id
@@ -242,7 +242,7 @@ describe('V1 - Get FW areas for a user tests', () => {
     });
 
     it('Getting FW areas should combine both user-owned and team-owned areas, removing duplicates', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockGetUserFromToken(USERS.MICROSERVICE);
 
         const area = await new Area(createArea({
             userId: USERS.USER.id
