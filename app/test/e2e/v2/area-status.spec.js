@@ -21,6 +21,7 @@ describe('V2 - Area status', () => {
 
     it('Getting an area that exists in the areas database always returns the status saved in the database', async () => {
         mockGetUserFromToken(USERS.USER);
+        mockGetUserFromToken(USERS.USER);
 
         const savedArea = await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();
         const pendingArea = await new Area(createArea({ userId: USERS.USER.id, status: 'pending' })).save();
@@ -39,6 +40,7 @@ describe('V2 - Area status', () => {
     });
 
     it('Getting pending or saved areas always returns the correct response', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
         mockGetUserFromToken(USERS.ADMIN);
 
         const savedArea = await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();

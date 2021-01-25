@@ -37,12 +37,12 @@ describe('V2 - Sync areas', () => {
     });
 
     it('Sync areas can only be performed by ADMIN users, returning 401 Unauthorized otherwise', async () => {
-        mockGetUserFromToken(USERS.USER);
-
         const response1 = await requester.post(`/api/v2/area/sync`).send();
         response1.status.should.equal(401);
         response1.body.should.have.property('errors').and.be.an('array');
         response1.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
+
+        mockGetUserFromToken(USERS.USER);
 
         const response2 = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd');
         response2.status.should.equal(401);
