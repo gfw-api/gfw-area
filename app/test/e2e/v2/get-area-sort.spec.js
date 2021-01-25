@@ -2,8 +2,7 @@ const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.modelV2');
 const { USERS } = require('../utils/test.constants');
-const { createArea } = require('../utils/helpers');
-
+const { createArea, mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 
 chai.should();
@@ -32,9 +31,12 @@ describe('Sort areas tests', () => {
     });
 
     it('Sort areas by non-existent field (implicit order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const responseOne = await requester
             .get(`/api/v2/area`)
-            .query({ sort: 'potato', loggedUser: JSON.stringify(USERS.USER) });
+            .set('Authorization', 'Bearer abcd')
+            .query({ sort: 'potato' });
 
         const areasOne = responseOne.body.data;
 
@@ -50,9 +52,12 @@ describe('Sort areas tests', () => {
     });
 
     it('Sort areas by name (implicit order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const responseOne = await requester
             .get(`/api/v2/area`)
-            .query({ sort: 'name', loggedUser: JSON.stringify(USERS.USER) });
+            .set('Authorization', 'Bearer abcd')
+            .query({ sort: 'name' });
         const areasOne = responseOne.body.data;
 
         responseOne.status.should.equal(200);
@@ -67,9 +72,12 @@ describe('Sort areas tests', () => {
     });
 
     it('Sort areas by name (explicit asc order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const responseOne = await requester
             .get(`/api/v2/area`)
-            .query({ sort: '+name', loggedUser: JSON.stringify(USERS.USER) });
+            .set('Authorization', 'Bearer abcd')
+            .query({ sort: '+name' });
 
         const areasOne = responseOne.body.data;
 
@@ -85,9 +93,12 @@ describe('Sort areas tests', () => {
     });
 
     it('Sort areas by name (explicit desc order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const responseOne = await requester
             .get(`/api/v2/area`)
-            .query({ sort: '-name', loggedUser: JSON.stringify(USERS.USER) });
+            .set('Authorization', 'Bearer abcd')
+            .query({ sort: '-name' });
 
         const areasOne = responseOne.body.data;
 

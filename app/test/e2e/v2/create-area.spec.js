@@ -11,7 +11,7 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { mockSubscriptionCreation, mockSubscriptionFindByIds } = require('../utils/helpers');
+const { mockSubscriptionCreation, mockSubscriptionFindByIds, mockGetUserFromToken } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -35,17 +35,21 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area while being logged in as a user that owns the area should return a 200 HTTP code and the created area object', async () => {
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            application: 'rw',
-            geostore: '713899292fc118a915741728ef84a2a7',
-            wdpaid: 3,
-            use: { id: 'bbb', name: 'created name' },
-            iso: { country: 'createdCountryIso', region: 'createdRegionIso' },
-            datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
-            templateId: 'createdTemplateId'
-        });
+        mockGetUserFromToken(USERS.USER);
+
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area',
+                application: 'rw',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                wdpaid: 3,
+                use: { id: 'bbb', name: 'created name' },
+                iso: { country: 'createdCountryIso', region: 'createdRegionIso' },
+                datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                templateId: 'createdTemplateId'
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -77,6 +81,8 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         nock(`https://${config.get('s3.bucket')}.s3.amazonaws.com`)
             .put(/^\/areas-dev\/(\w|-)+.png/)
             .reply(200);
@@ -85,8 +91,8 @@ describe('V2 - Create area', () => {
 
         const response = await requester
             .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
             .attach('image', fileData, 'sample.png')
-            .field('loggedUser', JSON.stringify(USERS.USER))
             .field('name', 'Portugal area')
             .field('application', 'rw')
             .field('geostore', '713899292fc118a915741728ef84a2a7')
@@ -128,15 +134,18 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with fires alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            geostore: '713899292fc118a915741728ef84a2a7',
-            fireAlerts: true,
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                fireAlerts: true,
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -146,15 +155,18 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with deforestation alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            geostore: '713899292fc118a915741728ef84a2a7',
-            deforestationAlerts: true,
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                deforestationAlerts: true,
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -164,15 +176,18 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with monthly summary alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            geostore: '713899292fc118a915741728ef84a2a7',
-            monthlySummary: true,
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                monthlySummary: true,
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -183,12 +198,14 @@ describe('V2 - Create area', () => {
 
     it('Creating an area with an invalid language code will default the language to \'en\' and return a 200 HTTP code and the created area object', async () => {
         const requestAndValidateAreaWithLangCode = async (requestLang, responseLang) => {
-            const response = await requester.post(`/api/v2/area`).send({
-                loggedUser: USERS.USER,
-                name: 'Portugal area',
-                geostore: '713899292fc118a915741728ef84a2a7',
-                language: requestLang,
-            });
+            const response = await requester
+                .post(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd')
+                .send({
+                    name: 'Portugal area',
+                    geostore: '713899292fc118a915741728ef84a2a7',
+                    language: requestLang,
+                });
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('object');
@@ -206,15 +223,19 @@ describe('V2 - Create area', () => {
     });
 
     it('Providing non-empty values for geostore and geostoreDataApi throws a 400 Bad Request error', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const geostore = '713899292fc118a915741728ef84a2a7';
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
 
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Area',
-            geostore,
-            geostoreDataApi
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Area',
+                geostore,
+                geostoreDataApi
+            });
 
         response.status.should.equal(400);
         response.body.should.have.property('errors').and.be.an('array');
@@ -223,12 +244,15 @@ describe('V2 - Create area', () => {
 
     it('Creating an area only with a geostore ID for the Data API returns 200 OK and the created area object', async () => {
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            geostore: null,
-            geostoreDataApi,
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                loggedUser: USERS.USER,
+                name: 'Portugal area',
+                geostore: null,
+                geostoreDataApi,
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -242,17 +266,20 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with fire alerts and a geostore ID for the Data API returns 200 OK and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
         const override = { userId: USERS.USER.id, params: { geostoreDataApi } };
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e', override);
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], override);
 
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            geostoreDataApi,
-            fireAlerts: true,
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area',
+                geostoreDataApi,
+                fireAlerts: true,
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');

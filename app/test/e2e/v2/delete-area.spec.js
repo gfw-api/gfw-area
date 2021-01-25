@@ -3,13 +3,12 @@ const chai = require('chai');
 const mongoose = require('mongoose');
 
 const Area = require('models/area.modelV2');
-const { createArea } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { mockSubscriptionFindByIds, mockSubscriptionDeletion } = require('../utils/helpers');
+const { createArea, mockSubscriptionFindByIds, mockSubscriptionDeletion } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);

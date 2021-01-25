@@ -3,6 +3,7 @@ const chai = require('chai');
 const Area = require('models/area.model');
 const { createArea } = require('../utils/helpers');
 
+const { mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
@@ -33,11 +34,10 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Getting areas with no data should be successful', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const response = await requester
-            .get(`/api/v1/area`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .get(`/api/v1/area`);
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
@@ -45,15 +45,15 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Getting areas should return local areas owned by the current user (happy case)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({
             userId: USERS.USER.id
         })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -76,19 +76,21 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Getting areas should not return areas not owned by the current user', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         await new Area(createArea()).save();
 
         const response = await requester
             .get(`/api/v1/area`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
     it('Getting areas supports filtering by application', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaGFW = await new Area(createArea({
             userId: USERS.USER.id,
             application: 'gfw'
@@ -101,9 +103,7 @@ describe('V1 - Get areas tests', () => {
 
         const responseRW = await requester
             .get(`/api/v1/area?application=rw`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         responseRW.status.should.equal(200);
         responseRW.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -126,9 +126,7 @@ describe('V1 - Get areas tests', () => {
 
         const responseGFW = await requester
             .get(`/api/v1/area?application=gfw`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         responseGFW.status.should.equal(200);
         responseGFW.body.should.have.property('data').and.be.an('array').and.length(1);

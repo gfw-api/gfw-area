@@ -4,6 +4,7 @@ const chai = require('chai');
 const Area = require('models/area.modelV2');
 const { createArea } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
+const { mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 
 chai.should();
@@ -26,46 +27,54 @@ describe('V2 - Area status', () => {
     });
 
     it('Getting a public area as the owner should return all the area info', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({
             userId: USERS.USER.id,
             public: true,
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a private area as the owner should return all the area info', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({
             userId: USERS.USER.id,
             public: false,
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a public area as an ADMIN should return all the area info', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
+
         const area = await new Area(createArea({
             userId: USERS.USER.id,
             public: true,
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.ADMIN)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a private area as an ADMIN should return all the area info', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
+
         const area = await new Area(createArea({
             userId: USERS.USER.id,
             public: false,
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.ADMIN)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         assertValidAreaResponse(response, 'test@example.com');
     });
 
@@ -76,7 +85,7 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=null`);
+        const response = await requester.get(`/api/v2/area/${area.id}`);
         assertValidAreaResponse(response, null);
     });
 
@@ -87,7 +96,7 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=null`);
+        const response = await requester.get(`/api/v2/area/${area.id}`);
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal('Area private');

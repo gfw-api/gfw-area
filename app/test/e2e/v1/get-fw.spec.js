@@ -1,8 +1,8 @@
 const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.model');
-const { createArea } = require('../utils/helpers');
 
+const { createArea, mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
@@ -33,21 +33,23 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas with no data should be successful', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         nock(process.env.CT_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, { data: null });
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
     it('Getting FW areas should return local areas owned by the current user (happy case)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         nock(process.env.CT_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, { data: null });
@@ -58,9 +60,7 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -83,6 +83,8 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas should return areas owned by the current user\'s team (happy case)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea()).save();
 
         nock(process.env.CT_URL)
@@ -122,9 +124,7 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -147,6 +147,8 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas should combine both user-owned and team-owned areas', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const userArea = await new Area(createArea({
             userId: USERS.USER.id
         })).save();
@@ -190,9 +192,7 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
@@ -201,6 +201,8 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas should combine both user-owned and team-owned areas, removing duplicates', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({
             userId: USERS.USER.id
         })).save();
@@ -242,9 +244,7 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -267,6 +267,8 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas should hide areas that do not have a geostore id', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({
             userId: USERS.USER.id,
         })).save();
@@ -289,9 +291,7 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .query({
-                loggedUser: JSON.stringify(USERS.USER)
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
