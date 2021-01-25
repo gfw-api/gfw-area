@@ -6,7 +6,7 @@ const sinonChai = require('sinon-chai');
 const MailService = require('services/mail.service');
 const Area = require('models/area.modelV2');
 const { USERS } = require('../utils/test.constants');
-const { createArea } = require('../utils/helpers');
+const { createArea, mockGetUserFromToken } = require('../utils/helpers');
 
 chai.should();
 chai.use(sinonChai);
@@ -44,18 +44,19 @@ describe('V2 - Area emails', () => {
     it('Creating an area with status saved triggers sending a dashboard ready email', async () => {
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            application: 'gfw',
-            geostore: '713899292fc118a915741728ef84a2a7',
-            wdpaid: 3,
-            email: 'test@example.com',
-            use: { id: 'bbb', name: 'created name' },
-            iso: { country: 'createdCountryIso', region: 'createdRegionIso' },
-            datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
-            templateId: 'createdTemplateId'
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .send({
+                name: 'Portugal area',
+                application: 'gfw',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                wdpaid: 3,
+                email: 'test@example.com',
+                use: { id: 'bbb', name: 'created name' },
+                iso: { country: 'createdCountryIso', region: 'createdRegionIso' },
+                datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                templateId: 'createdTemplateId'
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
@@ -73,17 +74,19 @@ describe('V2 - Area emails', () => {
     });
 
     it('Creating an area with status pending triggers sending a dashboard in construction email', async () => {
+
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            application: 'gfw',
-            email: 'test@example.com',
-            geostore: '713899292fc118a915741728ef84a2a7',
-            datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
-            templateId: 'createdTemplateId'
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .send({
+                name: 'Portugal area',
+                application: 'gfw',
+                email: 'test@example.com',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                templateId: 'createdTemplateId'
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
@@ -101,16 +104,20 @@ describe('V2 - Area emails', () => {
     });
 
     it('Creating an area without email associated does not trigger a dashboard in construction email', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
-        const response = await requester.post(`/api/v2/area`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area',
-            application: 'gfw',
-            geostore: '713899292fc118a915741728ef84a2a7',
-            datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
-            templateId: 'createdTemplateId'
-        });
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area',
+                application: 'gfw',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                templateId: 'createdTemplateId'
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
@@ -119,6 +126,8 @@ describe('V2 - Area emails', () => {
     });
 
     it('Updating an existing with status saved triggers sending a dashboard ready email', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
         const area = await new Area(createArea({
             email: 'test@example.com',
@@ -126,10 +135,12 @@ describe('V2 - Area emails', () => {
             userId: USERS.USER.id,
         })).save();
 
-        const response = await requester.patch(`/api/v2/area/${area.id}`).send({
-            loggedUser: USERS.USER,
-            name: 'Portugal area'
-        });
+        const response = await requester
+            .patch(`/api/v2/area/${area.id}`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area'
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
@@ -147,16 +158,20 @@ describe('V2 - Area emails', () => {
     });
 
     it('Updating areas by geostore triggers sending multiple emails informing the dashboards have been created', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
+
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
         await new Area(createArea({ geostore: 1, email: 'test@example.com', status: 'pending' })).save();
         await new Area(createArea({ geostore: 2, email: 'test@example.com', status: 'pending' })).save();
         await new Area(createArea({ geostore: 3, email: 'test@example.com', status: 'pending' })).save();
 
-        const response = await requester.post(`/api/v2/area/update`).send({
-            loggedUser: USERS.ADMIN,
-            geostores: [1, 2],
-            update_params: { status: 'saved' }
-        });
+        const response = await requester
+            .post(`/api/v2/area/update`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                geostores: [1, 2],
+                update_params: { status: 'saved' }
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(2);

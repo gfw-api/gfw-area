@@ -3,6 +3,7 @@ const chai = require('chai');
 const Area = require('models/area.model');
 const { createArea } = require('../utils/helpers');
 
+const { mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
@@ -23,15 +24,17 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by non-existent field (implicit order) still returns areas', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaOne = await new Area(createArea({ userId: USERS.USER.id })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id })).save();
         const areaThree = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
-                sort: 'potato',
-                loggedUser: JSON.stringify(USERS.USER)
+                sort: 'potato'
             });
 
         response.status.should.equal(200);
@@ -46,15 +49,17 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by name (implicit order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
         const areaThree = await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
-                sort: 'name',
-                loggedUser: JSON.stringify(USERS.USER)
+                sort: 'name'
             });
 
         response.status.should.equal(200);
@@ -69,15 +74,17 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by name (explicit asc order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
         const areaThree = await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
-                sort: '+name',
-                loggedUser: JSON.stringify(USERS.USER)
+                sort: '+name'
             });
 
         response.status.should.equal(200);
@@ -92,15 +99,17 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by name (explicit desc order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
         const areaThree = await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
-                sort: '-name',
-                loggedUser: JSON.stringify(USERS.USER)
+                sort: '-name'
             });
 
         response.status.should.equal(200);
@@ -115,15 +124,17 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by createdAt (explicit desc order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, createdAt: new Date('2020-04-01T10:20:30Z') })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, createdAt: new Date('2020-09-01T10:20:30Z') })).save();
         const areaThree = await new Area(createArea({ userId: USERS.USER.id, createdAt: new Date('2020-07-01T10:20:30Z') })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
-                sort: '-createdAt',
-                loggedUser: JSON.stringify(USERS.USER)
+                sort: '-createdAt'
             });
 
         response.status.should.equal(200);
@@ -138,15 +149,17 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by updatedAt (explicit desc order)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, updatedAt: new Date('2020-04-01T10:20:30Z') })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, updatedAt: new Date('2020-09-01T10:20:30Z') })).save();
         const areaThree = await new Area(createArea({ userId: USERS.USER.id, updatedAt: new Date('2020-07-01T10:20:30Z') })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
-                sort: '-updatedAt',
-                loggedUser: JSON.stringify(USERS.USER)
+                sort: '-updatedAt'
             });
 
         response.status.should.equal(200);

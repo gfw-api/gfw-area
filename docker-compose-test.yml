@@ -12,6 +12,7 @@ services:
       API_VERSION: v1
       CT_URL: http://mymachine:9000
       CT_REGISTER_MODE: auto
+      CT_TOKEN: cttoken
       LOCAL_URL: http://127.0.0.1:4110
       HOST_IP: 127.0.0.1
       MONGO_PORT_27017_TCP_ADDR: mongo
@@ -19,6 +20,7 @@ services:
       S3_SECRET_ACCESS_KEY: 1
       S3_BUCKET: s3bucket
       WAIT_HOSTS: mongo:27017
+      FASTLY_ENABLED: "false"
     command: test
     depends_on:
       - mongo
