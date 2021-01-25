@@ -1,8 +1,8 @@
 const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.model');
-const { createArea } = require('../utils/helpers');
 
+const { createArea, mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
@@ -23,19 +23,21 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Get a page with 3 areas using pagination', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
         const areaThree = await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
                 sort: 'name',
                 page: {
                     number: 1,
                     size: 3
-                },
-                loggedUser: JSON.stringify(USERS.USER)
+                }
             });
 
         response.status.should.equal(200);
@@ -50,19 +52,21 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Get the first page with one area using pagination', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
         await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
                 sort: 'name',
                 page: {
                     number: 1,
                     size: 1
-                },
-                loggedUser: JSON.stringify(USERS.USER)
+                }
             });
 
         response.status.should.equal(200);
@@ -73,19 +77,21 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Get the second page with one area using pagination', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
         await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd')
             .query({
                 sort: 'name',
                 page: {
                     number: 2,
                     size: 1
-                },
-                loggedUser: JSON.stringify(USERS.USER)
+                }
             });
 
         response.status.should.equal(200);

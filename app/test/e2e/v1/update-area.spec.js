@@ -3,7 +3,7 @@ const chai = require('chai');
 const Area = require('models/area.model');
 const fs = require('fs');
 const config = require('config');
-const { createArea } = require('../utils/helpers');
+const { createArea, mockGetUserFromToken } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
@@ -24,7 +24,6 @@ describe('V1 - Update area', () => {
     });
 
     it('Updating an area without being logged in should return a 401 - "Not logged" error', async () => {
-
         const testArea = await new Area(createArea()).save();
 
         const response = await requester
@@ -37,13 +36,13 @@ describe('V1 - Update area', () => {
     });
 
     it('Updating an area while being logged in as user that does not own the area should return a 403 - "Not authorized" error', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const testArea = await new Area(createArea()).save();
 
         const response = await requester
             .patch(`/api/v1/area/${testArea.id}`)
-            .send({
-                loggedUser: USERS.USER
-            });
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(403);
 
@@ -52,12 +51,14 @@ describe('V1 - Update area', () => {
     });
 
     it('Updating an area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
             .patch(`/api/v1/area/${testArea.id}`)
+            .set('Authorization', 'Bearer abcd')
             .send({
-                loggedUser: USERS.USER,
                 name: 'Portugal area',
                 application: 'rw',
                 geostore: '713899292fc118a915741728ef84a2a7',
@@ -109,6 +110,8 @@ describe('V1 - Update area', () => {
     });
 
     it('Updating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the updated area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         nock(`https://${config.get('s3.bucket')}.s3.amazonaws.com`)
@@ -119,8 +122,8 @@ describe('V1 - Update area', () => {
 
         const response = await requester
             .patch(`/api/v1/area/${testArea.id}`)
+            .set('Authorization', 'Bearer abcd')
             .attach('image', fileData, 'sample.png')
-            .field('loggedUser', JSON.stringify(USERS.USER))
             .field('name', 'Portugal area')
             .field('application', 'rw')
             .field('geostore', '713899292fc118a915741728ef84a2a7')

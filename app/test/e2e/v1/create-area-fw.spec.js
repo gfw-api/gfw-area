@@ -7,6 +7,7 @@ const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
+const { mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 
 nock.disableNetConnect();
@@ -34,10 +35,12 @@ describe('V1 - Create area FW', () => {
     });
 
     it('Creating an area while being logged in as a user that owns the area should return a 200 HTTP code and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const response = await requester
             .post(`/api/v1/area/fw/${USERS.USER.id}`)
+            .set('Authorization', 'Bearer abcd')
             .send({
-                loggedUser: USERS.USER,
                 name: 'Portugal area',
                 application: 'rw',
                 geostore: '713899292fc118a915741728ef84a2a7',
@@ -88,10 +91,12 @@ describe('V1 - Create area FW', () => {
     });
 
     it('Creating an area should automatically set the application field to "fw"', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const response = await requester
             .post(`/api/v1/area/fw/${USERS.USER.id}`)
+            .set('Authorization', 'Bearer abcd')
             .send({
-                loggedUser: USERS.USER,
                 name: 'Portugal area',
                 geostore: '713899292fc118a915741728ef84a2a7',
                 wdpaid: 3,
@@ -114,6 +119,8 @@ describe('V1 - Create area FW', () => {
     });
 
     it('Creating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         nock(`https://${config.get('s3.bucket')}.s3.amazonaws.com`)
             .put(/^\/areas-dev\/(\w|-)+.png/)
             .reply(200);
@@ -122,8 +129,8 @@ describe('V1 - Create area FW', () => {
 
         const response = await requester
             .post(`/api/v1/area/fw/${USERS.USER.id}`)
+            .set('Authorization', 'Bearer abcd')
             .attach('image', fileData, 'sample.png')
-            .field('loggedUser', JSON.stringify(USERS.USER))
             .field('name', 'Portugal area')
             .field('application', 'rw')
             .field('geostore', '713899292fc118a915741728ef84a2a7')
