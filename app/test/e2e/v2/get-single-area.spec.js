@@ -2,13 +2,12 @@ const nock = require('nock');
 const chai = require('chai');
 const mongoose = require('mongoose');
 const Area = require('models/area.modelV2');
-const { createArea } = require('../utils/helpers');
+const { createArea, mockGetUserFromToken, mockSubscriptionFindByIds } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { mockSubscriptionFindByIds } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -30,41 +29,51 @@ describe('V2 - Get single area', () => {
     });
 
     it('Getting an area that exists in the areas database and belongs to the user returns 200 OK with the area info', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({ userId: USERS.USER.id })).save();
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('id').and.equal(area.id);
     });
 
     it('Getting a private area that exists in the areas database but does not belong to the user returns 401 Unauthorized', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({ public: false })).save();
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal(`Area private`);
     });
 
     it('Getting a private area that exists in the areas database as an ADMIN user returns 200 OK with the area info', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
+
         const area = await new Area(createArea({ public: false })).save();
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.ADMIN)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('id').and.equal(area._id.toString());
     });
 
     it('Getting a public area that exists in the areas database but does not belong to the user returns 200 OK with the area info', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({ public: true })).save();
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('id').and.equal(area.id);
     });
 
     it('Getting an area that does not exist in the areas database, but corresponds to an user subscription returns 200 OK with the subscription info', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const id = new mongoose.Types.ObjectId().toString();
         mockSubscriptionFindByIds([id], { userId: USERS.USER.id }, 2);
-        const response = await requester.get(`/api/v2/area/${id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester.get(`/api/v2/area/${id}`).set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('attributes').and.be.an('object');
@@ -73,6 +82,8 @@ describe('V2 - Get single area', () => {
     });
 
     it('Getting an area which has an associated subscription returns 200 OK with the correct area info', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const id = new mongoose.Types.ObjectId().toString();
         const area = await new Area(createArea({
             public: false,
@@ -87,7 +98,7 @@ describe('V2 - Get single area', () => {
             confirmed: false,
         }, 2);
 
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('id').and.equal(area.id);
@@ -97,6 +108,8 @@ describe('V2 - Get single area', () => {
     });
 
     it('Getting an area that is associated with an invalid sub returns the correct result', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const fakeId = new mongoose.Types.ObjectId().toString();
         const area = await new Area(createArea({
             userId: USERS.USER.id,
@@ -104,7 +117,7 @@ describe('V2 - Get single area', () => {
         })).save();
         mockSubscriptionFindByIds([], {}, 2);
 
-        const response = await requester.get(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('id').and.equal(area.id);
