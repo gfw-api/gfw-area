@@ -1,7 +1,7 @@
 const logger = require('logger');
 const GeostoreNotFound = require('errors/geostore-not-found.error');
 const rimraf = require('rimraf');
-const ctRegisterMicroservice = require('ct-register-microservice-node');
+const { RWAPIMicroservice } = require('rw-api-microservice-node');
 const tilebelt = require('@mapbox/tilebelt');
 const tmp = require('tmp');
 const fs = require('fs');
@@ -14,7 +14,7 @@ class DownloadService {
 
     static async getBBox(geostoreId) {
         try {
-            const result = await ctRegisterMicroservice.requestToMicroservice({
+            const result = await RWAPIMicroservice.requestToMicroservice({
                 uri: `/geostore/${geostoreId}`,
                 method: 'GET',
                 json: true
