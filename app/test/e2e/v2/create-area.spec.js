@@ -197,6 +197,8 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with an invalid language code will default the language to \'en\' and return a 200 HTTP code and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const requestAndValidateAreaWithLangCode = async (requestLang, responseLang) => {
             const response = await requester
                 .post(`/api/v2/area`)
@@ -243,6 +245,8 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area only with a geostore ID for the Data API returns 200 OK and the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
         const response = await requester
             .post(`/api/v2/area`)
@@ -267,6 +271,7 @@ describe('V2 - Create area', () => {
 
     it('Creating an area with fire alerts and a geostore ID for the Data API returns 200 OK and the created area object', async () => {
         mockGetUserFromToken(USERS.USER);
+
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
         const override = { userId: USERS.USER.id, params: { geostoreDataApi } };
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e', override);

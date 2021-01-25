@@ -235,6 +235,9 @@ describe('V2 - Get areas', () => {
 
     it('Getting areas sending query param all along with other filters should return a 200 OK with the correct data', async () => {
         mockGetUserFromToken(USERS.ADMIN);
+        mockGetUserFromToken(USERS.ADMIN);
+        mockGetUserFromToken(USERS.ADMIN);
+        mockGetUserFromToken(USERS.ADMIN);
 
         const id1 = new mongoose.Types.ObjectId().toString();
         const id2 = new mongoose.Types.ObjectId().toString();
