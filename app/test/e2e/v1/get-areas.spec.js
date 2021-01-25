@@ -37,7 +37,8 @@ describe('V1 - Get areas tests', () => {
         mockGetUserFromToken(USERS.USER);
 
         const response = await requester
-            .get(`/api/v1/area`);
+            .get(`/api/v1/area`)
+            .set('Authorization', 'Bearer abcd');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
@@ -89,6 +90,7 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Getting areas supports filtering by application', async () => {
+        mockGetUserFromToken(USERS.USER);
         mockGetUserFromToken(USERS.USER);
 
         const areaGFW = await new Area(createArea({
