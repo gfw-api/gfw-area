@@ -1,4 +1,4 @@
-const ctRegisterMicroservice = require('ct-register-microservice-node');
+const { RWAPIMicroservice } = require('rw-api-microservice-node');
 const config = require('config');
 const logger = require('logger');
 const AreaModel = require('models/area.modelV2');
@@ -165,7 +165,7 @@ class SubscriptionsService {
     }
 
     static async getAllSubscriptions(pageNumber, pageSize, startDate, endDate) {
-        return ctRegisterMicroservice.requestToMicroservice({
+        return RWAPIMicroservice.requestToMicroservice({
             uri: `/subscriptions/find-all?page[number]=${pageNumber}&page[size]=${pageSize}&updatedAtSince=${startDate}&updatedAtUntil=${endDate}`,
             method: 'GET',
             json: true,
@@ -173,7 +173,7 @@ class SubscriptionsService {
     }
 
     static async findByIds(ids) {
-        const result = await ctRegisterMicroservice.requestToMicroservice({
+        const result = await RWAPIMicroservice.requestToMicroservice({
             uri: `/subscriptions/find-by-ids`,
             method: 'POST',
             json: true,
@@ -184,7 +184,7 @@ class SubscriptionsService {
     }
 
     static async createSubscriptionFromArea(area) {
-        const createdSubscription = await ctRegisterMicroservice.requestToMicroservice({
+        const createdSubscription = await RWAPIMicroservice.requestToMicroservice({
             uri: `/subscriptions`,
             method: 'POST',
             json: true,
@@ -196,7 +196,7 @@ class SubscriptionsService {
 
     static async updateSubscriptionFromArea(area) {
         try {
-            const updatedSubscription = await ctRegisterMicroservice.requestToMicroservice({
+            const updatedSubscription = await RWAPIMicroservice.requestToMicroservice({
                 uri: `/subscriptions/${area.subscriptionId}`,
                 method: 'PATCH',
                 json: true,
@@ -212,7 +212,7 @@ class SubscriptionsService {
 
     static async deleteSubscription(id) {
         try {
-            await ctRegisterMicroservice.requestToMicroservice({
+            await RWAPIMicroservice.requestToMicroservice({
                 uri: `/subscriptions/${id}`,
                 method: 'DELETE',
                 json: true,
