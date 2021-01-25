@@ -1,5 +1,5 @@
 const logger = require('logger');
-const ctRegisterMicroservice = require('ct-register-microservice-node');
+const { RWAPIMicroservice } = require('rw-api-microservice-node');
 const config = require('config');
 const geohash = require('ngeohash');
 const Mustache = require('mustache');
@@ -139,7 +139,7 @@ class AlertService {
     static async getGeostoreByWdpa(wdpaid) {
         logger.debug('Obtaining geostore of wdpaid ', wdpaid);
         try {
-            const result = await ctRegisterMicroservice.requestToMicroservice({
+            const result = await RWAPIMicroservice.requestToMicroservice({
                 uri: `/geostore/wdpa/${wdpaid}`,
                 method: 'GET',
                 json: true
@@ -162,7 +162,7 @@ class AlertService {
         // eslint-disable-next-line max-len
         const uri = `/query/${viirsDataset}?sql=select count(*) as count, ST_GeoHash(the_geom, ${precissionPoint}) as geohash from ${table} where acq_date > '2017-01-01' group by ST_GeoHash(the_geom, ${precissionPoint})&geostore=${area.geostore}`;
         try {
-            const result = await ctRegisterMicroservice.requestToMicroservice({
+            const result = await RWAPIMicroservice.requestToMicroservice({
                 uri,
                 method: 'GET',
                 json: true
@@ -179,7 +179,7 @@ class AlertService {
         const gladDataset = config.get('gladDataset');
         const uri = `/query/${gladDataset}?sql=select count(*) as count from data where year > 2016 group by ST_GeoHash(the_geom_point, ${precissionPoint})&geostore=${area.geostore}`;
         try {
-            const result = await ctRegisterMicroservice.requestToMicroservice({
+            const result = await RWAPIMicroservice.requestToMicroservice({
                 uri,
                 method: 'GET',
                 json: true
