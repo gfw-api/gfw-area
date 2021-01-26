@@ -15,6 +15,7 @@ services:
       CT_REGISTER_MODE: auto
       MONGO_PORT_27017_TCP_ADDR: mongo
       WAIT_HOSTS: mongo:27017
+      FASTLY_ENABLED: "false"
     command: develop
     depends_on:
       - mongo
