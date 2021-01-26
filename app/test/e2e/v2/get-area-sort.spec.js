@@ -14,7 +14,7 @@ let areaTwo;
 let areaThree;
 
 
-describe('Sort areas tests', () => {
+describe('V2 - Sort areas tests', () => {
 
     before(async () => {
         if (process.env.NODE_ENV !== 'test') {
