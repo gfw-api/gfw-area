@@ -547,9 +547,9 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area providing an invalid language code will default the language to \'en\' and return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
 
         const requestAndValidateAreaWithLangCode = async (requestLang, responseLang, initialLang = 'en') => {
+            mockGetUserFromToken(USERS.USER);
             const area = await new Area(createArea({ userId: USERS.USER.id, language: initialLang })).save();
             const response = await requester.patch(`/api/v2/area/${area._id}`)
                 .set('Authorization', 'Bearer abcd')
