@@ -656,7 +656,12 @@ async function loggedUserToState(ctx, next) {
     } else if (ctx.request.body.fields && ctx.request.body.fields.loggedUser) {
         ctx.state.loggedUser = JSON.parse(ctx.request.body.fields.loggedUser);
         delete ctx.request.body.loggedUser;
-    } else {
+    }
+    await next();
+}
+
+async function ensureUserIsLogged(ctx, next) {
+    if (!ctx.state.loggedUser) {
         ctx.throw(401, 'Not logged');
         return;
     }
@@ -703,12 +708,12 @@ const ensureAdminUser = async (ctx, next) => {
 
 const router = new Router({ prefix: '/area' });
 
-router.get('/', loggedUserToState, AreaRouterV2.getAll);
-router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidatorV2.create, AreaRouterV2.save);
-router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
+router.get('/', loggedUserToState, ensureUserIsLogged, AreaRouterV2.getAll);
+router.post('/', loggedUserToState, ensureUserIsLogged, unwrapJSONStrings, AreaValidatorV2.create, AreaRouterV2.save);
+router.patch('/:id', loggedUserToState, ensureUserIsLogged, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
-router.delete('/:id', loggedUserToState, checkPermission, AreaRouterV2.delete);
-router.post('/update', loggedUserToState, ensureAdminUser, AreaRouterV2.updateByGeostore);
-router.post('/sync', loggedUserToState, ensureAdminUser, AreaRouterV2.sync);
+router.delete('/:id', loggedUserToState, ensureUserIsLogged, checkPermission, AreaRouterV2.delete);
+router.post('/update', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaRouterV2.updateByGeostore);
+router.post('/sync', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaRouterV2.sync);
 
 module.exports = router;
