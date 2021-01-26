@@ -59,6 +59,7 @@ describe('V2 - Sync areas', () => {
 
     it('Sync areas as an ADMIN updates the areas in the database with overwrite information from associated subscriptions, returning the number of synced areas', async () => {
         mockGetUserFromToken(USERS.ADMIN);
+        mockGetUserFromToken(USERS.ADMIN);
 
         const subId1 = new mongoose.Types.ObjectId().toString();
         const subId2 = new mongoose.Types.ObjectId().toString();
@@ -89,6 +90,7 @@ describe('V2 - Sync areas', () => {
     });
 
     it('Sync areas as an ADMIN creates new areas in the database with subscriptions that do not have a match with an existing area, returning the number of created areas', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
         mockGetUserFromToken(USERS.ADMIN);
 
         const id1 = new mongoose.Types.ObjectId().toString();

@@ -8,6 +8,7 @@ const AreaValidatorV2 = require('validators/area.validatorV2');
 const TeamService = require('services/team.service');
 const SubscriptionService = require('services/subscription.service');
 const s3Service = require('services/s3.service');
+const mongoose = require('mongoose');
 const MailService = require('services/mail.service');
 
 const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
@@ -101,6 +102,10 @@ class AreaRouterV2 {
 
     static async get(ctx) {
         logger.info(`Obtaining v2 area with areaId ${ctx.params.id}`);
+
+        if (!mongoose.Types.ObjectId.isValid(ctx.params.id)) {
+            ctx.throw(404, 'Area not found');
+        }
 
         // 1. Check for area in areas
         let area = await AreaModel.findById(ctx.params.id);

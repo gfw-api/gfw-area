@@ -71,6 +71,7 @@ describe('V2 - Get areas', () => {
 
     it('Getting areas sending query param all as an USER/MANAGER should return a 200 OK with only the user areas (query filter is ignored)', async () => {
         mockGetUserFromToken(USERS.USER);
+        mockGetUserFromToken(USERS.MANAGER);
 
         const userArea = await new Area(createArea({ userId: USERS.USER.id })).save();
         const managerArea = await new Area(createArea({ userId: USERS.MANAGER.id })).save();
@@ -81,8 +82,6 @@ describe('V2 - Get areas', () => {
         userResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
         userResponse.body.data.find((element) => element.id === userArea.id).should.be.ok;
 
-        mockGetUserFromToken(USERS.MANAGER);
-
         const managerResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd');
         managerResponse.status.should.equal(200);
         managerResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
@@ -90,6 +89,7 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with all the areas (even not owned by the user)', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
         mockGetUserFromToken(USERS.ADMIN);
 
         const subId1 = new mongoose.Types.ObjectId().toString();
@@ -107,7 +107,7 @@ describe('V2 - Get areas', () => {
         );
 
         // First sync areas
-        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd');
+        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd').send({});
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('syncedAreas').and.equal(1);
@@ -126,6 +126,7 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas filtered by application should return a 200 OK with only areas for the application requested', async () => {
+        mockGetUserFromToken(USERS.USER);
         mockGetUserFromToken(USERS.USER);
 
         const rwArea = await new Area(createArea({ userId: USERS.USER.id, application: 'rw' })).save();
@@ -163,6 +164,7 @@ describe('V2 - Get areas', () => {
 
     it('Getting areas filtered by status should return a 200 OK with only areas for the status requested', async () => {
         mockGetUserFromToken(USERS.USER);
+        mockGetUserFromToken(USERS.USER);
 
         await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();
         await new Area(createArea({ userId: USERS.USER.id, status: 'pending' })).save();
@@ -179,6 +181,7 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas filtered by public should return a 200 OK with only public areas', async () => {
+        mockGetUserFromToken(USERS.USER);
         mockGetUserFromToken(USERS.USER);
 
         await new Area(createArea({ userId: USERS.USER.id, public: true })).save();
@@ -206,6 +209,7 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with ALL the areas', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
         mockGetUserFromToken(USERS.ADMIN);
 
         const id1 = new mongoose.Types.ObjectId().toString();
@@ -252,7 +256,10 @@ describe('V2 - Get areas', () => {
         );
 
         // First sync areas
-        const syncResponse = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd');
+        const syncResponse = await requester
+            .post(`/api/v2/area/sync`)
+            .set('Authorization', 'Bearer abcd')
+            .send({});
         syncResponse.status.should.equal(200);
         syncResponse.body.should.have.property('data').and.be.an('object');
         syncResponse.body.data.should.have.property('syncedAreas').and.equal(0);
@@ -260,7 +267,9 @@ describe('V2 - Get areas', () => {
 
         // Requesting all areas => should return 5 areas
         mockSubscriptionFindByIds([id1], { userId: USERS.USER.id }, 3);
-        const response = await requester.get(`/api/v2/area?all=true`).set('Authorization', 'Bearer abcd');
+        const response = await requester
+            .get(`/api/v2/area?all=true`)
+            .set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(5);
 
@@ -268,12 +277,16 @@ describe('V2 - Get areas', () => {
         mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
         mockSubscriptionFindByIds([id2], { userId: USERS.USER.id });
         mockSubscriptionFindByIds([id3], { userId: USERS.USER.id });
-        const savedResponse = await requester.get(`/api/v2/area?all=true&status=saved`).set('Authorization', 'Bearer abcd');
+        const savedResponse = await requester
+            .get(`/api/v2/area?all=true&status=saved`)
+            .set('Authorization', 'Bearer abcd');
         savedResponse.status.should.equal(200);
         savedResponse.body.should.have.property('data').and.be.an('array').and.have.length(4);
 
         // Requesting all areas with status pending => should return 4 areas
-        const pendingResponse = await requester.get(`/api/v2/area?all=true&status=pending`).set('Authorization', 'Bearer abcd');
+        const pendingResponse = await requester
+            .get(`/api/v2/area?all=true&status=pending`)
+            .set('Authorization', 'Bearer abcd');
         pendingResponse.status.should.equal(200);
         pendingResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
     });

@@ -21,11 +21,11 @@ describe('V2 - Get single area', () => {
         }
     });
 
-    it('Getting an area without being logged in should return a 401 - "Not logged" error', async () => {
+    it('Getting an area that doesn\'t exist should return a 404 - "Not found" error', async () => {
         const response = await requester.get(`/api/v2/area/1`);
-        response.status.should.equal(401);
+        response.status.should.equal(404);
         response.body.should.have.property('errors').and.be.an('array');
-        response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
+        response.body.errors[0].should.have.property('detail').and.equal(`Area not found`);
     });
 
     it('Getting an area that exists in the areas database and belongs to the user returns 200 OK with the area info', async () => {
