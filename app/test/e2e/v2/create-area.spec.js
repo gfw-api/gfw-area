@@ -197,9 +197,8 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with an invalid language code will default the language to \'en\' and return a 200 HTTP code and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
-
         const requestAndValidateAreaWithLangCode = async (requestLang, responseLang) => {
+            mockGetUserFromToken(USERS.USER);
             const response = await requester
                 .post(`/api/v2/area`)
                 .set('Authorization', 'Bearer abcd')
