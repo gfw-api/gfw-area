@@ -8,7 +8,9 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { createArea, mockSubscriptionFindByIds, mockSubscriptionDeletion } = require('../utils/helpers');
+const {
+    createArea, mockSubscriptionFindByIds, mockSubscriptionDeletion, mockGetUserFromToken
+} = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -31,38 +33,56 @@ describe('V2 - Delete area', () => {
     });
 
     it('Deleting an area while being logged in as user that does not own the area should return a 403 - "Not authorized" error', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea()).save();
-        const response = await requester.delete(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester
+            .delete(`/api/v2/area/${area.id}`)
+            .set('Authorization', 'Bearer abcd');
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal(`Not authorized`);
     });
 
     it('Deleting an area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const area = await new Area(createArea({ userId: USERS.USER.id })).save();
-        const response = await requester.delete(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester
+            .delete(`/api/v2/area/${area.id}`)
+            .set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
     });
 
     it('Deleting an area that has subscription associated also deletes the subscription, returning a 200 HTTP code and the updated area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1222']);
         mockSubscriptionDeletion('5e3bf82fad36f4001abe1222');
         const area = await new Area(createArea({
             userId: USERS.USER.id,
             subscriptionId: '5e3bf82fad36f4001abe1222',
         })).save();
-        const response = await requester.delete(`/api/v2/area/${area.id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester
+            .delete(`/api/v2/area/${area.id}`)
+            .set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
     });
 
     it('Deleting an non-existing area (mapped subscription) deletes the subscription, returning a 200 HTTP code and the updated area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1111']);
         mockSubscriptionDeletion('5e3bf82fad36f4001abe1111');
-        const response = await requester.delete(`/api/v2/area/5e3bf82fad36f4001abe1111?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester
+            .delete(`/api/v2/area/5e3bf82fad36f4001abe1111`)
+            .set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
     });
 
     it('Deleting an area that is associated with an invalid sub does not throw an error, returning a 200 HTTP code and the updated area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+
         const fakeId = new mongoose.Types.ObjectId().toString();
         const area = await new Area(createArea({
             userId: USERS.USER.id,
@@ -72,7 +92,9 @@ describe('V2 - Delete area', () => {
         })).save();
         mockSubscriptionFindByIds([]);
 
-        const response = await requester.delete(`/api/v2/area/${area._id}?loggedUser=${JSON.stringify(USERS.USER)}`);
+        const response = await requester
+            .delete(`/api/v2/area/${area._id}`)
+            .set('Authorization', 'Bearer abcd');
         response.status.should.equal(200);
     });
 

@@ -251,7 +251,6 @@ describe('V2 - Create area', () => {
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
             .send({
-                loggedUser: USERS.USER,
                 name: 'Portugal area',
                 geostore: null,
                 geostoreDataApi,

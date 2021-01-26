@@ -528,7 +528,6 @@ describe('V2 - Update area', () => {
         const response = await requester.patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
             .send({
-                loggedUser: USERS.USER,
                 name: 'Portugal area',
                 geostore,
                 geostoreDataApi: null,

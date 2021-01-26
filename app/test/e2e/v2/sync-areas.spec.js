@@ -126,6 +126,7 @@ describe('V2 - Sync areas', () => {
 
     it('Running sync areas with dryRun flag set to true does not apply the updates to the areas in the database', async () => {
         mockGetUserFromToken(USERS.ADMIN);
+        mockGetUserFromToken(USERS.ADMIN);
 
         const id1 = new mongoose.Types.ObjectId().toString();
         const id2 = new mongoose.Types.ObjectId().toString();
@@ -140,11 +141,15 @@ describe('V2 - Sync areas', () => {
             [{ name: 'Updated 1' }, { name: 'Updated 2' }, { name: 'Updated 3' }]
         );
 
-        const response = await requester.post(`/api/v2/area/sync?dryRun=true`).set('Authorization', 'Bearer abcd');
+        const response = await requester
+            .post(`/api/v2/area/sync?dryRun=true`)
+            .set('Authorization', 'Bearer abcd');
         validateSyncSuccessResponse(response, 0, 3, 3);
 
         // Getting the subscription should just return the previously existing subs (not the ones that should have been created)
-        const getResponse = await requester.get(`/api/v2/area?loggedUser=${JSON.stringify(USERS.ADMIN)}&all=true`);
+        const getResponse = await requester
+            .get(`/api/v2/area?all=true`)
+            .set('Authorization', 'Bearer abcd');
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(3);
         getResponse.body.data.find((area) => area.id === area1.id).attributes.should.have.property('name').and.equal('Old Name 1');
