@@ -18,8 +18,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      annotations:
-        chaos.alpha.kubernetes.io/enabled: "true"
       labels:
         name: area
     spec:
@@ -114,7 +112,24 @@ spec:
                 secretKeyRef:
                   key: SPARKPOST_KEY
                   name: mssecrets
-          image: vizzuality/area
+            - name: FASTLY_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  key: FASTLY_ENABLED
+                  name: mssecrets
+            - name: FASTLY_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: FASTLY_APIKEY
+                  name: mssecrets
+                  optional: true
+            - name: FASTLY_SERVICEID
+              valueFrom:
+                secretKeyRef:
+                  key: FASTLY_SERVICEID
+                  name: mssecrets
+                  optional: true
+          image: gfwdockerhub/area
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -150,8 +165,9 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
       dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: regcred
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
-status: {}
