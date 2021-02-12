@@ -31,7 +31,7 @@ describe('V2 - Create area', () => {
         const response = await requester.post(`/api/v2/area`);
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
-        response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
+        response.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
     });
 
     it('Creating an area while being logged in as a user that owns the area should return a 200 HTTP code and the created area object', async () => {

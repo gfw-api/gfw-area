@@ -667,7 +667,7 @@ async function loggedUserToState(ctx, next) {
 
 async function ensureUserIsLogged(ctx, next) {
     if (!ctx.state.loggedUser) {
-        ctx.throw(401, 'Not logged');
+        ctx.throw(401, 'Unauthorized');
         return;
     }
     await next();

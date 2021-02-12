@@ -39,7 +39,7 @@ describe('V2 - Update area', () => {
 
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
-        response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
+        response.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
     });
 
     it('Updating an area while being logged in as user that does not own the area should return a 403 - "Not authorized" error', async () => {

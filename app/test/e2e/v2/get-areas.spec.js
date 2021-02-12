@@ -31,7 +31,7 @@ describe('V2 - Get areas', () => {
         const response = await requester.get('/api/v2/area');
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
-        response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
+        response.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
     });
 
     it('Getting areas being logged in should return a 200 OK with all the areas for the current user -- no areas', async () => {

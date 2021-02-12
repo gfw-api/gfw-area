@@ -30,7 +30,7 @@ describe('V1 - Get FW areas for a user tests', () => {
         response.status.should.equal(401);
 
         response.body.should.have.property('errors').and.be.an('array');
-        response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
+        response.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
     });
 
     it('Getting FW areas for a user while being logged in with role USER should return a 403 - "Not authorized" error', async () => {

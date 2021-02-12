@@ -249,7 +249,7 @@ async function loggedUserToState(ctx, next) {
         ctx.state.loggedUser = JSON.parse(ctx.request.body.fields.loggedUser);
         delete ctx.request.body.loggedUser;
     } else {
-        ctx.throw(401, 'Not logged');
+        ctx.throw(401, 'Unauthorized');
         return;
     }
     await next();

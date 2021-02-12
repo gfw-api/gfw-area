@@ -27,7 +27,7 @@ describe('V2 - Update area', () => {
         const response1 = await requester.post(`/api/v2/area/update`).send();
         response1.status.should.equal(401);
         response1.body.should.have.property('errors').and.be.an('array');
-        response1.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
+        response1.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
 
         const response2 = await requester.post(`/api/v2/area/update`).set('Authorization', 'Bearer abcd');
         response2.status.should.equal(401);

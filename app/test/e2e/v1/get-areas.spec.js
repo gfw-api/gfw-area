@@ -30,7 +30,7 @@ describe('V1 - Get areas tests', () => {
         response.status.should.equal(401);
 
         response.body.should.have.property('errors').and.be.an('array');
-        response.body.errors[0].should.have.property('detail').and.equal(`Not logged`);
+        response.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
     });
 
     it('Getting areas with no data should be successful', async () => {
