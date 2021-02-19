@@ -6,7 +6,7 @@ services:
       - "4200:4100"
     container_name: gfw-area
     env_file:
-      - dev.env.sample
+      - dev.env
     environment:
       PORT: 4100
       NODE_ENV: dev
