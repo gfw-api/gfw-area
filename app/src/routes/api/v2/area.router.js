@@ -83,7 +83,7 @@ class AreaRouterV2 {
 
         logger.info(`[AREAS-V2-ROUTER] Going to find areas`);
         const page = ctx.query['page[number]'] ? parseInt(ctx.query['page[number]'], 10) : 1;
-        const limit = ctx.query['page[size]'] ? parseInt(ctx.query['page[size]'], 10) : 100;
+        const limit = ctx.query['page[size]'] ? parseInt(ctx.query['page[size]'], 10) : 300;
 
         const clonedQuery = { ...ctx.query };
         delete clonedQuery['page[size]'];
