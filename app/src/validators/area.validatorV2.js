@@ -68,6 +68,21 @@ class AreaValidatorV2 {
         await next();
     }
 
+    static async updateByGeostore(ctx, next) {
+        logger.debug('Validating body for update area by geostore');
+        ctx.checkBody('/update_params/application', true).optional().check(
+            (applications) => applications.forEach((application) => AreaValidatorV2.notEmptyString(application)),
+            'Applications can only have string values'
+        );
+
+        if (ctx.errors) {
+            ctx.body = ErrorSerializer.serializeValidationBodyErrors(ctx.errors);
+            ctx.status = 400;
+            return;
+        }
+        await next();
+    }
+
     static async update(ctx, next) {
         logger.debug('Validating body for update area');
         ctx.checkBody('name').optional().len(2, 100);

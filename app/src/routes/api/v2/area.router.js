@@ -718,7 +718,7 @@ router.post('/', loggedUserToState, ensureUserIsLogged, unwrapJSONStrings, AreaV
 router.patch('/:id', loggedUserToState, ensureUserIsLogged, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
 router.delete('/:id', loggedUserToState, ensureUserIsLogged, checkPermission, AreaRouterV2.delete);
-router.post('/update', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaRouterV2.updateByGeostore);
+router.post('/update', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaValidatorV2.updateByGeostore, AreaRouterV2.updateByGeostore);
 router.post('/sync', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaRouterV2.sync);
 
 module.exports = router;

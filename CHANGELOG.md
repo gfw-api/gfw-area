@@ -1,3 +1,7 @@
+## 20/05/2021
+
+- Improve error message when updating geostore with invalid application values.
+
 ## 12/02/2021
 
 - Remove dependency on CT's `authenticated` functionality

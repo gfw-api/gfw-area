@@ -79,7 +79,7 @@ describe('V2 - Update area', () => {
             });
         response.status.should.equal(400);
         response.body.should.have.property('errors').and.be.an('array').and.have.length(1);
-        response.body.errors[0].should.have.property('detail').and.equal('Cast to string failed for value "[ 1, 2 ]" at path "application"');
+        response.body.errors[0].should.have.property('detail').and.equal('Applications can only have string values');
     });
 
     afterEach(async () => {
