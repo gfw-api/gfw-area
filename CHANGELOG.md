@@ -1,3 +1,7 @@
+## 21/05/2021
+
+- Add support for hosts from `referer` header when generating pagination links.
+
 ## 20/05/2021
 
 - Improve error message when updating geostore with invalid application values.

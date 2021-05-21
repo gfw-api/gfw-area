@@ -13,6 +13,14 @@ const MailService = require('services/mail.service');
 
 const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
 
+const getHostForPaginationLink = (ctx) => {
+    if ('referer' in ctx.request.header) {
+        const url = new URL(ctx.request.header.referer);
+        return url.host;
+    }
+    return ctx.request.host;
+};
+
 function getFilters(ctx) {
     const filter = shouldUseAllFilter(ctx) ? {} : { userId: ctx.state.loggedUser.id };
 
@@ -91,7 +99,7 @@ class AreaRouterV2 {
         const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
 
         const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
-        const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
+        const link = `${ctx.request.protocol}://${getHostForPaginationLink(ctx)}/${apiVersion}${ctx.request.path}${serializedQuery}`;
         const filteredSort = getFilteredSort(sort);
 
         const areas = await AreaModel.paginate(filter, { page, limit, sort: filteredSort });
