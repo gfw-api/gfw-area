@@ -75,7 +75,7 @@
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
     "rimraf": "^2.6.1",
-    "rw-api-microservice-node": "^3.3.3",
+    "rw-api-microservice-node": "^3.4.1",
     "sleep": "^6.1.0",
     "sparkpost": "^2.1.4",
     "tmp": "0.0.31",

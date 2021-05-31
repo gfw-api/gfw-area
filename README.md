@@ -1,6 +1,6 @@
 # GFW Area API
 
-[![Build Status](https://travis-ci.com/gfw-api/gfw-area.svg?branch=dev)](https://travis-ci.org/gfw-api/gfw-area)
+[![Build Status](https://travis-ci.com/gfw-api/gfw-area.svg?branch=dev)](https://travis-ci.com/gfw-api/gfw-area)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/d4eaa98d51c79d83159b/test_coverage)](https://codeclimate.com/github/gfw-api/gfw-area/test_coverage)
 
 
@@ -133,3 +133,5 @@ PATCH: /area/:id -> Update the area with the same id. Check if the area is owned
 DELETE: /area/:id -> Delete the area with the same id. Check if the area is owned of the logged user
 
 ```
+
+[]: https://travis-ci.com/gfw-api/gfw-area
