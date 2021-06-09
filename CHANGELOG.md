@@ -1,3 +1,7 @@
+## 09/06/2021
+
+- Add support for hosts from `x-rw-domain` header when generating pagination links.
+
 ## 31/05/2021
 
 - Update `rw-api-microservice-node` to add CORS support.

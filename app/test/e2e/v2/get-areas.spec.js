@@ -61,6 +61,41 @@ describe('V2 - Get areas', () => {
             response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
             response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
         });
+
+        it('Get areas with x-rw-domain header should be successful and use that header on the links on the response', async () => {
+            mockGetUserFromToken(USERS.USER);
+            const response = await requester
+                .get(`/api/v2/area`)
+                .set('x-rw-domain', `potato.com`)
+                .set('Authorization', 'Bearer abcd');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('prev').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('next').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+        });
+
+        it('Get areas with x-rw-domain and referer headers should be successful and use the x-rw-domain header on the links on the response', async () => {
+            mockGetUserFromToken(USERS.USER);
+            const response = await requester
+                .get(`/api/v2/area`)
+                .set('x-rw-domain', `potato.com`)
+                .set('referer', `https://tomato.com/get-me-all-the-data`)
+                .set('Authorization', 'Bearer abcd');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('prev').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('next').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+        });
     });
 
     it('Getting areas without being logged in should return a 401 - "Not logged" error', async () => {

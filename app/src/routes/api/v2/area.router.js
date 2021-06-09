@@ -14,6 +14,9 @@ const MailService = require('services/mail.service');
 const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
 
 const getHostForPaginationLink = (ctx) => {
+    if ('x-rw-domain' in ctx.request.header) {
+        return ctx.request.header['x-rw-domain'];
+    }
     if ('referer' in ctx.request.header) {
         const url = new URL(ctx.request.header.referer);
         return url.host;

@@ -56,6 +56,41 @@ describe('V1 - Get areas', () => {
             response.body.links.should.have.property('first').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
             response.body.links.should.have.property('last').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
         });
+
+        it('Get areas with x-rw-domain header should be successful and use that header on the links on the response', async () => {
+            mockGetUserFromToken(USERS.USER);
+            const response = await requester
+                .get(`/api/v1/area`)
+                .set('x-rw-domain', `potato.com`)
+                .set('Authorization', 'Bearer abcd');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+            response.body.links.should.have.property('prev').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+            response.body.links.should.have.property('next').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+            response.body.links.should.have.property('first').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+            response.body.links.should.have.property('last').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+        });
+
+        it('Get areas with x-rw-domain and referer headers should be successful and use the x-rw-domain header on the links on the response', async () => {
+            mockGetUserFromToken(USERS.USER);
+            const response = await requester
+                .get(`/api/v1/area`)
+                .set('referer', `https://tomato.com/get-me-all-the-data`)
+                .set('x-rw-domain', `potato.com`)
+                .set('Authorization', 'Bearer abcd');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+            response.body.links.should.have.property('prev').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+            response.body.links.should.have.property('next').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+            response.body.links.should.have.property('first').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+            response.body.links.should.have.property('last').and.equal('http://potato.com/v1/area?page[number]=1&page[size]=1000');
+        });
     });
 
     it('Get a page with 3 areas using pagination', async () => {
