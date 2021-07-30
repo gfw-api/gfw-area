@@ -40,6 +40,14 @@ function getFilters(ctx) {
         filter.public = query.public.trim().toLowerCase() === 'true';
     }
 
+    if (!query.env) { // default value
+        query.env = 'production';
+    }
+
+    if (query.env) {
+        filter.env = { $in: query.env.split(',').map((elem) => elem.trim()) };
+    }
+
     return filter;
 }
 
@@ -276,6 +284,7 @@ class AreaRouterV2 {
             wdpaid,
             userId: userId || ctx.state.loggedUser.id,
             use,
+            env: ctx.request.body.env || 'production',
             iso,
             admin,
             datasets,
@@ -419,6 +428,7 @@ class AreaRouterV2 {
         const updateKeys = body && Object.keys(body);
         area.public = updateKeys.includes('public') ? body.public : area.public;
         area.webhookUrl = updateKeys.includes('webhookUrl') ? body.webhookUrl : area.webhookUrl;
+        area.env = updateKeys.includes('env') ? body.env : area.env;
         area.fireAlerts = updateKeys.includes('fireAlerts') ? body.fireAlerts : area.fireAlerts;
         area.deforestationAlerts = updateKeys.includes('deforestationAlerts') ? body.deforestationAlerts : area.deforestationAlerts;
         area.monthlySummary = updateKeys.includes('monthlySummary') ? body.monthlySummary : area.monthlySummary;
