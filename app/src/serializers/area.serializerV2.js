@@ -13,6 +13,7 @@ const areaSerializer = new JSONAPISerializer('area', {
         'image',
         'datasets',
         'use',
+        'env',
         'iso',
         'admin',
         'templateId',

@@ -40,6 +40,9 @@ const Area = new Schema({
         adm1: { type: Number, required: false, trim: true },
         adm2: { type: Number, required: false, trim: true }
     },
+    env: {
+        type: String, required: true, default: 'production', trim: true
+    },
     datasets: [Dataset],
     createdAt: { type: Date, required: true, default: Date.now },
     updatedAt: { type: Date, required: true, default: Date.now },
