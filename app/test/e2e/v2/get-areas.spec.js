@@ -38,11 +38,11 @@ describe('V2 - Get areas', () => {
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
             response.body.should.have.property('links').and.be.an('object');
-            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=production&page[number]=1&page[size]=300`);
-            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=production&page[number]=1&page[size]=300`);
-            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=production&page[number]=1&page[size]=300`);
-            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=production&page[number]=1&page[size]=300`);
-            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=production&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
         });
 
         it('Get areas with referer header should be successful and use that header on the links on the response', async () => {
@@ -55,11 +55,11 @@ describe('V2 - Get areas', () => {
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
             response.body.should.have.property('links').and.be.an('object');
-            response.body.links.should.have.property('self').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('prev').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('next').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
+            response.body.links.should.have.property('self').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('prev').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('next').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
         });
 
         it('Get areas with x-rw-domain header should be successful and use that header on the links on the response', async () => {
@@ -72,11 +72,11 @@ describe('V2 - Get areas', () => {
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
             response.body.should.have.property('links').and.be.an('object');
-            response.body.links.should.have.property('self').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('prev').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('next').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
+            response.body.links.should.have.property('self').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('prev').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('next').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
         });
 
         it('Get areas with x-rw-domain and referer headers should be successful and use the x-rw-domain header on the links on the response', async () => {
@@ -90,11 +90,11 @@ describe('V2 - Get areas', () => {
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
             response.body.should.have.property('links').and.be.an('object');
-            response.body.links.should.have.property('self').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('prev').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('next').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
-            response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?env=production&page[number]=1&page[size]=300');
+            response.body.links.should.have.property('self').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('prev').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('next').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('first').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
+            response.body.links.should.have.property('last').and.equal('http://potato.com/v2/area?page[number]=1&page[size]=300');
         });
     });
 
@@ -379,26 +379,85 @@ describe('V2 - Get areas', () => {
         response.body.data.map((area) => area.id).should.have.members(sortedAreaIds.slice(0, 3));
     });
 
-    it('Getting areas with filtering by env returns the correct result', async () => {
-        mockGetUserFromToken(USERS.USER, 3);
+    describe('Filtering by environments', () => {
+        it('Getting areas without an env filter returns areas with env production', async () => {
+            await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
+            const areaOne = await new Area(createArea({ userId: USERS.USER.id })).save();
+            await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            const areaTwo = await new Area(createArea({ userId: USERS.USER.id })).save();
 
-        await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
-        await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
-        await new Area(createArea({ userId: USERS.USER.id })).save();
-        await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
-        await new Area(createArea({ userId: USERS.USER.id })).save();
+            mockGetUserFromToken(USERS.USER);
 
-        const response = await requester.get(`/api/v2/area`).set('Authorization', 'Bearer abcd');
-        response.status.should.equal(200);
-        response.body.should.have.property('data').with.lengthOf(2);
+            const response = await requester
+                .get(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd');
 
-        const responseCustom = await requester.get(`/api/v2/area`).set('Authorization', 'Bearer abcd');
-        responseCustom.status.should.equal(200);
-        responseCustom.body.should.have.property('data').with.lengthOf(2);
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(2);
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id].sort());
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
+        });
 
-        const responseTwoEnv = await requester.get(`/api/v2/area`).set('Authorization', 'Bearer abcd').query({ env: ['custom', 'potato'].join(',') });
-        responseTwoEnv.status.should.equal(200);
-        responseTwoEnv.body.should.have.property('data').with.lengthOf(3);
+        it('Getting areas while filtering by a custom env returns areas matching that env', async () => {
+            const areaOne = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+            const areaTwo = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            mockGetUserFromToken(USERS.USER);
+
+            const response = await requester
+                .get(`/api/v2/area`)
+                .query({
+                    env: 'custom'
+                })
+                .set('Authorization', 'Bearer abcd');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(2);
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id].sort());
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom&page[number]=1&page[size]=300`);
+        });
+
+        it('Getting areas while filtering by custom envs returns areas matching those envs', async () => {
+            const areaOne = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            const areaTwo = await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+            const areaThree = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            mockGetUserFromToken(USERS.USER);
+
+            const response = await requester
+                .get(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd')
+                .query({ env: ['custom', 'potato'].join(',') });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(3);
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id, areaThree.id].sort());
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom%2Cpotato&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom%2Cpotato&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom%2Cpotato&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom%2Cpotato&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=custom%2Cpotato&page[number]=1&page[size]=300`);
+        });
     });
 
     it('Getting areas requesting the second page returns the correct paginated result', async () => {

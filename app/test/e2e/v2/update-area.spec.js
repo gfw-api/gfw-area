@@ -168,7 +168,7 @@ describe('V2 - Update area', () => {
         });
     });
 
-    it('Updating an area with env updating', async () => {
+    it('Updating an area with an env modifies the env', async () => {
         mockGetUserFromToken(USERS.USER);
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
@@ -219,6 +219,31 @@ describe('V2 - Update area', () => {
             endDate: '1',
             lastUpdate: 1513793462776
         });
+    });
+
+    it('Updating an area with an empty env returns a 400 error message', async () => {
+        mockGetUserFromToken(USERS.USER);
+
+        const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+        const response = await requester
+            .patch(`/api/v2/area/${testArea.id}`)
+            .set('Authorization', 'Bearer abcd')
+            .field('name', 'Portugal area')
+            .field('application', 'rw')
+            .field('geostore', '713899292fc118a915741728ef84a2a7')
+            .field('wdpaid', '3')
+            .field('env', '')
+            .field('use', '{"id": "bbb", "name": "updated name"}')
+            .field('iso', '{"country": "updatedCountryIso", "region": "updatedRegionIso"}')
+            .field('templateId', 'updatedTemplateId')
+            .field('datasets', '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastUpdate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]');
+
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('source').and.deep.equal({ parameter: 'env' });
+        response.body.errors[0].should.have.property('code').and.equal('invalid_body_parameter');
+        response.body.errors[0].should.have.property('detail').and.equal('must be a string');
     });
 
     it('Updating an area that did not have a subscription attached creates a subscription and should return a 200 HTTP code and the updated area object', async () => {

@@ -120,10 +120,9 @@ const mockSubscriptionFindAll = (
         }));
 };
 
-const mockGetUserFromToken = (userProfile, times = 1) => {
+const mockGetUserFromToken = (userProfile) => {
     nock(process.env.CT_URL, { reqheaders: { authorization: 'Bearer abcd' } })
         .get('/auth/user/me')
-        .times(times)
         .reply(200, userProfile);
 };
 

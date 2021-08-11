@@ -26,13 +26,6 @@ class AreaValidatorV2 {
         return false;
     }
 
-    static isString(property) {
-        if (typeof property === 'string' && property.length >= 0) {
-            return true;
-        }
-        return false;
-    }
-
     static async create(ctx, next) {
         logger.debug('Validating body for create area');
         ctx.checkBody('name').notEmpty().len(1, 100);
@@ -58,7 +51,7 @@ class AreaValidatorV2 {
         ctx.checkBody('iso').optional().check((iso) => AreaValidatorV2.isObject(iso), 'must be an object');
         ctx.checkBody('admin').optional().check((admin) => AreaValidatorV2.isObject(admin), 'must be an object');
         ctx.checkBody('use').optional().check((use) => AreaValidatorV2.isObject(use), 'must be an object');
-        ctx.checkBody('env').optional().toLow().check((env) => AreaValidatorV2.isString(env), 'must be a string');
+        ctx.checkBody('env').optional().toLow().check((env) => AreaValidatorV2.notEmptyString(env), 'must be a string');
         ctx.checkBody('tags').optional().check((tags) => AreaValidatorV2.isArray(tags), 'must be an array of valid strings');
         ctx.checkBody('status').optional().check((status) => AreaValidatorV2.notEmptyString(status), 'must be a string - cannot be empty');
         ctx.checkBody('public').optional().check((pub) => AreaValidatorV2.isBool(pub), 'must be boolean');
@@ -116,7 +109,7 @@ class AreaValidatorV2 {
         ctx.checkBody('iso').optional().check((iso) => AreaValidatorV2.isObject(iso), 'must be an object');
         ctx.checkBody('admin').optional().check((admin) => AreaValidatorV2.isObject(admin), 'must be an object');
         ctx.checkBody('use').optional().check((use) => AreaValidatorV2.isObject(use), 'must be an object');
-        ctx.checkBody('env').optional().check((env) => AreaValidatorV2.isString(env), 'must be a string');
+        ctx.checkBody('env').optional().check((env) => AreaValidatorV2.notEmptyString(env), 'must be a string');
         ctx.checkBody('templateId').optional();
         ctx.checkBody('tags').optional().check((tags) => AreaValidatorV2.isArray(tags), 'must be an array of valid strings');
         ctx.checkBody('status').optional().check((status) => AreaValidatorV2.notEmptyString(status), 'must be a string - cannot be empty');
