@@ -40,13 +40,9 @@ function getFilters(ctx) {
         filter.public = query.public.trim().toLowerCase() === 'true';
     }
 
-    if (!query.env) { // default value
-        query.env = 'production';
-    }
 
-    if (query.env) {
-        filter.env = { $in: query.env.split(',').map((elem) => elem.trim()) };
-    }
+    const env = query.env ? query.env : 'production';
+    filter.env = { $in: env.split(',').map((elem) => elem.trim()) };
 
     return filter;
 }
