@@ -27,16 +27,17 @@ const getHostForPaginationLink = (ctx) => {
 function getFilters(ctx) {
     const filter = shouldUseAllFilter(ctx) ? {} : { userId: ctx.state.loggedUser.id };
 
-    if (ctx.query.application) {
-        filter.application = ctx.query.application.split(',').map((el) => el.trim());
+    const { query } = ctx;
+    if (query.application) {
+        filter.application = query.application.split(',').map((el) => el.trim());
     }
 
-    if (ctx.query.status) {
-        filter.status = ctx.query.status.trim();
+    if (query.status) {
+        filter.status = query.status.trim();
     }
 
-    if (ctx.query.public) {
-        filter.public = ctx.query.public.trim().toLowerCase() === 'true';
+    if (query.public) {
+        filter.public = query.public.trim().toLowerCase() === 'true';
     }
 
     return filter;
@@ -88,13 +89,14 @@ class AreaRouterV2 {
 
     static async getAll(ctx) {
         logger.info('[AREAS-V2-ROUTER] Obtaining all v2 areas of the user ', ctx.state.loggedUser.id);
-        const sort = ctx.query.sort || '_id';
+        const { query, request } = ctx;
+        const sort = query.sort || '_id';
 
         const filter = getFilters(ctx);
 
         logger.info(`[AREAS-V2-ROUTER] Going to find areas`);
-        const page = ctx.query['page[number]'] ? parseInt(ctx.query['page[number]'], 10) : 1;
-        const limit = ctx.query['page[size]'] ? parseInt(ctx.query['page[size]'], 10) : 300;
+        const page = query['page[number]'] ? parseInt(query['page[number]'], 10) : 1;
+        const limit = query['page[size]'] ? parseInt(query['page[size]'], 10) : 300;
 
         const clonedQuery = { ...ctx.query };
         delete clonedQuery['page[size]'];
@@ -102,7 +104,7 @@ class AreaRouterV2 {
         const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
 
         const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
-        const link = `${ctx.request.protocol}://${getHostForPaginationLink(ctx)}/${apiVersion}${ctx.request.path}${serializedQuery}`;
+        const link = `${request.protocol}://${getHostForPaginationLink(ctx)}/${apiVersion}${request.path}${serializedQuery}`;
         const filteredSort = getFilteredSort(sort);
 
         const areas = await AreaModel.paginate(filter, { page, limit, sort: filteredSort });
@@ -341,32 +343,32 @@ class AreaRouterV2 {
             previousArea = { subscriptionId: subscription.id };
         }
 
-        const { files } = ctx.request;
-        if (ctx.request.body.application || !area.application) {
-            area.application = ctx.request.body.application || 'gfw';
+        const { files, body } = ctx.request;
+        if (body.application || !area.application) {
+            area.application = body.application || 'gfw';
         }
-        if (ctx.request.body.name) {
-            area.name = ctx.request.body.name;
+        if (body.name) {
+            area.name = body.name;
         }
 
         let isSaved = false;
 
-        if (ctx.request.body.geostore) {
+        if (body.geostore) {
             // check if it exists in db with status=saved
-            const { geostore } = ctx.request.body;
+            const { geostore } = body;
             logger.info(`Checking if data created already for geostore ${geostore}`);
             if (await AreaModel.existsSavedAreaForGeostore(geostore)) isSaved = true;
-            area.geostore = ctx.request.body.geostore;
+            area.geostore = body.geostore;
 
             // Update status to saved if geostore already exists with status=saved
             area.status = isSaved ? 'saved' : 'pending';
             logger.info(`Updating area with id ${ctx.params.id} to status ${isSaved ? 'saved' : 'pending'}`);
-        } else if (ctx.request.body.geostore === null) {
+        } else if (body.geostore === null) {
             area.geostore = null;
         }
 
-        if (Object.keys(ctx.request.body).includes('geostoreDataApi')) {
-            const { geostoreDataApi } = ctx.request.body;
+        if (Object.keys(body).includes('geostoreDataApi')) {
+            const { geostoreDataApi } = body;
             area.geostoreDataApi = geostoreDataApi;
 
             // check if it exists in db with status=saved
@@ -383,54 +385,54 @@ class AreaRouterV2 {
             logger.info(`Updating area with id ${ctx.params.id} to status ${isSaved ? 'saved' : 'pending'}`);
         }
 
-        if (ctx.request.body.wdpaid) {
-            area.wdpaid = ctx.request.body.wdpaid;
+        if (body.wdpaid) {
+            area.wdpaid = body.wdpaid;
         }
         const use = {};
-        if (ctx.request.body.use) {
-            use.id = ctx.request.body.use ? ctx.request.body.use.id : null;
-            use.name = ctx.request.body.use ? ctx.request.body.use.name : null;
+        if (body.use) {
+            use.id = body.use ? body.use.id : null;
+            use.name = body.use ? body.use.name : null;
         }
         area.use = use;
         const iso = {};
-        if (ctx.request.body.iso) {
-            iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
-            iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
+        if (body.iso) {
+            iso.country = body.iso ? body.iso.country : null;
+            iso.region = body.iso ? body.iso.region : null;
         }
         area.iso = iso;
         const admin = {};
-        if (ctx.request.body.admin) {
-            admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
-            admin.adm1 = ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
-            admin.adm2 = ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+        if (body.admin) {
+            admin.adm0 = body.admin ? body.admin.adm0 : null;
+            admin.adm1 = body.admin ? body.admin.adm1 : null;
+            admin.adm2 = body.admin ? body.admin.adm2 : null;
         }
         area.admin = admin;
-        if (ctx.request.body.datasets) {
-            area.datasets = JSON.parse(ctx.request.body.datasets);
+        if (body.datasets) {
+            area.datasets = JSON.parse(body.datasets);
         }
-        if (ctx.request.body.tags) {
-            area.tags = ctx.request.body.tags;
+        if (body.tags) {
+            area.tags = body.tags;
         }
-        if (ctx.request.body.public) {
-            area.public = ctx.request.body.public;
+        if (body.public) {
+            area.public = body.public;
         }
-        const updateKeys = ctx.request.body && Object.keys(ctx.request.body);
-        area.public = updateKeys.includes('public') ? ctx.request.body.public : area.public;
-        area.webhookUrl = updateKeys.includes('webhookUrl') ? ctx.request.body.webhookUrl : area.webhookUrl;
-        area.fireAlerts = updateKeys.includes('fireAlerts') ? ctx.request.body.fireAlerts : area.fireAlerts;
-        area.deforestationAlerts = updateKeys.includes('deforestationAlerts') ? ctx.request.body.deforestationAlerts : area.deforestationAlerts;
-        area.monthlySummary = updateKeys.includes('monthlySummary') ? ctx.request.body.monthlySummary : area.monthlySummary;
-        area.subscriptionId = updateKeys.includes('subscriptionId') ? ctx.request.body.subscriptionId : area.subscriptionId;
-        area.email = updateKeys.includes('email') ? ctx.request.body.email : area.email;
-        area.status = updateKeys.includes('status') && ctx.state.loggedUser.role === 'ADMIN' ? ctx.request.body.status : area.status;
+        const updateKeys = body && Object.keys(body);
+        area.public = updateKeys.includes('public') ? body.public : area.public;
+        area.webhookUrl = updateKeys.includes('webhookUrl') ? body.webhookUrl : area.webhookUrl;
+        area.fireAlerts = updateKeys.includes('fireAlerts') ? body.fireAlerts : area.fireAlerts;
+        area.deforestationAlerts = updateKeys.includes('deforestationAlerts') ? body.deforestationAlerts : area.deforestationAlerts;
+        area.monthlySummary = updateKeys.includes('monthlySummary') ? body.monthlySummary : area.monthlySummary;
+        area.subscriptionId = updateKeys.includes('subscriptionId') ? body.subscriptionId : area.subscriptionId;
+        area.email = updateKeys.includes('email') ? body.email : area.email;
+        area.status = updateKeys.includes('status') && ctx.state.loggedUser.role === 'ADMIN' ? body.status : area.status;
         if (updateKeys.includes('language')) {
-            area.language = SUPPORTED_LANG_CODES.includes(ctx.request.body.language) ? ctx.request.body.language : DEFAULT_LANG_CODE;
+            area.language = SUPPORTED_LANG_CODES.includes(body.language) ? body.language : DEFAULT_LANG_CODE;
         }
         if (files && files.image) {
             area.image = await s3Service.uploadFile(files.image.path, files.image.name);
         }
-        if (typeof ctx.request.body.templateId !== 'undefined') {
-            area.templateId = ctx.request.body.templateId;
+        if (typeof body.templateId !== 'undefined') {
+            area.templateId = body.templateId;
         }
         area.updatedAt = Date.now();
         await area.save();
