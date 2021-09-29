@@ -32,8 +32,8 @@
     "flagshipUrl": "https://staging.globalforestwatch.org/"
   },
   "datasets": {
-    "deforestation": "deforestation_alerts_dataset_id",
-    "fires": "fire_alerts_dataset_id",
-    "monthlySummary": "monthly_summary_dataset_id"
+    "deforestation": "glad-alerts",
+    "fires": "viirs-active-fires",
+    "monthlySummary": "monthly-summary"
   }
 }
