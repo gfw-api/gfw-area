@@ -10,6 +10,7 @@ const SubscriptionService = require('services/subscription.service');
 const s3Service = require('services/s3.service');
 const mongoose = require('mongoose');
 const MailService = require('services/mail.service');
+const gladAlertTypes = require('models/glad-alert-types');
 
 const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
 
@@ -253,10 +254,6 @@ class AreaRouterV2 {
         if (ctx.request.body.fireAlerts) {
             fireAlertSub = ctx.request.body.fireAlerts;
         }
-        let deforAlertSub = false;
-        if (ctx.request.body.deforestationAlerts) {
-            deforAlertSub = ctx.request.body.deforestationAlerts;
-        }
         let webhookUrl = '';
         if (ctx.request.body.webhookUrl) {
             webhookUrl = ctx.request.body.webhookUrl;
@@ -268,6 +265,12 @@ class AreaRouterV2 {
         let email = '';
         if (ctx.request.body.email) {
             email = ctx.request.body.email;
+        }
+
+        if (ctx.request.body.deforestationAlertsType && !Object.values(gladAlertTypes).includes(ctx.request.body.deforestationAlertsType)) {
+            ctx.response.status = 400;
+            ctx.response.body = { message: 'Invalid GLAD alert type.' };
+            return;
         }
 
         logger.info(`Building areaData`);
@@ -289,7 +292,8 @@ class AreaRouterV2 {
             status: isSaved ? 'saved' : 'pending',
             public: publicStatus,
             fireAlerts: fireAlertSub,
-            deforestationAlerts: deforAlertSub,
+            deforestationAlerts: ctx.request.body.deforestationAlerts || false,
+            ...(ctx.request.body.deforestationAlertsType && { deforestationAlertsType: ctx.request.body.deforestationAlertsType }),
             webhookUrl,
             monthlySummary: summarySub,
             language: SUPPORTED_LANG_CODES.includes(ctx.request.body.language) ? ctx.request.body.language : DEFAULT_LANG_CODE,

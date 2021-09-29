@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate');
 const mongooseHistory = require('mongoose-history');
+const gladAlertTypes = require('models/glad-alert-types');
 
 const { Schema } = mongoose;
 
@@ -62,6 +63,9 @@ const Area = new Schema({
     },
     deforestationAlerts: {
         type: Boolean, trim: true, required: true, default: false
+    },
+    deforestationAlertsType: {
+        type: String, enum: Object.values(gladAlertTypes), trim: true, required: false
     },
     webhookUrl: {
         type: String, trim: true, required: false, default: ''
