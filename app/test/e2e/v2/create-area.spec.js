@@ -458,6 +458,47 @@ describe('V2 - Create area', () => {
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
     });
 
+    it('Invalid GLAD alert types are rejected with status code 400 Bad Request', async () => {
+        mockGetUserFromToken(USERS.USER);
+
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                deforestationAlerts: true,
+                deforestationAlertsType: 'invalid-type'
+            });
+
+        response.status.should.equal(400);
+        response.body.should.have.property('message', 'Invalid GLAD alert type.');
+    });
+
+    it('Creating an area with a custom GLAD alert type triggers a request to create a subscription with correct data and returns 200 OK with the created area object', async () => {
+        mockGetUserFromToken(USERS.USER);
+        mockSubscriptionCreation('5e3bf82fad36f4001abe150e', {}, (body) => body.datasets.includes('glad-s2'));
+        mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
+
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                name: 'Portugal area',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                deforestationAlerts: true,
+                deforestationAlertsType: 'glad-s2'
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
+        response.body.data.attributes.should.have.property('deforestationAlerts').and.equal(true);
+        response.body.data.attributes.should.have.property('deforestationAlertsType').and.equal('glad-s2');
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
