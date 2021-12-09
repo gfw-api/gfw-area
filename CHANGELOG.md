@@ -1,13 +1,25 @@
-# v1.8.0
+## 09/06/2021
 
-## 29/09/2021
-
-- Add support for different GLAD alert types for a v2 area
 - Add support for hosts from `x-rw-domain` header when generating pagination links.
+
+## 31/05/2021
+
 - Update `rw-api-microservice-node` to add CORS support.
+
+## 21/05/2021
+
 - Add support for hosts from `referer` header when generating pagination links.
+
+## 20/05/2021
+
 - Improve error message when updating geostore with invalid application values.
+
+## 12/02/2021
+
 - Remove dependency on CT's `authenticated` functionality
+
+## 29/01/2021
+
 - Replace CT integration library
 
 # v1.7.1
