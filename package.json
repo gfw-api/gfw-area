@@ -1,6 +1,6 @@
 {
   "name": "gfw-areas",
-  "version": "1.8.0",
+  "version": "1.7.1",
   "description": "Area of Interest service for the RW API.",
   "main": "index.js",
   "scripts": {
