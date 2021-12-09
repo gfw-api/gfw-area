@@ -22,7 +22,6 @@ const areaSerializer = new JSONAPISerializer('area', {
         'public',
         'fireAlerts',
         'deforestationAlerts',
-        'deforestationAlertsType',
         'webhookUrl',
         'monthlySummary',
         'subscriptionId',
