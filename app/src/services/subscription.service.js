@@ -148,9 +148,7 @@ class SubscriptionsService {
 
     static getDatasetsForSubscription(area) {
         const datasets = [];
-        if (area.deforestationAlerts) {
-            datasets.push(area.deforestationAlertsType || config.get('datasets.deforestation'));
-        }
+        if (area.deforestationAlerts) datasets.push(config.get('datasets.deforestation'));
         if (area.fireAlerts) datasets.push(config.get('datasets.fires'));
         if (area.monthlySummary) datasets.push(config.get('datasets.monthlySummary'));
         return datasets;
