@@ -29,9 +29,9 @@ const getDefaultSubscription = (override = {}) => ({
     ...override
 });
 
-const mockSubscriptionCreation = (id = '123', override = {}, validator = () => true) => {
+const mockSubscriptionCreation = (id = '123', override = {}) => {
     nock(process.env.CT_URL)
-        .post(`/v1/subscriptions`, validator)
+        .post(`/v1/subscriptions`)
         .reply(200, () => ({
             data: {
                 type: 'subscription',
