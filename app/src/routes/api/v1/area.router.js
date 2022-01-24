@@ -138,6 +138,7 @@ class AreaRouter {
         const area = await new AreaModel({
             name: ctx.request.body.name,
             application: ctx.request.body.application || 'gfw',
+            env: ctx.request.body.env || 'production',
             geostore: ctx.request.body.geostore,
             wdpaid: ctx.request.body.wdpaid,
             userId: userId || ctx.state.loggedUser.id,
@@ -168,6 +169,9 @@ class AreaRouter {
         }
         if (ctx.request.body.wdpaid) {
             area.wdpaid = ctx.request.body.wdpaid;
+        }
+        if (ctx.request.body.env) {
+            area.env = ctx.request.body.env;
         }
         const use = {};
         if (ctx.request.body.use) {

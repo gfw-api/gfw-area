@@ -41,7 +41,6 @@ function getFilters(ctx) {
         filter.public = query.public.trim().toLowerCase() === 'true';
     }
 
-
     const env = query.env ? query.env : 'production';
     filter.env = { $in: env.split(',').map((elem) => elem.trim()) };
 

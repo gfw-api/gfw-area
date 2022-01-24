@@ -219,7 +219,10 @@ describe('V2 - Create area', () => {
             response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
             response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
             response.body.data.attributes.should.have.property('env').and.equal('custom');
-            response.body.data.attributes.should.have.property('use').and.deep.equal({ id: 'bbb', name: 'created name' });
+            response.body.data.attributes.should.have.property('use').and.deep.equal({
+                id: 'bbb',
+                name: 'created name'
+            });
             response.body.data.attributes.should.have.property('iso').and.deep.equal({
                 country: 'createdCountryIso',
                 region: 'createdRegionIso'
