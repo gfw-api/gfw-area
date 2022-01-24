@@ -20,6 +20,9 @@ const Area = new Schema({
     },
     geostore: { type: String, required: false, trim: true },
     wdpaid: { type: Number, required: false, trim: true },
+    env: {
+        type: String, required: true, default: 'production', trim: true
+    },
     userId: { type: String, required: true, trim: true },
     use: {
         _id: false,
