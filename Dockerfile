@@ -1,4 +1,4 @@
-FROM node:12.16-bullseye
+FROM node:12.16-buster-slim
 MAINTAINER info@vizzuality.com
 
 ENV NAME gfw-area
