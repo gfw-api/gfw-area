@@ -1,8 +1,8 @@
 const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.model');
+const config = require('config');
 const { createArea } = require('../utils/helpers');
-
 const { mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
@@ -148,6 +148,72 @@ describe('V1 - Get areas tests', () => {
         responseGFW.body.data[0].attributes.should.have.property('datasets').and.be.an('array').and.length(0);
         responseGFW.body.data[0].attributes.should.have.property('use').and.be.an('object');
         responseGFW.body.data[0].attributes.should.have.property('iso').and.be.an('object');
+    });
+
+    describe('Filtering by environments', () => {
+        it('Getting areas without an env filter returns areas with all envs, ensuring BC', async () => {
+            await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+            await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            mockGetUserFromToken(USERS.USER);
+
+            const response = await requester
+                .get(`/api/v1/area`)
+                .set('Authorization', 'Bearer abcd');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(5);
+            [...new Set(response.body.data.map((element) => element.attributes.env))].sort().should.deep.equal(['potato', 'custom', 'production'].sort());
+        });
+
+        it('Getting areas while filtering by a custom env returns areas matching that env', async () => {
+            const areaOne = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+            const areaTwo = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            mockGetUserFromToken(USERS.USER);
+
+            const response = await requester
+                .get(`/api/v1/area`)
+                .query({
+                    env: 'custom'
+                })
+                .set('Authorization', 'Bearer abcd');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(2);
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id].sort());
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/area?env=custom&page[number]=1&page[size]=1000`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/area?env=custom&page[number]=1&page[size]=1000`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/area?env=custom&page[number]=1&page[size]=1000`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/area?env=custom&page[number]=1&page[size]=1000`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/area?env=custom&page[number]=1&page[size]=1000`);
+        });
+
+        it('Getting areas while filtering by multiple envs returns no areas, as multi-env filter is not supported on v1', async () => {
+            await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+            await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+            await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            mockGetUserFromToken(USERS.USER);
+
+            const response = await requester
+                .get(`/api/v1/area`)
+                .set('Authorization', 'Bearer abcd')
+                .query({ env: ['custom', 'potato'].join(',') });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(0);
+        });
     });
 
     afterEach(async () => {

@@ -10,6 +10,7 @@ const areaSerializer = new JSONAPISerializer('area', {
         'createdAt',
         'updatedAt',
         'image',
+        'env',
         'datasets',
         'use',
         'iso',

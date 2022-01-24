@@ -1,3 +1,10 @@
+## 24/01/2022
+
+- Add `env` with default value `production` to v1 areas model
+- Add partial support for `env` in area v1 endpoints
+  - Allow specifying a custom `env` value on create or update of an area.
+  - Allow filtering by a single `env` value when listing v1 areas.
+
 # v1.8.0
 
 ## 29/09/2021
