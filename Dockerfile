@@ -5,7 +5,7 @@ ENV NAME gfw-area
 ENV USER gfw-area
 
 RUN apt-get update -y && apt-get upgrade -y && \
-    apt-get install -y bash git ssh python3 make \
+    apt-get install -y bash git ssh python3 make
 
 RUN addgroup $USER && useradd -ms /bin/bash $USER -g $USER
 
