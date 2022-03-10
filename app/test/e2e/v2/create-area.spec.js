@@ -475,7 +475,8 @@ describe('V2 - Create area', () => {
             });
 
         response.status.should.equal(400);
-        response.body.should.have.property('message', 'Invalid GLAD alert type.');
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.equal(`Invalid GLAD alert type`);
     });
 
     it('Creating an area with a custom GLAD alert type triggers a request to create a subscription with correct data and returns 200 OK with the created area object', async () => {

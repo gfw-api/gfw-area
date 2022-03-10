@@ -258,16 +258,38 @@ describe('V2 - Update area', () => {
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
-            .send({ deforestationAlerts: true });
+            .send({
+                deforestationAlerts: true,
+                deforestationAlertsType: 'glad-all',
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('type').and.equal('area');
         response.body.data.should.have.property('id').and.equal(testArea.id);
         response.body.data.attributes.should.have.property('subscriptionId').and.equal('5e3bf82fad36f4001abe150e');
+        response.body.data.attributes.should.have.property('deforestationAlertsType').and.equal('glad-all');
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');
         new Date(response.body.data.attributes.updatedAt).should.afterTime(new Date(response.body.data.attributes.createdAt));
+    });
+
+
+    it('Updating an area with an invalid alert type should return a 400 error message', async () => {
+        mockGetUserFromToken(USERS.USER);
+
+        const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+        const response = await requester
+            .patch(`/api/v2/area/${testArea.id}`)
+            .set('Authorization', 'Bearer abcd')
+            .send({
+                deforestationAlertsType: 'potato',
+            });
+
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.equal(`Invalid GLAD alert type`);
     });
 
     it('Updating an area that had a subscription attached but now with different values updates the subscription and should return a 200 HTTP code and the updated area object', async () => {

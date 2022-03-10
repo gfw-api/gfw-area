@@ -267,8 +267,7 @@ class AreaRouterV2 {
         }
 
         if (ctx.request.body.deforestationAlertsType && !Object.values(gladAlertTypes).includes(ctx.request.body.deforestationAlertsType)) {
-            ctx.response.status = 400;
-            ctx.response.body = { message: 'Invalid GLAD alert type.' };
+            ctx.throw(400, 'Invalid GLAD alert type');
             return;
         }
 
@@ -430,6 +429,14 @@ class AreaRouterV2 {
         area.env = updateKeys.includes('env') ? body.env : area.env;
         area.fireAlerts = updateKeys.includes('fireAlerts') ? body.fireAlerts : area.fireAlerts;
         area.deforestationAlerts = updateKeys.includes('deforestationAlerts') ? body.deforestationAlerts : area.deforestationAlerts;
+        area.deforestationAlertsType = updateKeys.includes('deforestationAlertsType') ? body.deforestationAlertsType : area.deforestationAlertsType;
+        if (updateKeys.includes('deforestationAlertsType')) {
+            if (!Object.values(gladAlertTypes).includes(body.deforestationAlertsType)) {
+                ctx.throw(400, 'Invalid GLAD alert type');
+                return;
+            }
+            area.deforestationAlertsType = body.deforestationAlertsType;
+        }
         area.monthlySummary = updateKeys.includes('monthlySummary') ? body.monthlySummary : area.monthlySummary;
         area.subscriptionId = updateKeys.includes('subscriptionId') ? body.subscriptionId : area.subscriptionId;
         area.email = updateKeys.includes('email') ? body.email : area.email;

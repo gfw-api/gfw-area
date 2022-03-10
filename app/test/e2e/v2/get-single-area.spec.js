@@ -90,6 +90,7 @@ describe('V2 - Get single area', () => {
             userId: USERS.USER.id,
             subscriptionId: id,
             name: 'Area name',
+            deforestationAlertsType: 'glad-all',
         })).save();
 
         mockSubscriptionFindByIds([id], {
@@ -104,6 +105,7 @@ describe('V2 - Get single area', () => {
         response.body.data.should.have.property('id').and.equal(area.id);
         response.body.data.should.have.property('attributes').and.be.an('object');
         response.body.data.attributes.should.have.property('name').and.equal('Area name');
+        response.body.data.attributes.should.have.property('deforestationAlertsType').and.equal('glad-all');
         response.body.data.attributes.should.have.property('confirmed').and.equal(false);
     });
 
