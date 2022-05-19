@@ -22,6 +22,11 @@ class S3Service {
 
     async uploadFile(filePath, name) {
         logger.info(`Uploading file ${filePath}`);
+
+        fs.stat(filePath, (err, stats) => {
+            logger.debug('Uploaded file stats', stats);
+        });
+
         const ext = S3Service.getExtension(name);
         return new Promise((resolve, reject) => {
             fs.readFile(filePath, (err, data) => {
@@ -29,7 +34,7 @@ class S3Service {
                     reject(err);
                 }
                 const uuid = uuidV4();
-                const imageBuffer = Buffer.from(data, 'binary');
+                const imageBuffer = Buffer.from(data);
                 this.s3.upload({
                     Bucket: config.get('s3.bucket'),
                     Key: `${config.get('s3.folder')}/${uuid}.${ext}`,
