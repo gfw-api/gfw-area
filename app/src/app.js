@@ -87,13 +87,9 @@ app.use(async (ctx, next) => {
 app.use(koaLogger());
 
 app.use(RWAPIMicroservice.bootstrap({
-    name: 'area',
-    info: require('../microservice/register.json'),
-    swagger: require('../microservice/public-swagger.json'),
     logger,
-    baseURL: process.env.CT_URL,
-    url: process.env.LOCAL_URL,
-    token: process.env.CT_TOKEN,
+    gatewayURL: process.env.GATEWAY_URL,
+    microserviceToken: process.env.MICROSERVICE_TOKEN,
     fastlyEnabled: process.env.FASTLY_ENABLED,
     fastlyServiceId: process.env.FASTLY_SERVICEID,
     fastlyAPIKey: process.env.FASTLY_APIKEY
@@ -105,14 +101,6 @@ loader.loadRoutes(app);
 
 const port = process.env.PORT || '3000';
 const server = app.listen(port, () => {
-    if (process.env.CT_REGISTER_MODE === 'auto') {
-        RWAPIMicroservice.register().then(() => {
-            logger.info('CT registration process started');
-        }, (error) => {
-            logger.error(error);
-            process.exit(1);
-        });
-    }
     logger.info('Server started in ', port);
 });
 

@@ -1,11 +1,11 @@
-FROM node:12.16-buster-slim
+FROM node:16.15-alpine3.15
 MAINTAINER info@vizzuality.com
 
 ENV NAME gfw-area
 ENV USER gfw-area
 
-RUN apt-get update -y && apt-get upgrade -y && \
-    apt-get install -y bash git ssh python3 make g++
+RUN apk update && apk upgrade && \
+    apk add --no-cache --update bash git openssh python3 build-base
 
 RUN addgroup $USER && useradd -ms /bin/bash $USER -g $USER
 

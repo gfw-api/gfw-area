@@ -30,7 +30,7 @@ const getDefaultSubscription = (override = {}) => ({
 });
 
 const mockSubscriptionCreation = (id = '123', override = {}, validator = () => true) => {
-    nock(process.env.CT_URL)
+    nock(process.env.GATEWAY_URL)
         .post(`/v1/subscriptions`, validator)
         .reply(200, () => ({
             data: {
@@ -42,7 +42,7 @@ const mockSubscriptionCreation = (id = '123', override = {}, validator = () => t
 };
 
 const mockSubscriptionEdition = (id = '123') => {
-    nock(process.env.CT_URL)
+    nock(process.env.GATEWAY_URL)
         .patch(`/v1/subscriptions/${id}`)
         .reply(200, () => ({
             data: {
@@ -54,11 +54,11 @@ const mockSubscriptionEdition = (id = '123') => {
 };
 
 const mockSubscriptionDeletion = (id = '123') => {
-    nock(process.env.CT_URL).delete(`/v1/subscriptions/${id}`).reply(200);
+    nock(process.env.GATEWAY_URL).delete(`/v1/subscriptions/${id}`).reply(200);
 };
 
 const mockSubscriptionFindByIds = (ids = [], overrideData = {}, times = 1) => {
-    nock(process.env.CT_URL)
+    nock(process.env.GATEWAY_URL)
         .post(`/v1/subscriptions/find-by-ids`)
         .times(times)
         .reply(200, () => ({
@@ -77,7 +77,7 @@ const mockSubscriptionFindAll = (
     pageSize = null,
     updatedAtSince = null,
 ) => {
-    nock(process.env.CT_URL)
+    nock(process.env.GATEWAY_URL)
         .get(`/v1/subscriptions/find-all`)
         .query((q) => {
             let match = true;
@@ -121,7 +121,7 @@ const mockSubscriptionFindAll = (
 };
 
 const mockGetUserFromToken = (userProfile) => {
-    nock(process.env.CT_URL, { reqheaders: { authorization: 'Bearer abcd' } })
+    nock(process.env.GATEWAY_URL, { reqheaders: { authorization: 'Bearer abcd' } })
         .get('/auth/user/me')
         .reply(200, userProfile);
 };
