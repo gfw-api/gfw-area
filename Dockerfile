@@ -7,7 +7,7 @@ ENV USER gfw-area
 RUN apk update && apk upgrade && \
     apk add --no-cache --update bash git openssh python3 build-base
 
-RUN addgroup $USER && useradd -ms /bin/bash $USER -g $USER
+RUN addgroup $USER && adduser -s /bin/bash -D -G $USER $USER
 
 RUN yarn global add grunt-cli bunyan
 
