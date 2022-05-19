@@ -6,8 +6,6 @@
 
 ## Dependencies
 
-You will need [Control Tower](https://github.com/control-tower/control-tower) up and running - either natively or with Docker. Refer to the project's README for information on how to set it up.
-
 The GFW User API microservice is built using [Node.js](https://nodejs.org/en/), and can be executed either natively or using Docker, each of which has its own set of requirements.
 
 Native execution requires:
@@ -49,19 +47,19 @@ yarn
 yarn start
 ```
 
-The endpoints provided by this microservice should now be available through Control Tower's URL.
+The endpoints provided by this microservice should now be available through the webserver's URL.
 
 ### Using Docker
 
 1 - Create and complete your `dev.env` file with your configuration. The meaning of the variables is available in this [section](#configuration-environment-variables). You can find an example `dev.env.sample` file in the project root.
 
-2 - Execute the following command to run Control tower:
+2 - Execute the following command to run the application:
 
 ```
 ./area.sh develop
 ```
 
-The endpoints provided by this microservice should now be available through Control Tower's URL.
+The endpoints provided by this microservice should now be available through the webserver's URL.
 
 ## Testing
 
@@ -87,9 +85,7 @@ Follow the instruction above for setting up the runtime environment for Docker e
 
 - PORT => TCP port in which the service will run
 - NODE_PATH => relative path to the source code. Should be `app/src`
-- CT_REGISTER_MODE => if `auto` the microservice automatically registers on Control Tower on start
-- CT_TOKEN => 
-- API_VERSION => API version identifier that prefixes the URL. Should be `v1`
+- MICROSERVICE_TOKEN => 
 - MONGO_PORT_27017_TCP_ADDR => IP/Address of the MongoDB server
 
 You can optionally set other variables, see [this file](config/custom-environment-variables.json) for an extended list.

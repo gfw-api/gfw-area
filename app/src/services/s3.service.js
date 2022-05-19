@@ -29,11 +29,11 @@ class S3Service {
                     reject(err);
                 }
                 const uuid = uuidV4();
-                const base64data = Buffer.from(data, 'binary');
+                const imageBuffer = Buffer.from(data, 'binary');
                 this.s3.upload({
                     Bucket: config.get('s3.bucket'),
                     Key: `${config.get('s3.folder')}/${uuid}.${ext}`,
-                    Body: base64data,
+                    Body: imageBuffer,
                     ACL: 'public-read'
                 }, (error, data) => {
                     if (error) {

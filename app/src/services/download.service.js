@@ -5,7 +5,7 @@ const { RWAPIMicroservice } = require('rw-api-microservice-node');
 const tilebelt = require('@mapbox/tilebelt');
 const tmp = require('tmp');
 const fs = require('fs');
-const zipFolder = require('zip-folder');
+const zip = require('zip-a-folder');
 const request = require('request');
 
 const CONCURRENCY = 30;
@@ -15,9 +15,8 @@ class DownloadService {
     static async getBBox(geostoreId) {
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
-                uri: `/geostore/${geostoreId}`,
+                uri: `/v1/geostore/${geostoreId}`,
                 method: 'GET',
-                json: true
             });
             return result.data.attributes.bbox;
         } catch (err) {
@@ -32,7 +31,6 @@ class DownloadService {
         const tilesArray = [];
         logger.debug(minZoom, maxZoom);
         for (let i = minZoom; i <= maxZoom; i++) {
-            logger.debug('asdfadfa');
             zooms.push(i);
         }
         logger.debug('zooms', zooms);
@@ -88,16 +86,7 @@ class DownloadService {
 
     static async zipFolder(folder, zipDir) {
         logger.debug(`Zipping folder ${folder}`);
-        return new Promise((resolve, reject) => {
-            zipFolder(folder, zipDir, (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-
+        return zip.zip(folder, zipDir, { compression: 1 });
     }
 
     static async removeFolder(path) {
