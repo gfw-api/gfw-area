@@ -19,6 +19,7 @@ const koaBodyMiddleware = koaBody({
     formLimit: '50mb',
     textLimit: '50mb',
     formidable: {
+        encoding: 'binary',
         uploadDir: '/tmp'
     }
 });
