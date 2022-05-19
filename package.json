@@ -46,7 +46,7 @@
   "dependencies": {
     "@mapbox/tilebelt": "^1.0.1",
     "JSONStream": "^1.3.0",
-    "aws-sdk": "^2.587.0",
+    "aws-sdk": "^2.814.0",
     "bunyan": "^1.8.15",
     "config": "^1.21.0",
     "jsonapi-serializer": "2.1.1",
