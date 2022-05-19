@@ -21,15 +21,15 @@ class S3Service {
     }
 
     async uploadFile(file) {
-        logger.info(`Uploading file ${file.filepath} with size ${file.size}`);
+        logger.info(`Uploading file ${file.path} with size ${file.size}`);
 
-        fs.stat(file.filepath, (err, stats) => {
+        fs.stat(file.path, (err, stats) => {
             logger.debug('Uploaded file stats', stats);
         });
 
-        const ext = S3Service.getExtension(file.originalFilename);
+        const ext = S3Service.getExtension(file.name);
         return new Promise((resolve, reject) => {
-            fs.readFile(file.filepath, (err, data) => {
+            fs.readFile(file.path, (err, data) => {
                 if (err) {
                     reject(err);
                 }
