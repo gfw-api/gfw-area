@@ -20,16 +20,16 @@ class S3Service {
         return parts[parts.length - 1];
     }
 
-    async uploadFile(filePath, name) {
-        logger.info(`Uploading file ${filePath}`);
+    async uploadFile(file) {
+        logger.info(`Uploading file ${file.filepath} with size ${file.size}`);
 
-        fs.stat(filePath, (err, stats) => {
+        fs.stat(file.filepath, (err, stats) => {
             logger.debug('Uploaded file stats', stats);
         });
 
-        const ext = S3Service.getExtension(name);
+        const ext = S3Service.getExtension(file.originalFilename);
         return new Promise((resolve, reject) => {
-            fs.readFile(filePath, (err, data) => {
+            fs.readFile(file.filepath, (err, data) => {
                 if (err) {
                     reject(err);
                 }
@@ -40,13 +40,13 @@ class S3Service {
                     Key: `${config.get('s3.folder')}/${uuid}.${ext}`,
                     Body: imageBuffer,
                     ACL: 'public-read'
-                }, (error, data) => {
+                }, (error, s3UploadData) => {
                     if (error) {
                         logger.error('[S3Service] Error uploading file to S3', error);
                         reject(error);
                         return;
                     }
-                    logger.debug('File uploaded successfully', data);
+                    logger.debug('File uploaded successfully', s3UploadData);
                     resolve(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}/${uuid}.${ext}`);
                 });
             });

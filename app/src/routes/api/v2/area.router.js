@@ -185,7 +185,7 @@ class AreaRouterV2 {
 
         let image = '';
         if (ctx.request.files && ctx.request.files.image) {
-            image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
+            image = await s3Service.uploadFile(ctx.request.files.image);
         }
 
         // Check geostore exists already with status=saved
@@ -445,7 +445,7 @@ class AreaRouterV2 {
             area.language = SUPPORTED_LANG_CODES.includes(body.language) ? body.language : DEFAULT_LANG_CODE;
         }
         if (files && files.image) {
-            area.image = await s3Service.uploadFile(files.image.path, files.image.name);
+            area.image = await s3Service.uploadFile(files.image);
         }
         if (typeof body.templateId !== 'undefined') {
             area.templateId = body.templateId;
@@ -554,7 +554,7 @@ class AreaRouterV2 {
                 const { email, application } = area;
                 const lang = area.language || 'en';
                 if (!email) {
-                    return new Promise((resolve) => resolve());
+                    return new Promise((resolve) => { resolve(); });
                 }
 
                 return MailService.sendMail(

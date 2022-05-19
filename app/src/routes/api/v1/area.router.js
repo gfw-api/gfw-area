@@ -119,7 +119,7 @@ class AreaRouter {
         logger.info('Saving area');
         let image = '';
         if (ctx.request.files && ctx.request.files.image) {
-            image = await s3Service.uploadFile(ctx.request.files.image.path, ctx.request.files.image.name);
+            image = await s3Service.uploadFile(ctx.request.files.image);
         }
         let datasets = [];
         if (ctx.request.body.datasets) {
@@ -189,7 +189,7 @@ class AreaRouter {
             area.datasets = JSON.parse(ctx.request.body.datasets);
         }
         if (files && files.image) {
-            area.image = await s3Service.uploadFile(files.image.path, files.image.name);
+            area.image = await s3Service.uploadFile(files.image);
         }
         if (typeof ctx.request.body.templateId !== 'undefined') {
             area.templateId = ctx.request.body.templateId;
@@ -247,7 +247,6 @@ class AreaRouter {
     }
 
 }
-
 
 async function loggedUserToState(ctx, next) {
     if (ctx.query && ctx.query.loggedUser) {
