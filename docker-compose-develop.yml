@@ -11,8 +11,6 @@ services:
       PORT: 4100
       NODE_ENV: dev
       NODE_PATH: app/src
-      API_VERSION: v1
-      CT_REGISTER_MODE: auto
       MONGO_PORT_27017_TCP_ADDR: mongo
       WAIT_HOSTS: mongo:27017
       FASTLY_ENABLED: "false"

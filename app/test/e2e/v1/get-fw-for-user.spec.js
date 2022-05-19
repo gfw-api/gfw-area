@@ -75,7 +75,7 @@ describe('V1 - Get FW areas for a user tests', () => {
     it('Getting FW areas for a user while being logged in with role MICROSERVICE should return a 2ßß (happy case)', async () => {
         mockGetUserFromToken(USERS.MICROSERVICE);
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, { data: null });
 
@@ -91,7 +91,7 @@ describe('V1 - Get FW areas for a user tests', () => {
     it('Getting FW areas should return local areas owned by the current user (happy case)', async () => {
         mockGetUserFromToken(USERS.MICROSERVICE);
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, { data: null });
 
@@ -128,7 +128,7 @@ describe('V1 - Get FW areas for a user tests', () => {
 
         const area = await new Area(createArea()).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -196,7 +196,7 @@ describe('V1 - Get FW areas for a user tests', () => {
 
         const teamArea = await new Area(createArea()).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -248,7 +248,7 @@ describe('V1 - Get FW areas for a user tests', () => {
             userId: USERS.USER.id
         })).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -326,7 +326,7 @@ describe('V1 - Get FW areas for a user tests', () => {
 
         await new Area(areaWithoutGeostore).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {});
 

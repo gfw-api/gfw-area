@@ -4,7 +4,7 @@ const USERS = {
         id: '1a10d7c6e0a37126611fd7a5',
         role: 'USER',
         provider: 'local',
-        email: 'user@control-tower.org',
+        email: 'user@resourcewatch.org',
         extraUserData: {
             apps: [
                 'rw',
@@ -21,7 +21,7 @@ const USERS = {
         id: '1a10d7c6e0a37126611fd7a6',
         role: 'MANAGER',
         provider: 'local',
-        email: 'user@control-tower.org',
+        email: 'user@resourcewatch.org',
         extraUserData: {
             apps: [
                 'rw',
@@ -38,7 +38,7 @@ const USERS = {
         id: '1a10d7c6e0a37126611fd7a7',
         role: 'ADMIN',
         provider: 'local',
-        email: 'user@control-tower.org',
+        email: 'user@resourcewatch.org',
         name: 'John Admin',
         extraUserData: {
             apps: [
@@ -56,7 +56,6 @@ const USERS = {
         id: 'microservice'
     }
 };
-
 
 module.exports = {
     USERS

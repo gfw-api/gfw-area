@@ -168,17 +168,15 @@ class SubscriptionsService {
 
     static async getAllSubscriptions(pageNumber, pageSize, startDate, endDate) {
         return RWAPIMicroservice.requestToMicroservice({
-            uri: `/subscriptions/find-all?page[number]=${pageNumber}&page[size]=${pageSize}&updatedAtSince=${startDate}&updatedAtUntil=${endDate}`,
+            uri: `/v1/subscriptions/find-all?page[number]=${pageNumber}&page[size]=${pageSize}&updatedAtSince=${startDate}&updatedAtUntil=${endDate}`,
             method: 'GET',
-            json: true,
         });
     }
 
     static async findByIds(ids) {
         const result = await RWAPIMicroservice.requestToMicroservice({
-            uri: `/subscriptions/find-by-ids`,
+            uri: `/v1/subscriptions/find-by-ids`,
             method: 'POST',
-            json: true,
             body: { ids },
         });
 
@@ -187,9 +185,8 @@ class SubscriptionsService {
 
     static async createSubscriptionFromArea(area) {
         const createdSubscription = await RWAPIMicroservice.requestToMicroservice({
-            uri: `/subscriptions`,
+            uri: `/v1/subscriptions`,
             method: 'POST',
-            json: true,
             body: SubscriptionsService.getRequestBodyForSubscriptionFromArea(area),
         });
 
@@ -199,9 +196,8 @@ class SubscriptionsService {
     static async updateSubscriptionFromArea(area) {
         try {
             const updatedSubscription = await RWAPIMicroservice.requestToMicroservice({
-                uri: `/subscriptions/${area.subscriptionId}`,
+                uri: `/v1/subscriptions/${area.subscriptionId}`,
                 method: 'PATCH',
-                json: true,
                 body: SubscriptionsService.getRequestBodyForSubscriptionFromArea(area),
             });
 
@@ -215,9 +211,8 @@ class SubscriptionsService {
     static async deleteSubscription(id) {
         try {
             await RWAPIMicroservice.requestToMicroservice({
-                uri: `/subscriptions/${id}`,
+                uri: `/v1/subscriptions/${id}`,
                 method: 'DELETE',
-                json: true,
             });
         } catch (e) {
             logger.warn(`Error while deleting subscription with id ${id}.`);

@@ -34,12 +34,12 @@ class AlertService {
         return JSON.stringify(data).replace(/"/g, '\\"');
     }
 
-    static groupPoints(dataViirs, dataGlad, precissionBbox) {
-        logger.debug('Group points', ' and preccisionbbox ', precissionBbox);
+    static groupPoints(dataViirs, dataGlad, precisionBbox) {
+        logger.debug('Group points', ' and precisionBbox ', precisionBbox);
         const result = {};
         if (dataViirs) {
             for (let i = 0, { length } = dataViirs; i < length; i++) {
-                const substring = dataViirs[i].geohash.substring(0, precissionBbox);
+                const substring = dataViirs[i].geohash.substring(0, precisionBbox);
                 if (!result[substring]) {
                     result[substring] = {
                         points: []
@@ -51,7 +51,7 @@ class AlertService {
         }
         if (dataGlad) {
             for (let i = 0, { length } = dataGlad; i < length; i++) {
-                const substring = dataGlad[i].geohash.substring(0, precissionBbox);
+                const substring = dataGlad[i].geohash.substring(0, precisionBbox);
                 if (!result[substring]) {
                     result[substring] = {
                         points: []
@@ -140,9 +140,8 @@ class AlertService {
         logger.debug('Obtaining geostore of wdpaid ', wdpaid);
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
-                uri: `/geostore/wdpa/${wdpaid}`,
+                uri: `/v1/geostore/wdpa/${wdpaid}`,
                 method: 'GET',
-                json: true
             });
             return result.data.id;
         } catch (err) {
@@ -155,17 +154,16 @@ class AlertService {
 
     }
 
-    static async getViirs(area, precissionPoint) {
+    static async getViirs(area, precisionPoint) {
         logger.debug('Obtaining data of viirs');
         const viirsDataset = config.get('viirsDataset');
         const table = config.get('viirsDatasetTableName');
         // eslint-disable-next-line max-len
-        const uri = `/query/${viirsDataset}?sql=select count(*) as count, ST_GeoHash(the_geom, ${precissionPoint}) as geohash from ${table} where acq_date > '2017-01-01' group by ST_GeoHash(the_geom, ${precissionPoint})&geostore=${area.geostore}`;
+        const uri = `v1//query/${viirsDataset}?sql=select count(*) as count, ST_GeoHash(the_geom, ${precisionPoint}) as geohash from ${table} where acq_date > '2017-01-01' group by ST_GeoHash(the_geom, ${precisionPoint})&geostore=${area.geostore}`;
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
                 uri,
                 method: 'GET',
-                json: true
             });
             return result;
         } catch (err) {
@@ -174,15 +172,14 @@ class AlertService {
         }
     }
 
-    static async getGlad(area, precissionPoint) {
+    static async getGlad(area, precisionPoint) {
         logger.debug('Obtaining data of glad');
         const gladDataset = config.get('gladDataset');
-        const uri = `/query/${gladDataset}?sql=select count(*) as count from data where year > 2016 group by ST_GeoHash(the_geom_point, ${precissionPoint})&geostore=${area.geostore}`;
+        const uri = `/v1/query/${gladDataset}?sql=select count(*) as count from data where year > 2016 group by ST_GeoHash(the_geom_point, ${precisionPoint})&geostore=${area.geostore}`;
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
                 uri,
                 method: 'GET',
-                json: true
             });
             return result;
         } catch (err) {
@@ -202,8 +199,7 @@ class AlertService {
             const viirs = await AlertService.getViirs(area, precisionPoint);
             const glad = await AlertService.getGlad(area, precisionPoint);
             const groups = AlertService.groupPoints(viirs ? viirs.data : [], glad ? glad.data : [], precisionBbox);
-            const response = await AlertService.obtainImages(groups, generateImages);
-            return response;
+            return await AlertService.obtainImages(groups, generateImages);
         } catch (err) {
             logger.error(err);
             throw err;

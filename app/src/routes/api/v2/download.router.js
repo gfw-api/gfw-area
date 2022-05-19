@@ -23,11 +23,12 @@ class DownloadRouter {
         );
         ctx.set('content-disposition', 'attachment; filename=download.zip');
         await send(ctx, path, { root: '/' });
-        fs.unlinkSync(path);
+        ctx.body.on('finish', () => {
+            fs.unlinkSync(path);
+        });
     }
 
 }
-
 
 router.get('/:geostoreId/:minZoom/:maxZoom', DownloadValidator.get, DownloadRouter.downloadTiles);
 

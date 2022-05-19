@@ -35,7 +35,7 @@ describe('V1 - Get FW areas tests', () => {
     it('Getting FW areas with no data should be successful', async () => {
         mockGetUserFromToken(USERS.USER);
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, { data: null });
 
@@ -50,7 +50,7 @@ describe('V1 - Get FW areas tests', () => {
     it('Getting FW areas should return local areas owned by the current user (happy case)', async () => {
         mockGetUserFromToken(USERS.USER);
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, { data: null });
 
@@ -87,7 +87,7 @@ describe('V1 - Get FW areas tests', () => {
 
         const area = await new Area(createArea()).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -155,7 +155,7 @@ describe('V1 - Get FW areas tests', () => {
 
         const teamArea = await new Area(createArea()).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -207,7 +207,7 @@ describe('V1 - Get FW areas tests', () => {
             userId: USERS.USER.id
         })).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -285,7 +285,7 @@ describe('V1 - Get FW areas tests', () => {
 
         await new Area(areaWithoutGeostore).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {});
 
