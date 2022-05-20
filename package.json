@@ -18,7 +18,7 @@
   "author": {
     "name": "Vizzuality",
     "email": "hello@vizzuality.com",
-    "url": "http://vizzuality.com/"
+    "url": "https://vizzuality.com/"
   },
   "devDependencies": {
     "assert": "^2.0.0",
@@ -50,7 +50,6 @@
     "aws-sdk": "^2.1138.0",
     "bunyan": "^1.8.15",
     "config": "^1.21.0",
-    "formidable": "^2.0.1",
     "jsonapi-serializer": "2.1.1",
     "koa": "^2.13.4",
     "koa-body": "^5.0.0",

@@ -5,7 +5,7 @@ ENV NAME gfw-area
 ENV USER gfw-area
 
 RUN apk update && apk upgrade && \
-    apk add --no-cache --update bash git openssh python3 build-base curl su-exec sudo
+    apk add --no-cache --update bash git openssh python3 build-base
 
 RUN addgroup $USER && adduser -s /bin/bash -D -G $USER $USER
 
