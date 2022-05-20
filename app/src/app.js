@@ -1,5 +1,4 @@
 const Koa = require('koa');
-const path = require('path');
 const logger = require('logger');
 const koaLogger = require('koa-logger');
 const koaBody = require('koa-body');
@@ -11,6 +10,7 @@ const mongoose = require('mongoose');
 const koaValidate = require('koa-validate');
 const koaSimpleHealthCheck = require('koa-simple-healthcheck');
 const sleep = require('sleep');
+const S3Service = require('services/s3.service');
 
 const mongoUri = process.env.MONGO_URI || `mongodb://${config.get('mongodb.host')}:${config.get('mongodb.port')}/${config.get('mongodb.database')}`;
 
@@ -20,11 +20,9 @@ const koaBodyMiddleware = koaBody({
     formLimit: '50mb',
     textLimit: '50mb',
     formidable: {
-        uploadDir: '/tmp',
-        onFileBegin(name, file) {
-            const folder = path.dirname(file.path);
-            file.path = path.join(folder, file.name);
-        }
+        multipart: true,
+        fileWriteStreamHandler: S3Service.uploadStream,
+        filter: (file) => file.name === 'image'
     }
 });
 

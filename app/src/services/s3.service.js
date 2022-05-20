@@ -1,8 +1,8 @@
 const logger = require('logger');
 const AWS = require('aws-sdk');
-const fs = require('fs');
 const config = require('config');
 const uuidV4 = require('uuid/v4');
+const { PassThrough } = require('node:stream');
 
 AWS.config.update({
     accessKeyId: config.get('s3.accessKeyId'),
@@ -11,43 +11,40 @@ AWS.config.update({
 
 class S3Service {
 
-    constructor() {
-        this.s3 = new AWS.S3();
-    }
-
     static getExtension(name) {
         const parts = name.split('.');
         return parts[parts.length - 1];
     }
 
-    async uploadFile(filePath, name) {
-        logger.info(`Uploading file ${filePath}`);
-        const ext = S3Service.getExtension(name);
-        return new Promise((resolve, reject) => {
-            fs.readFile(filePath, (err, data) => {
-                if (err) {
-                    reject(err);
+    static uploadStream(file) {
+        logger.info(`Streaming file ${file.originalFilename}`);
+
+        const pass = new PassThrough();
+        const uuid = uuidV4();
+        const ext = S3Service.getExtension(file.originalFilename);
+
+        try {
+            const s3Client = new AWS.S3();
+            s3Client.upload({
+                Bucket: config.get('s3.bucket'),
+                Key: `${config.get('s3.folder')}/${uuid}.${ext}`,
+                Body: pass,
+                ACL: 'public-read'
+            }, (error, s3UploadData) => {
+                if (error) {
+                    logger.error('[S3Service] Error uploading file to S3', error);
+                    return;
                 }
-                const uuid = uuidV4();
-                const imageBuffer = Buffer.from(data, 'binary');
-                this.s3.upload({
-                    Bucket: config.get('s3.bucket'),
-                    Key: `${config.get('s3.folder')}/${uuid}.${ext}`,
-                    Body: imageBuffer,
-                    ACL: 'public-read'
-                }, (error, data) => {
-                    if (error) {
-                        logger.error('[S3Service] Error uploading file to S3', error);
-                        reject(error);
-                        return;
-                    }
-                    logger.debug('File uploaded successfully', data);
-                    resolve(`https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}/${uuid}.${ext}`);
-                });
+                logger.debug('File uploaded successfully', s3UploadData);
+                file.s3Url = `https://s3.amazonaws.com/${config.get('s3.bucket')}/${config.get('s3.folder')}/${uuid}.${ext}`;
             });
-        });
+        } catch (error) {
+            logger.error(`Error streaming to S3: ${error.toString()}`);
+        }
+
+        return pass;
     }
 
 }
 
-module.exports = new S3Service();
+module.exports = S3Service;
