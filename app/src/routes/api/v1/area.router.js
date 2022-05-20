@@ -6,7 +6,6 @@ const AreaValidator = require('validators/area.validator');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const AreaService = require('services/area.service');
-const s3Service = require('services/s3.service');
 
 const router = new Router({
     prefix: '/area',
@@ -118,8 +117,8 @@ class AreaRouter {
     static async saveArea(ctx, userId) {
         logger.info('Saving area');
         let image = '';
-        if (ctx.request.files && ctx.request.files.image) {
-            image = await s3Service.uploadFile(ctx.request.files.image);
+        if (ctx.request.files && ctx.request.files.image && ctx.request.files.image.s3Url) {
+            image = ctx.request.files.image.s3Url;
         }
         let datasets = [];
         if (ctx.request.body.datasets) {
@@ -188,8 +187,8 @@ class AreaRouter {
         if (ctx.request.body.datasets) {
             area.datasets = JSON.parse(ctx.request.body.datasets);
         }
-        if (files && files.image) {
-            area.image = await s3Service.uploadFile(files.image);
+        if (files && files.image && files.image.s3Url) {
+            area.image = files.image.s3Url;
         }
         if (typeof ctx.request.body.templateId !== 'undefined') {
             area.templateId = ctx.request.body.templateId;

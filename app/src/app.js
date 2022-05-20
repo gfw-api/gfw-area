@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const koaValidate = require('koa-validate');
 const koaSimpleHealthCheck = require('koa-simple-healthcheck');
 const sleep = require('sleep');
+const S3Service = require('services/s3.service');
 
 const mongoUri = process.env.MONGO_URI || `mongodb://${config.get('mongodb.host')}:${config.get('mongodb.port')}/${config.get('mongodb.database')}`;
 
@@ -20,7 +21,8 @@ const koaBodyMiddleware = koaBody({
     textLimit: '50mb',
     formidable: {
         multipart: true,
-        uploadDir: '/tmp'
+        fileWriteStreamHandler: S3Service.uploadStream,
+        filter: (file) => file.name === 'image'
     }
 });
 

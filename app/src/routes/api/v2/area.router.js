@@ -7,7 +7,6 @@ const AreaModel = require('models/area.modelV2');
 const AreaValidatorV2 = require('validators/area.validatorV2');
 const TeamService = require('services/team.service');
 const SubscriptionService = require('services/subscription.service');
-const s3Service = require('services/s3.service');
 const mongoose = require('mongoose');
 const MailService = require('services/mail.service');
 const gladAlertTypes = require('models/glad-alert-types');
@@ -184,8 +183,8 @@ class AreaRouterV2 {
         let isSaved = false;
 
         let image = '';
-        if (ctx.request.files && ctx.request.files.image) {
-            image = await s3Service.uploadFile(ctx.request.files.image);
+        if (ctx.request.files && ctx.request.files.image && ctx.request.files.image.s3Url) {
+            image = ctx.request.files.image.s3Url;
         }
 
         // Check geostore exists already with status=saved
@@ -444,8 +443,8 @@ class AreaRouterV2 {
         if (updateKeys.includes('language')) {
             area.language = SUPPORTED_LANG_CODES.includes(body.language) ? body.language : DEFAULT_LANG_CODE;
         }
-        if (files && files.image) {
-            area.image = await s3Service.uploadFile(files.image);
+        if (files && files.image && files.image.s3Url) {
+            area.image = files.image.s3Url;
         }
         if (typeof body.templateId !== 'undefined') {
             area.templateId = body.templateId;
