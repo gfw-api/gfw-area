@@ -79,6 +79,8 @@ spec:
                 secretKeyRef:
                   key: AREA_S3_SECRET_ACCESS_KEY
                   name: mssecrets
+            - name: S3_BUCKET
+              value: forest-watcher-files
             - name: AOI_DATA_S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -91,8 +93,6 @@ spec:
                   name: mssecrets
             - name: AOI_DATA_S3_BUCKET
               value: gfw-pipelines
-            - name: S3_BUCKET
-              value: forest-watcher-files
             - name: DEFORESTATION_ALERTS_DATASET_ID
               value: glad-alerts
             - name: FIRE_ALERTS_DATASET_ID
