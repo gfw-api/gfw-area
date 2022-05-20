@@ -17,7 +17,7 @@ class S3Service {
     }
 
     static uploadStream(file) {
-        logger.info(`Streaming file ${file.path} with size ${file.size} to S3`);
+        logger.info(`Streaming file ${file.originalFilename}`);
 
         const pass = new PassThrough();
         const uuid = uuidV4();
@@ -29,6 +29,7 @@ class S3Service {
                 Bucket: config.get('s3.bucket'),
                 Key: `${config.get('s3.folder')}/${uuid}.${ext}`,
                 Body: pass,
+                ACL: 'public-read'
             }, (error, s3UploadData) => {
                 if (error) {
                     logger.error('[S3Service] Error uploading file to S3', error);
