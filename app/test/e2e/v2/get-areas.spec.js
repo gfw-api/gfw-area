@@ -405,6 +405,33 @@ describe('V2 - Get areas', () => {
             response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?page[number]=1&page[size]=300`);
         });
 
+        it('Getting areas while filtering by all filter returns areas from every env', async () => {
+            const areaOne = await new Area(createArea({ userId: USERS.USER.id, env: 'production' })).save();
+            const areaTwo = await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
+            const areaThree = await new Area(createArea({ userId: USERS.USER.id })).save();
+            const areaFour = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
+
+            mockGetUserFromToken(USERS.USER);
+
+            const response = await requester
+                .get(`/api/v2/area`)
+                .query({
+                    env: 'all'
+                })
+                .set('Authorization', 'Bearer abcd');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(4);
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id, areaThree.id, areaFour.id].sort());
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=all&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=all&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=all&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=all&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=all&page[number]=1&page[size]=300`);
+        });
+
         it('Getting areas while filtering by a custom env returns areas matching that env', async () => {
             const areaOne = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
             await new Area(createArea({ userId: USERS.USER.id, env: 'potato' })).save();
