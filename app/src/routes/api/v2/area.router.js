@@ -41,7 +41,12 @@ function getFilters(ctx) {
     }
 
     const env = query.env ? query.env : 'production';
-    filter.env = { $in: env.split(',').map((elem) => elem.trim()) };
+
+    if (env === 'all') {
+        logger.debug(`Applying all env filter`);
+    } else {
+        filter.env = { $in: env.split(',').map((elem) => elem.trim()) };
+    }
 
     return filter;
 }
