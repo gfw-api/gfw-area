@@ -423,6 +423,7 @@ describe('V2 - Get areas', () => {
             response.status.should.equal(200);
             response.body.should.have.property('data').with.lengthOf(4);
             response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id, areaThree.id, areaFour.id].sort());
+            [...new Set(response.body.data.map((elem) => elem.attributes.env))].sort().should.eql(['custom', 'potato', 'production'].sort());
             response.body.should.have.property('data').and.be.an('array');
             response.body.should.have.property('links').and.be.an('object');
             response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?env=all&page[number]=1&page[size]=300`);
