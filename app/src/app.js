@@ -1,5 +1,4 @@
 const Koa = require('koa');
-const path = require('path');
 const logger = require('logger');
 const koaLogger = require('koa-logger');
 const koaBody = require('koa-body');
@@ -11,6 +10,7 @@ const mongoose = require('mongoose');
 const koaValidate = require('koa-validate');
 const koaSimpleHealthCheck = require('koa-simple-healthcheck');
 const sleep = require('sleep');
+const S3Service = require('services/s3.service');
 
 const mongoUri = process.env.MONGO_URI || `mongodb://${config.get('mongodb.host')}:${config.get('mongodb.port')}/${config.get('mongodb.database')}`;
 
@@ -20,11 +20,9 @@ const koaBodyMiddleware = koaBody({
     formLimit: '50mb',
     textLimit: '50mb',
     formidable: {
-        uploadDir: '/tmp',
-        onFileBegin(name, file) {
-            const folder = path.dirname(file.path);
-            file.path = path.join(folder, file.name);
-        }
+        multipart: true,
+        fileWriteStreamHandler: S3Service.uploadStream,
+        filter: (file) => file.name === 'image'
     }
 });
 
@@ -87,13 +85,9 @@ app.use(async (ctx, next) => {
 app.use(koaLogger());
 
 app.use(RWAPIMicroservice.bootstrap({
-    name: 'area',
-    info: require('../microservice/register.json'),
-    swagger: require('../microservice/public-swagger.json'),
     logger,
-    baseURL: process.env.CT_URL,
-    url: process.env.LOCAL_URL,
-    token: process.env.CT_TOKEN,
+    gatewayURL: process.env.GATEWAY_URL,
+    microserviceToken: process.env.MICROSERVICE_TOKEN,
     fastlyEnabled: process.env.FASTLY_ENABLED,
     fastlyServiceId: process.env.FASTLY_SERVICEID,
     fastlyAPIKey: process.env.FASTLY_APIKEY
@@ -105,14 +99,6 @@ loader.loadRoutes(app);
 
 const port = process.env.PORT || '3000';
 const server = app.listen(port, () => {
-    if (process.env.CT_REGISTER_MODE === 'auto') {
-        RWAPIMicroservice.register().then(() => {
-            logger.info('CT registration process started');
-        }, (error) => {
-            logger.error(error);
-            process.exit(1);
-        });
-    }
     logger.info('Server started in ', port);
 });
 

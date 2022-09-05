@@ -1,3 +1,10 @@
+## 19/05/2022
+
+- Update nodejs version to v16.15
+- Update dev dependencies
+- Update `rw-api-microservice-node` to remove Control Tower references
+- Update production dependencies based on `yarn audit`
+
 ## 24/01/2022
 
 - Add `env` with default value `production` to v1 areas model

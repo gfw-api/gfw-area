@@ -6,6 +6,7 @@ const config = require('config');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
+chai.use(require('chai-datetime'));
 
 const { mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');

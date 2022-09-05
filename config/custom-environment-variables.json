@@ -14,6 +14,7 @@
   "s3": {
     "accessKeyId": "S3_ACCESS_KEY_ID",
     "secretAccessKey": "S3_SECRET_ACCESS_KEY",
+    "folder": "S3_FOLDER",
     "bucket": "S3_BUCKET"
   },
   "logger": {

@@ -274,7 +274,6 @@ describe('V2 - Update area', () => {
         new Date(response.body.data.attributes.updatedAt).should.afterTime(new Date(response.body.data.attributes.createdAt));
     });
 
-
     it('Updating an area with an invalid alert type should return a 400 error message', async () => {
         mockGetUserFromToken(USERS.USER);
 
@@ -424,7 +423,7 @@ describe('V2 - Update area', () => {
         })).save();
 
         // Mock failed update on subscription
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .patch(`/v1/subscriptions/${fakeId}`)
             .reply(404, () => ({ errors: {} }));
         mockSubscriptionFindByIds([]);
@@ -456,7 +455,7 @@ describe('V2 - Update area', () => {
         })).save();
 
         // Mock failed update on subscription
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .delete(`/v1/subscriptions/${fakeId}`)
             .reply(404, () => ({ errors: {} }));
 
