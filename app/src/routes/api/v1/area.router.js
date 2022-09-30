@@ -227,6 +227,19 @@ class AreaRouter {
         ctx.statusCode = 204;
     }
 
+    static async deleteByUserId(ctx) {
+        logger.info(`Deleting areas of user with id ${ctx.params.userId}`);
+        const userIdToDelete = ctx.params.userId;
+
+        try {
+            const deletedAreas = await AreaService.deleteByUserId(userIdToDelete);
+            ctx.body = AreaSerializer.serialize(deletedAreas);
+        } catch (err) {
+            logger.error(`Error deleting areas (v1) from user ${userIdToDelete}`, err);
+            ctx.throw(500, `Error deleting areas (v1) from user ${userIdToDelete}`);
+        }
+    }
+
     static async getAlertsOfArea(ctx) {
         logger.info(`Obtaining alerts of area with id ${ctx.params.id}`);
         ctx.assert(ctx.query.precissionPoints, 400, 'precissionPoints is required');
@@ -308,6 +321,25 @@ async function unwrapJSONStrings(ctx, next) {
     await next();
 }
 
+const deleteResourceAuthorizationMiddleware = async (ctx, next) => {
+    logger.info(`[VocabularyRouter] Checking delete by user authorization`);
+
+    const user = ctx.state.loggedUser;
+    const userFromParam = ctx.params.userId;
+
+    if (user.id === 'microservice' || user.role === 'ADMIN') {
+        await next();
+        return;
+    }
+
+    if (userFromParam !== user.id) {
+        ctx.throw(403, 'Forbidden');
+        return;
+    }
+
+    await next();
+};
+
 router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidator.create, AreaRouter.save);
 router.patch('/:id', loggedUserToState, checkPermission, unwrapJSONStrings, AreaValidator.update, AreaRouter.update);
 router.get('/', loggedUserToState, AreaRouter.getAll);
@@ -317,5 +349,6 @@ router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouter.getFWAre
 router.get('/:id', loggedUserToState, AreaRouter.get);
 router.get('/:id/alerts', loggedUserToState, AreaRouter.getAlertsOfArea);
 router.delete('/:id', loggedUserToState, checkPermission, AreaRouter.delete);
+router.delete('/by-user/:userId', loggedUserToState, deleteResourceAuthorizationMiddleware, AreaRouter.deleteByUserId);
 
 module.exports = router;

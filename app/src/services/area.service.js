@@ -1,5 +1,6 @@
 const logger = require('logger');
 const Area = require('models/area.model');
+const TeamService = require('services/team.service');
 
 class AreaService {
 
@@ -87,7 +88,6 @@ class AreaService {
         return filteredSort;
     }
 
-
     static async getByDataset(resource) {
         logger.debug(`[AreaService] Getting areas for datasets with ids ${resource.ids}`);
         if (resource.app) {
@@ -124,6 +124,37 @@ class AreaService {
             permission = false;
         }
         return permission;
+    }
+
+    static async deleteByUserId(userId) {
+        logger.debug(`[AreaV1Service]: Delete areas for user with id:  ${userId}`);
+
+        const userAreas = await Area.find({ userId: { $eq: userId } }).exec();
+
+        if (userAreas) {
+            for (let i = 0, { length } = userAreas; i < length; i++) {
+                const currentArea = userAreas[i];
+                const currentAreaId = currentArea._id.toString();
+                logger.debug('[AreasService]: Deleting areas from teams');
+                let team = null;
+                try {
+                    team = await TeamService.getTeamByUserId(userId);
+                } catch (e) {
+                    logger.error(e);
+                }
+
+                if (team && team.areas.includes(currentAreaId)) {
+                    const areas = team.areas.filter((area) => area !== currentAreaId);
+                    try {
+                        await TeamService.patchTeamById(team.id, { areas });
+                    } catch (e) {
+                        logger.error(e);
+                    }
+                }
+                await currentArea.remove();
+            }
+        }
+        return userAreas;
     }
 
 }
