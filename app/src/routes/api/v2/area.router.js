@@ -536,6 +536,47 @@ class AreaRouterV2 {
         ctx.statusCode = 204;
     }
 
+    static async deleteByUserId(ctx) {
+        logger.info(`Deleting areas of user with id ${ctx.params.userId}`);
+        const userIdToDelete = ctx.params.userId;
+
+        const userAreas = await AreaModel.find({ userId: { $eq: userIdToDelete } }).exec();
+
+        if (userAreas) {
+            for (let i = 0, { length } = userAreas; i < length; i++) {
+                const currentArea = userAreas[i];
+                const currentAreaId = currentArea._id.toString();
+
+                logger.debug('[AreasService]: Deleting subscriptions of area');
+                if (currentArea.subscriptionId) {
+                    const [subscription] = await SubscriptionService.findByIds([currentArea.subscriptionId]);
+                    if (subscription) {
+                        await SubscriptionService.deleteSubscription(currentArea.subscriptionId);
+                    }
+                }
+
+                logger.debug('[AreasService]: Deleting areas from teams');
+                let team = null;
+                try {
+                    team = await TeamService.getTeamByUserId(userIdToDelete);
+                } catch (e) {
+                    logger.error(e);
+                }
+
+                if (team && team.areas.includes(currentAreaId)) {
+                    const areas = team.areas.filter((area) => area !== currentAreaId);
+                    try {
+                        await TeamService.patchTeamById(team.id, { areas });
+                    } catch (e) {
+                        logger.error(e);
+                    }
+                }
+                await currentArea.remove();
+            }
+        }
+        ctx.body = AreaSerializerV2.serialize(userAreas);
+    }
+
     static async updateByGeostore(ctx) {
         const geostores = ctx.request.body.geostores || [];
         const updateParams = ctx.request.body.update_params || {};
@@ -744,12 +785,32 @@ const ensureAdminUser = async (ctx, next) => {
     await next();
 };
 
+const deleteResourceAuthorizationMiddleware = async (ctx, next) => {
+    logger.info(`[AreaRouter] Checking delete by user authorization`);
+
+    const user = ctx.state.loggedUser;
+    const userFromParam = ctx.params.userId;
+
+    if (user.id === 'microservice' || user.role === 'ADMIN') {
+        await next();
+        return;
+    }
+
+    if (userFromParam === user.id) {
+        await next();
+        return;
+    }
+
+    ctx.throw(403, 'Forbidden');
+};
+
 const router = new Router({ prefix: '/area' });
 
 router.get('/', loggedUserToState, ensureUserIsLogged, AreaRouterV2.getAll);
 router.post('/', loggedUserToState, ensureUserIsLogged, unwrapJSONStrings, AreaValidatorV2.create, AreaRouterV2.save);
 router.patch('/:id', loggedUserToState, ensureUserIsLogged, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
+router.delete('/by-user/:userId', loggedUserToState, ensureUserIsLogged, deleteResourceAuthorizationMiddleware, AreaRouterV2.deleteByUserId);
 router.delete('/:id', loggedUserToState, ensureUserIsLogged, checkPermission, AreaRouterV2.delete);
 router.post('/update', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaValidatorV2.updateByGeostore, AreaRouterV2.updateByGeostore);
 router.post('/sync', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaRouterV2.sync);
