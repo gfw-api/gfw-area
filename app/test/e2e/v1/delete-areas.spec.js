@@ -59,6 +59,7 @@ describe('V1 - Delete areas by user id tests', () => {
 
         nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
+            .times(2)
             .reply(200, {
                 data: {
                     id: teamId,
@@ -69,18 +70,9 @@ describe('V1 - Delete areas by user id tests', () => {
             });
 
         nock(process.env.GATEWAY_URL)
-            .get(`/v1/teams/user/${USERS.USER.id}`)
-            .reply(200, {
-                data: {
-                    id: teamId,
-                    attributes: {
-                        areas: [areaOne._id.toString()]
-                    }
-                }
-            });
-
-        nock(process.env.GATEWAY_URL)
-            .patch(`/v1/teams/${teamId}`)
+            .patch(`/v1/teams/${teamId}`, {
+                areas: []
+            })
             .reply(200, {
                 data: {
                     id: teamId,
@@ -179,67 +171,6 @@ describe('V1 - Delete areas by user id tests', () => {
         areaNames.should.contain(fakeAreaFromManager.name);
         areaNames.should.contain(fakeAreaFromAdmin.name);
     });
-
-    // it('Getting areas supports filtering by application', async () => {
-    //     mockGetUserFromToken(USERS.USER);
-    //     mockGetUserFromToken(USERS.USER);
-
-    //     const areaGFW = await new Area(createArea({
-    //         userId: USERS.USER.id,
-    //         application: 'gfw'
-    //     })).save();
-
-    //     const areaRW = await new Area(createArea({
-    //         userId: USERS.USER.id,
-    //         application: 'rw'
-    //     })).save();
-
-    //     const responseRW = await requester
-    //         .get(`/api/v1/area?application=rw`)
-    //         .set('Authorization', 'Bearer abcd');
-
-    //     responseRW.status.should.equal(200);
-    //     responseRW.body.should.have.property('data').and.be.an('array').and.length(1);
-
-    //     responseRW.body.data[0].should.have.property('type').and.equal('area');
-    //     responseRW.body.data[0].should.have.property('id').and.equal(areaRW.id);
-    //     responseRW.body.data[0].should.have.property('attributes').and.be.an('object');
-
-    //     responseRW.body.data[0].attributes.should.have.property('name').and.equal(areaRW.name);
-    //     responseRW.body.data[0].attributes.should.have.property('application').and.equal(areaRW.application);
-    //     responseRW.body.data[0].attributes.should.have.property('geostore').and.equal(areaRW.geostore);
-    //     responseRW.body.data[0].attributes.should.have.property('wdpaid').and.equal(areaRW.wdpaid);
-    //     responseRW.body.data[0].attributes.should.have.property('userId').and.equal(USERS.USER.id);
-    //     responseRW.body.data[0].attributes.should.have.property('createdAt');
-    //     responseRW.body.data[0].attributes.should.have.property('updatedAt');
-    //     responseRW.body.data[0].attributes.should.have.property('image').and.equal('');
-    //     responseRW.body.data[0].attributes.should.have.property('datasets').and.be.an('array').and.length(0);
-    //     responseRW.body.data[0].attributes.should.have.property('use').and.be.an('object');
-    //     responseRW.body.data[0].attributes.should.have.property('iso').and.be.an('object');
-
-    //     const responseGFW = await requester
-    //         .get(`/api/v1/area?application=gfw`)
-    //         .set('Authorization', 'Bearer abcd');
-
-    //     responseGFW.status.should.equal(200);
-    //     responseGFW.body.should.have.property('data').and.be.an('array').and.length(1);
-
-    //     responseGFW.body.data[0].should.have.property('type').and.equal('area');
-    //     responseGFW.body.data[0].should.have.property('id').and.equal(areaGFW.id);
-    //     responseGFW.body.data[0].should.have.property('attributes').and.be.an('object');
-
-    //     responseGFW.body.data[0].attributes.should.have.property('name').and.equal(areaGFW.name);
-    //     responseGFW.body.data[0].attributes.should.have.property('application').and.equal(areaGFW.application);
-    //     responseGFW.body.data[0].attributes.should.have.property('geostore').and.equal(areaGFW.geostore);
-    //     responseGFW.body.data[0].attributes.should.have.property('wdpaid').and.equal(areaGFW.wdpaid);
-    //     responseGFW.body.data[0].attributes.should.have.property('userId').and.equal(USERS.USER.id);
-    //     responseGFW.body.data[0].attributes.should.have.property('createdAt');
-    //     responseGFW.body.data[0].attributes.should.have.property('updatedAt');
-    //     responseGFW.body.data[0].attributes.should.have.property('image').and.equal('');
-    //     responseGFW.body.data[0].attributes.should.have.property('datasets').and.be.an('array').and.length(0);
-    //     responseGFW.body.data[0].attributes.should.have.property('use').and.be.an('object');
-    //     responseGFW.body.data[0].attributes.should.have.property('iso').and.be.an('object');
-    // });
 
     afterEach(async () => {
         if (!nock.isDone()) {

@@ -4,7 +4,7 @@ const TeamService = require('services/team.service');
 
 class AreaService {
 
-    static async getAll(query = {}, user) {
+    static async getAll(query, user) {
 
         logger.info(`[DBACCESS-FIND]: all areas`);
         const sort = query.sort || '';
@@ -127,7 +127,7 @@ class AreaService {
     }
 
     static async deleteByUserId(userId) {
-        logger.debug(`[AreaV1Service]: Delete areas for user with id:  ${userId}`);
+        logger.debug(`[AreaService]: Delete areas for user with id:  ${userId}`);
 
         const userAreas = await Area.find({ userId: { $eq: userId } }).exec();
 
