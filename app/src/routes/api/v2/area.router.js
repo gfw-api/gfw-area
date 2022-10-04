@@ -542,38 +542,37 @@ class AreaRouterV2 {
 
         const userAreas = await AreaModel.find({ userId: { $eq: userIdToDelete } }).exec();
 
-        if (userAreas) {
-            for (let i = 0, { length } = userAreas; i < length; i++) {
-                const currentArea = userAreas[i];
-                const currentAreaId = currentArea._id.toString();
+        for (let i = 0, { length } = userAreas; i < length; i++) {
+            const currentArea = userAreas[i];
+            const currentAreaId = currentArea._id.toString();
 
-                logger.debug('[AreasService]: Deleting subscriptions of area');
-                if (currentArea.subscriptionId) {
-                    const [subscription] = await SubscriptionService.findByIds([currentArea.subscriptionId]);
-                    if (subscription) {
-                        await SubscriptionService.deleteSubscription(currentArea.subscriptionId);
-                    }
+            logger.debug('[AreasService]: Deleting subscriptions of area');
+            if (currentArea.subscriptionId) {
+                const [subscription] = await SubscriptionService.findByIds([currentArea.subscriptionId]);
+                if (subscription) {
+                    await SubscriptionService.deleteSubscription(currentArea.subscriptionId);
                 }
+            }
 
-                logger.debug('[AreasService]: Deleting areas from teams');
-                let team = null;
+            logger.debug('[AreasService]: Deleting areas from teams');
+            let team = null;
+            try {
+                team = await TeamService.getTeamByUserId(userIdToDelete);
+            } catch (e) {
+                logger.error(e);
+            }
+
+            if (team && team.areas.includes(currentAreaId)) {
+                const areas = team.areas.filter((area) => area !== currentAreaId);
                 try {
-                    team = await TeamService.getTeamByUserId(userIdToDelete);
+                    await TeamService.patchTeamById(team.id, { areas });
                 } catch (e) {
                     logger.error(e);
                 }
-
-                if (team && team.areas.includes(currentAreaId)) {
-                    const areas = team.areas.filter((area) => area !== currentAreaId);
-                    try {
-                        await TeamService.patchTeamById(team.id, { areas });
-                    } catch (e) {
-                        logger.error(e);
-                    }
-                }
-                await currentArea.remove();
             }
+            await currentArea.remove();
         }
+
         ctx.body = AreaSerializerV2.serialize(userAreas);
     }
 

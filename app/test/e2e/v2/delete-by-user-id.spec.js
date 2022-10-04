@@ -135,17 +135,7 @@ describe('V2 - Delete areas by user id tests', () => {
 
         nock(process.env.GATEWAY_URL)
             .get(`/v1/teams/user/${USERS.USER.id}`)
-            .reply(200, {
-                data: {
-                    id: teamId,
-                    attributes: {
-                        areas: [areaTwo._id.toString()]
-                    }
-                }
-            });
-
-        nock(process.env.GATEWAY_URL)
-            .get(`/v1/teams/user/${USERS.USER.id}`)
+            .times(2)
             .reply(200, {
                 data: {
                     id: teamId,
@@ -197,6 +187,18 @@ describe('V2 - Delete areas by user id tests', () => {
         const areaNames = findAllAreas.map((area) => area.name);
         areaNames.should.contain(fakeAreaFromManager.name);
         areaNames.should.contain(fakeAreaFromAdmin.name);
+    });
+
+    it('Deleting all areas of an user while being authenticated as USER should return a 200 and all widgets deleted - no areas in the db', async () => {
+        mockGetUserFromToken(USERS.USER);
+
+        const response = await requester
+            .delete(`/api/v2/area/by-user/${USERS.USER.id}`)
+            .set('Authorization', 'Bearer abcd')
+            .send();
+
+        response.status.should.equal(200);
+        response.body.data.should.be.an('array').with.lengthOf(0);
     });
 
     afterEach(async () => {
