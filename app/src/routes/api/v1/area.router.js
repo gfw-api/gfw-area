@@ -332,12 +332,12 @@ const deleteResourceAuthorizationMiddleware = async (ctx, next) => {
         return;
     }
 
-    if (userFromParam !== user.id) {
-        ctx.throw(403, 'Forbidden');
+    if (userFromParam === user.id) {
+        await next();
         return;
     }
 
-    await next();
+    ctx.throw(403, 'Forbidden');
 };
 
 router.post('/', loggedUserToState, unwrapJSONStrings, AreaValidator.create, AreaRouter.save);
@@ -348,7 +348,7 @@ router.post('/fw/:userId', loggedUserToState, unwrapJSONStrings, AreaValidator.c
 router.get('/fw/:userId', loggedUserToState, isMicroservice, AreaRouter.getFWAreasByUserId);
 router.get('/:id', loggedUserToState, AreaRouter.get);
 router.get('/:id/alerts', loggedUserToState, AreaRouter.getAlertsOfArea);
-router.delete('/:id', loggedUserToState, checkPermission, AreaRouter.delete);
 router.delete('/by-user/:userId', loggedUserToState, deleteResourceAuthorizationMiddleware, AreaRouter.deleteByUserId);
+router.delete('/:id', loggedUserToState, checkPermission, AreaRouter.delete);
 
 module.exports = router;
