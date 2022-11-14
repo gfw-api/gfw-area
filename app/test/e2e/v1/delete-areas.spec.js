@@ -88,12 +88,7 @@ describe('V1 - Delete areas by user id tests', () => {
             .send();
 
         response.status.should.equal(200);
-        response.body.data[0].id.should.equal(areaOne._id.toString());
-        response.body.data[0].attributes.name.should.equal(areaOne.name);
-        response.body.data[0].attributes.userId.should.equal(areaOne.userId);
-        response.body.data[1].id.should.equal(areaTwo._id.toString());
-        response.body.data[1].attributes.name.should.equal(areaTwo.name);
-        response.body.data[1].attributes.userId.should.equal(areaTwo.userId);
+        response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id].sort());
 
         const findAreaByUser = await Area.find({ userId: { $eq: USERS.USER.id } }).exec();
         findAreaByUser.should.be.an('array').with.lengthOf(0);
@@ -146,12 +141,7 @@ describe('V1 - Delete areas by user id tests', () => {
             .send();
 
         response.status.should.equal(200);
-        response.body.data[0].id.should.equal(areaOne._id.toString());
-        response.body.data[0].attributes.name.should.equal(areaOne.name);
-        response.body.data[0].attributes.userId.should.equal(areaOne.userId);
-        response.body.data[1].id.should.equal(areaTwo._id.toString());
-        response.body.data[1].attributes.name.should.equal(areaTwo.name);
-        response.body.data[1].attributes.userId.should.equal(areaTwo.userId);
+        response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id].sort());
 
         const findAreaByUser = await Area.find({ userId: { $eq: USERS.USER.id } }).exec();
         findAreaByUser.should.be.an('array').with.lengthOf(0);
@@ -212,12 +202,7 @@ describe('V1 - Delete areas by user id tests', () => {
             .send();
 
         response.status.should.equal(200);
-        response.body.data[0].id.should.equal(areaOne._id.toString());
-        response.body.data[0].attributes.name.should.equal(areaOne.name);
-        response.body.data[0].attributes.userId.should.equal(areaOne.userId);
-        response.body.data[1].id.should.equal(areaTwo._id.toString());
-        response.body.data[1].attributes.name.should.equal(areaTwo.name);
-        response.body.data[1].attributes.userId.should.equal(areaTwo.userId);
+        response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id].sort());
 
         const findAreaByUser = await Area.find({ userId: { $eq: USERS.USER.id } }).exec();
         findAreaByUser.should.be.an('array').with.lengthOf(0);
@@ -240,6 +225,26 @@ describe('V1 - Delete areas by user id tests', () => {
 
         response.status.should.equal(200);
         response.body.data.should.be.an('array').with.lengthOf(0);
+    });
+
+    it('Deleting areas from a user should delete them completely from a database (large number of areas)', async () => {
+        mockGetUserFromToken(USERS.USER);
+
+        await Promise.all([...Array(50)].map(async () => {
+            await new Area(createArea({ env: 'staging', userId: USERS.USER.id })).save();
+            await new Area(createArea({ env: 'production', userId: USERS.USER.id })).save();
+        }));
+
+        const deleteResponse = await requester
+            .delete(`/api/v1/area/by-user/${USERS.USER.id}`)
+            .set('Authorization', `Bearer abcd`)
+            .send();
+
+        deleteResponse.status.should.equal(200);
+        deleteResponse.body.should.have.property('data').with.lengthOf(100);
+
+        const findAreaByUser = await Area.find({ userId: { $eq: USERS.USER.id } }).exec();
+        findAreaByUser.should.be.an('array').with.lengthOf(0);
     });
 
     afterEach(async () => {
