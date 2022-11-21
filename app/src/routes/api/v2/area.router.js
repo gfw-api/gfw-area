@@ -536,6 +536,13 @@ class AreaRouterV2 {
         ctx.statusCode = 204;
     }
 
+    static async getByUserId(ctx) {
+        logger.info(`Finding areas of user with id ${ctx.params.userId}`);
+        const userAreas = await AreaModel.find({ userId: { $eq: ctx.params.userId } }).exec();
+
+        ctx.body = AreaSerializerV2.serialize(userAreas);
+    }
+
     static async deleteByUserId(ctx) {
         logger.info(`Deleting areas of user with id ${ctx.params.userId}`);
         const userIdToDelete = ctx.params.userId;
@@ -784,8 +791,8 @@ const ensureAdminUser = async (ctx, next) => {
     await next();
 };
 
-const deleteResourceAuthorizationMiddleware = async (ctx, next) => {
-    logger.info(`[AreaRouter] Checking delete by user authorization`);
+const resourcesByUserAuthorizationMiddleware = async (ctx, next) => {
+    logger.info(`[AreaRouter] Checking access to resources by user authorization`);
 
     const user = ctx.state.loggedUser;
     const userFromParam = ctx.params.userId;
@@ -809,7 +816,8 @@ router.get('/', loggedUserToState, ensureUserIsLogged, AreaRouterV2.getAll);
 router.post('/', loggedUserToState, ensureUserIsLogged, unwrapJSONStrings, AreaValidatorV2.create, AreaRouterV2.save);
 router.patch('/:id', loggedUserToState, ensureUserIsLogged, checkPermission, unwrapJSONStrings, AreaValidatorV2.update, AreaRouterV2.update);
 router.get('/:id', loggedUserToState, AreaRouterV2.get);
-router.delete('/by-user/:userId', loggedUserToState, ensureUserIsLogged, deleteResourceAuthorizationMiddleware, AreaRouterV2.deleteByUserId);
+router.get('/by-user/:userId', loggedUserToState, ensureUserIsLogged, resourcesByUserAuthorizationMiddleware, AreaRouterV2.getByUserId);
+router.delete('/by-user/:userId', loggedUserToState, ensureUserIsLogged, resourcesByUserAuthorizationMiddleware, AreaRouterV2.deleteByUserId);
 router.delete('/:id', loggedUserToState, ensureUserIsLogged, checkPermission, AreaRouterV2.delete);
 router.post('/update', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaValidatorV2.updateByGeostore, AreaRouterV2.updateByGeostore);
 router.post('/sync', loggedUserToState, ensureUserIsLogged, ensureAdminUser, AreaRouterV2.sync);
