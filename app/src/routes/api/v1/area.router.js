@@ -6,6 +6,7 @@ const AreaValidator = require('validators/area.validator');
 const AlertsService = require('services/alerts.service');
 const TeamService = require('services/team.service');
 const AreaService = require('services/area.service');
+const UserService = require('../../../services/user.service');
 
 const router = new Router({
     prefix: '/area',
@@ -230,6 +231,12 @@ class AreaRouter {
     static async deleteByUserId(ctx) {
         logger.info(`Deleting areas of user with id ${ctx.params.userId}`);
         const userIdToDelete = ctx.params.userId;
+
+        try {
+            await UserService.getUserById(userIdToDelete);
+        } catch (error) {
+            ctx.throw(404, `User ${userIdToDelete} does not exist`);
+        }
 
         try {
             const deletedAreas = await AreaService.deleteByUserId(userIdToDelete);
