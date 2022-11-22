@@ -82,6 +82,14 @@ describe('V1 - Delete areas by user id tests', () => {
                 }
             });
 
+        nock(process.env.GATEWAY_URL)
+            .get(`/auth/user/${USERS.USER.id}`)
+            .reply(200, {
+                data: {
+                    ...USERS.USER,
+                }
+            });
+
         const response = await requester
             .delete(`/api/v1/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
@@ -135,6 +143,14 @@ describe('V1 - Delete areas by user id tests', () => {
                 }
             });
 
+        nock(process.env.GATEWAY_URL)
+            .get(`/auth/user/${USERS.USER.id}`)
+            .reply(200, {
+                data: {
+                    ...USERS.USER,
+                }
+            });
+
         const response = await requester
             .delete(`/api/v1/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
@@ -152,6 +168,30 @@ describe('V1 - Delete areas by user id tests', () => {
         const areaNames = findAllAreas.map((area) => area.name);
         areaNames.should.contain(fakeAreaFromManager.name);
         areaNames.should.contain(fakeAreaFromAdmin.name);
+    });
+
+    it('Deleting areas owned by a user that does not exist as a MICROSERVICE should return a 404', async () => {
+        mockGetUserFromToken(USERS.MICROSERVICE);
+
+        nock(process.env.GATEWAY_URL)
+            .get(`/auth/user/potato`)
+            .reply(403, {
+                errors: [
+                    {
+                        status: 403,
+                        detail: 'Not authorized'
+                    }
+                ]
+            });
+
+        const deleteResponse = await requester
+            .delete(`/api/v1/area/by-user/potato`)
+            .set('Authorization', `Bearer abcd`)
+            .send();
+
+        deleteResponse.status.should.equal(404);
+        deleteResponse.body.should.have.property('errors').and.be.an('array');
+        deleteResponse.body.errors[0].should.have.property('detail').and.equal(`User potato does not exist`);
     });
 
     it('Deleting all areas of an user while being authenticated as USER should return a 200 and all widgets deleted', async () => {
@@ -196,6 +236,14 @@ describe('V1 - Delete areas by user id tests', () => {
                 }
             });
 
+        nock(process.env.GATEWAY_URL)
+            .get(`/auth/user/${USERS.USER.id}`)
+            .reply(200, {
+                data: {
+                    ...USERS.USER,
+                }
+            });
+
         const response = await requester
             .delete(`/api/v1/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
@@ -218,6 +266,14 @@ describe('V1 - Delete areas by user id tests', () => {
     it('Deleting all areas of an user while being authenticated as USER should return a 200 and all areas deleted - no areas in the db', async () => {
         mockGetUserFromToken(USERS.USER);
 
+        nock(process.env.GATEWAY_URL)
+            .get(`/auth/user/${USERS.USER.id}`)
+            .reply(200, {
+                data: {
+                    ...USERS.USER,
+                }
+            });
+
         const response = await requester
             .delete(`/api/v1/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
@@ -234,6 +290,14 @@ describe('V1 - Delete areas by user id tests', () => {
             await new Area(createArea({ env: 'staging', userId: USERS.USER.id })).save();
             await new Area(createArea({ env: 'production', userId: USERS.USER.id })).save();
         }));
+
+        nock(process.env.GATEWAY_URL)
+            .get(`/auth/user/${USERS.USER.id}`)
+            .reply(200, {
+                data: {
+                    ...USERS.USER,
+                }
+            });
 
         const deleteResponse = await requester
             .delete(`/api/v1/area/by-user/${USERS.USER.id}`)

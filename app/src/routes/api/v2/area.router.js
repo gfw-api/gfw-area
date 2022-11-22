@@ -10,6 +10,7 @@ const SubscriptionService = require('services/subscription.service');
 const mongoose = require('mongoose');
 const MailService = require('services/mail.service');
 const gladAlertTypes = require('models/glad-alert-types');
+const UserService = require('../../../services/user.service');
 
 const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
 
@@ -546,6 +547,12 @@ class AreaRouterV2 {
     static async deleteByUserId(ctx) {
         logger.info(`Deleting areas of user with id ${ctx.params.userId}`);
         const userIdToDelete = ctx.params.userId;
+
+        try {
+            await UserService.getUserById(userIdToDelete);
+        } catch (error) {
+            ctx.throw(404, `User ${userIdToDelete} does not exist`);
+        }
 
         const userAreas = await AreaModel.find({ userId: { $eq: userIdToDelete } }).exec();
 
