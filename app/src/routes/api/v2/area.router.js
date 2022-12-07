@@ -133,12 +133,12 @@ class AreaRouterV2 {
         let area = await AreaModel.findById(ctx.params.id);
         const areaExists = area !== null;
 
-        // 3. if area doesn’t exist
+        // 3. if area doesn't exist
         if (!areaExists) {
             // get from subscriptions and return subscription mapped to have area props keys
             const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
 
-            // if doesn’t exist, send rude message
+            // if it doesn't exist, send rude message
             if (!subscription) {
                 ctx.throw(404, 'Area not found');
                 return;
@@ -150,8 +150,8 @@ class AreaRouterV2 {
             });
 
             // 2. If area exists
-            // if has subscription get subscription also and merge props
-            // if it doesn’t have subscription just return the area
+            // if it has subscription get subscription also and merge props
+            // if it doesn't have subscription just return the area
         } else if (area.subscriptionId) {
             area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
         }
