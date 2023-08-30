@@ -1,4 +1,7 @@
 const nock = require('nock');
+const config = require('config');
+const { mockValidateRequest, mockCloudWatchLogRequest } = require('rw-api-microservice-node/dist/test-mocks');
+const { USERS } = require('./test.constants');
 
 const getUUID = () => Math.random().toString(36).substring(7);
 
@@ -30,7 +33,11 @@ const getDefaultSubscription = (override = {}) => ({
 });
 
 const mockSubscriptionCreation = (id = '123', override = {}, validator = () => true) => {
-    nock(process.env.GATEWAY_URL)
+    nock(process.env.GATEWAY_URL, {
+        reqheaders: {
+            'x-api-key': 'api-key-test',
+        }
+    })
         .post(`/v1/subscriptions`, validator)
         .reply(200, () => ({
             data: {
@@ -42,7 +49,11 @@ const mockSubscriptionCreation = (id = '123', override = {}, validator = () => t
 };
 
 const mockSubscriptionEdition = (id = '123') => {
-    nock(process.env.GATEWAY_URL)
+    nock(process.env.GATEWAY_URL, {
+        reqheaders: {
+            'x-api-key': 'api-key-test',
+        }
+    })
         .patch(`/v1/subscriptions/${id}`)
         .reply(200, () => ({
             data: {
@@ -54,11 +65,19 @@ const mockSubscriptionEdition = (id = '123') => {
 };
 
 const mockSubscriptionDeletion = (id = '123') => {
-    nock(process.env.GATEWAY_URL).delete(`/v1/subscriptions/${id}`).reply(200);
+    nock(process.env.GATEWAY_URL, {
+        reqheaders: {
+            'x-api-key': 'api-key-test',
+        }
+    }).delete(`/v1/subscriptions/${id}`).reply(200);
 };
 
 const mockSubscriptionFindByIds = (ids = [], overrideData = {}, times = 1) => {
-    nock(process.env.GATEWAY_URL)
+    nock(process.env.GATEWAY_URL, {
+        reqheaders: {
+            'x-api-key': 'api-key-test',
+        }
+    })
         .post(`/v1/subscriptions/find-by-ids`)
         .times(times)
         .reply(200, () => ({
@@ -77,7 +96,11 @@ const mockSubscriptionFindAll = (
     pageSize = null,
     updatedAtSince = null,
 ) => {
-    nock(process.env.GATEWAY_URL)
+    nock(process.env.GATEWAY_URL, {
+        reqheaders: {
+            'x-api-key': 'api-key-test',
+        }
+    })
         .get(`/v1/subscriptions/find-all`)
         .query((q) => {
             let match = true;
@@ -120,10 +143,60 @@ const mockSubscriptionFindAll = (
         }));
 };
 
-const mockGetUserFromToken = (userProfile) => {
-    nock(process.env.GATEWAY_URL, { reqheaders: { authorization: 'Bearer abcd' } })
-        .get('/auth/user/me')
-        .reply(200, userProfile);
+const APPLICATION = {
+    data: {
+        type: 'applications',
+        id: '649c4b204967792f3a4e52c9',
+        attributes: {
+            name: 'grouchy-armpit',
+            organization: null,
+            user: null,
+            apiKeyValue: 'a1a9e4c3-bdff-4b6b-b5ff-7a60a0454e13',
+            createdAt: '2023-06-28T15:00:48.149Z',
+            updatedAt: '2023-06-28T15:00:48.149Z'
+        }
+    }
+};
+
+const mockValidateRequestWithApiKey = ({
+    apiKey = 'api-key-test',
+    application = APPLICATION
+}) => {
+    mockValidateRequest({
+        gatewayUrl: process.env.GATEWAY_URL,
+        microserviceToken: process.env.MICROSERVICE_TOKEN,
+        application,
+        apiKey
+    });
+    mockCloudWatchLogRequest({
+        application,
+        awsRegion: process.env.AWS_REGION,
+        logGroupName: process.env.CLOUDWATCH_LOG_GROUP_NAME,
+        logStreamName: config.get('service.name')
+    });
+};
+
+const mockValidateRequestWithApiKeyAndUserToken = ({
+    apiKey = 'api-key-test',
+    token = 'abcd',
+    application = APPLICATION,
+    user = USERS.USER
+}) => {
+    mockValidateRequest({
+        gatewayUrl: process.env.GATEWAY_URL,
+        microserviceToken: process.env.MICROSERVICE_TOKEN,
+        user,
+        application,
+        token,
+        apiKey
+    });
+    mockCloudWatchLogRequest({
+        user,
+        application,
+        awsRegion: process.env.AWS_REGION,
+        logGroupName: process.env.CLOUDWATCH_LOG_GROUP_NAME,
+        logStreamName: config.get('service.name')
+    });
 };
 
 module.exports = {
@@ -134,5 +207,6 @@ module.exports = {
     mockSubscriptionDeletion,
     mockSubscriptionFindByIds,
     mockSubscriptionFindAll,
-    mockGetUserFromToken
+    mockValidateRequestWithApiKey,
+    mockValidateRequestWithApiKeyAndUserToken
 };

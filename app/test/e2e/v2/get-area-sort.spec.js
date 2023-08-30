@@ -2,7 +2,7 @@ const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.modelV2');
 const { USERS } = require('../utils/test.constants');
-const { createArea, mockGetUserFromToken } = require('../utils/helpers');
+const { createArea, mockValidateRequestWithApiKeyAndUserToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 
 chai.should();
@@ -13,13 +13,14 @@ let areaOne;
 let areaTwo;
 let areaThree;
 
-
 describe('V2 - Sort areas tests', () => {
 
     before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
 
         await Area.deleteMany({}).exec();
 
@@ -31,11 +32,12 @@ describe('V2 - Sort areas tests', () => {
     });
 
     it('Sort areas by non-existent field (implicit order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const responseOne = await requester
             .get(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({ sort: 'potato' });
 
         const areasOne = responseOne.body.data;
@@ -52,11 +54,12 @@ describe('V2 - Sort areas tests', () => {
     });
 
     it('Sort areas by name (implicit order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const responseOne = await requester
             .get(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({ sort: 'name' });
         const areasOne = responseOne.body.data;
 
@@ -72,11 +75,12 @@ describe('V2 - Sort areas tests', () => {
     });
 
     it('Sort areas by name (explicit asc order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const responseOne = await requester
             .get(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({ sort: '+name' });
 
         const areasOne = responseOne.body.data;
@@ -93,11 +97,12 @@ describe('V2 - Sort areas tests', () => {
     });
 
     it('Sort areas by name (explicit desc order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const responseOne = await requester
             .get(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({ sort: '-name' });
 
         const areasOne = responseOne.body.data;

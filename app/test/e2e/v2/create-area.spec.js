@@ -11,35 +11,46 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 
 const { getTestServer } = require('../utils/test-server');
-const { mockSubscriptionCreation, mockSubscriptionFindByIds, mockGetUserFromToken } = require('../utils/helpers');
+const {
+    mockSubscriptionCreation, mockSubscriptionFindByIds, mockValidateRequestWithApiKey,
+    mockValidateRequestWithApiKeyAndUserToken
+} = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-const requester = getTestServer();
+let requester;
 
 describe('V2 - Create area', () => {
-    before(() => {
+    before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
 
+        requester = await getTestServer();
+
+        // eslint-disable-next-line no-promise-executor-return
         sinon.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
     });
 
     it('Creating an area without being logged in should return a 401 - "Not logged" error', async () => {
-        const response = await requester.post(`/api/v2/area`);
+        mockValidateRequestWithApiKey({});
+
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
     });
 
     it('Creating an area while being logged in as a user that owns the area should return a 200 HTTP code and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 application: 'rw',
@@ -84,11 +95,12 @@ describe('V2 - Create area', () => {
     describe('Custom envs', () => {
 
         it('Creating an area with no env should be successful and have the default env value', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .post(`/api/v2/area`)
                 .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
                 .send({
                     name: 'Portugal area',
                     application: 'rw',
@@ -134,11 +146,12 @@ describe('V2 - Create area', () => {
         });
 
         it('Creating an area with custom env should be successful and have the correct env value', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .post(`/api/v2/area`)
                 .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
                 .send({
                     name: 'Portugal area',
                     application: 'rw',
@@ -185,7 +198,7 @@ describe('V2 - Create area', () => {
         });
 
         it('Creating an area with custom env and with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the created area object with the custom env', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             nock(`https://${config.get('s3.bucket')}.s3.amazonaws.com`)
                 .put(/^\/areas-dev\/(\w|-)+.png/)
@@ -196,6 +209,7 @@ describe('V2 - Create area', () => {
             const response = await requester
                 .post(`/api/v2/area`)
                 .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
                 .attach('image', fileData, 'sample.png')
                 .field('name', 'Portugal area')
                 .field('application', 'rw')
@@ -206,7 +220,6 @@ describe('V2 - Create area', () => {
                 .field('iso', '{"country": "createdCountryIso", "region": "createdRegionIso"}')
                 .field('templateId', 'createdTemplateId')
                 .field('datasets', '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]');
-
 
             response.status.should.equal(200);
 
@@ -245,7 +258,7 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         nock(`https://${config.get('s3.bucket')}.s3.amazonaws.com`)
             .put(/^\/areas-dev\/(\w|-)+.png/)
@@ -256,6 +269,7 @@ describe('V2 - Create area', () => {
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .attach('image', fileData, 'sample.png')
             .field('name', 'Portugal area')
             .field('application', 'rw')
@@ -299,13 +313,14 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with fires alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: '713899292fc118a915741728ef84a2a7',
@@ -320,13 +335,14 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with deforestation alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: '713899292fc118a915741728ef84a2a7',
@@ -341,13 +357,14 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with monthly summary alerts on triggers a request to create a subscription and should return a 200 HTTP code and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e');
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: '713899292fc118a915741728ef84a2a7',
@@ -363,10 +380,11 @@ describe('V2 - Create area', () => {
 
     it('Creating an area with an invalid language code will default the language to \'en\' and return a 200 HTTP code and the created area object', async () => {
         const requestAndValidateAreaWithLangCode = async (requestLang, responseLang) => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .post(`/api/v2/area`)
                 .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
                 .send({
                     name: 'Portugal area',
                     geostore: '713899292fc118a915741728ef84a2a7',
@@ -389,7 +407,7 @@ describe('V2 - Create area', () => {
     });
 
     it('Providing non-empty values for geostore and geostoreDataApi throws a 400 Bad Request error', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostore = '713899292fc118a915741728ef84a2a7';
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
@@ -397,6 +415,7 @@ describe('V2 - Create area', () => {
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Area',
                 geostore,
@@ -409,12 +428,13 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area only with a geostore ID for the Data API returns 200 OK and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: null,
@@ -433,7 +453,7 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with fire alerts and a geostore ID for the Data API returns 200 OK and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
         const override = { userId: USERS.USER.id, params: { geostoreDataApi } };
@@ -443,6 +463,7 @@ describe('V2 - Create area', () => {
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostoreDataApi,
@@ -462,11 +483,12 @@ describe('V2 - Create area', () => {
     });
 
     it('Invalid GLAD alert types are rejected with status code 400 Bad Request', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: '713899292fc118a915741728ef84a2a7',
@@ -480,13 +502,14 @@ describe('V2 - Create area', () => {
     });
 
     it('Creating an area with a custom GLAD alert type triggers a request to create a subscription with correct data and returns 200 OK with the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         mockSubscriptionCreation('5e3bf82fad36f4001abe150e', {}, (body) => body.datasets.includes('glad-s2'));
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe150e'], { userId: USERS.USER.id });
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: '713899292fc118a915741728ef84a2a7',

@@ -6,7 +6,7 @@ const sinonChai = require('sinon-chai');
 const MailService = require('services/mail.service');
 const Area = require('models/area.modelV2');
 const { USERS } = require('../utils/test.constants');
-const { createArea, mockGetUserFromToken } = require('../utils/helpers');
+const { createArea, mockValidateRequestWithApiKeyAndUserToken } = require('../utils/helpers');
 
 chai.should();
 chai.use(sinonChai);
@@ -17,7 +17,7 @@ nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
 let sandbox;
-const requester = getTestServer();
+let requester;
 
 const getEmailParameters = (id, attributes) => ({
     id,
@@ -31,10 +31,12 @@ const getEmailParameters = (id, attributes) => ({
 });
 
 describe('V2 - Area emails', () => {
-    before(() => {
+    before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     beforeEach(() => {
@@ -42,12 +44,14 @@ describe('V2 - Area emails', () => {
     });
 
     it('Creating an area with status saved triggers sending a dashboard ready email', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+        // eslint-disable-next-line no-promise-executor-return
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 application: 'gfw',
@@ -76,13 +80,15 @@ describe('V2 - Area emails', () => {
     });
 
     it('Creating an area with status pending triggers sending a dashboard in construction email', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
+        // eslint-disable-next-line no-promise-executor-return
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 application: 'gfw',
@@ -108,13 +114,15 @@ describe('V2 - Area emails', () => {
     });
 
     it('Creating an area without email associated does not trigger a dashboard in construction email', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
+        // eslint-disable-next-line no-promise-executor-return
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 application: 'gfw',
@@ -130,8 +138,9 @@ describe('V2 - Area emails', () => {
     });
 
     it('Updating an existing with status saved triggers sending a dashboard ready email', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
+        // eslint-disable-next-line no-promise-executor-return
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
         const area = await new Area(createArea({
             email: 'test@example.com',
@@ -142,6 +151,7 @@ describe('V2 - Area emails', () => {
         const response = await requester
             .patch(`/api/v2/area/${area.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area'
             });
@@ -162,8 +172,9 @@ describe('V2 - Area emails', () => {
     });
 
     it('Updating areas by geostore triggers sending multiple emails informing the dashboards have been created', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
+        // eslint-disable-next-line no-promise-executor-return
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
         await new Area(createArea({ geostore: 1, email: 'test@example.com', status: 'pending' })).save();
         await new Area(createArea({ geostore: 2, email: 'test@example.com', status: 'pending' })).save();
@@ -172,6 +183,7 @@ describe('V2 - Area emails', () => {
         const response = await requester
             .post(`/api/v2/area/update`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 geostores: [1, 2],
                 update_params: { status: 'saved' }

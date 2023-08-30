@@ -2,14 +2,13 @@ const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.model');
 const config = require('config');
-const { createArea } = require('../utils/helpers');
-const { mockGetUserFromToken } = require('../utils/helpers');
+const { createArea, mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
-const requester = getTestServer();
+let requester;
 
 describe('V1 - Get areas tests', () => {
 
@@ -17,6 +16,8 @@ describe('V1 - Get areas tests', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     beforeEach(async () => {
@@ -24,8 +25,10 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Getting areas without being logged in should return a 401 - "Not logged" error', async () => {
+        mockValidateRequestWithApiKey({});
         const response = await requester
-            .get(`/api/v1/area`);
+            .get(`/api/v1/area`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(401);
 
@@ -34,11 +37,12 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Getting areas with no data should be successful', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const response = await requester
             .get(`/api/v1/area`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
@@ -46,7 +50,7 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Getting areas should return local areas owned by the current user (happy case)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area = await new Area(createArea({
             userId: USERS.USER.id
@@ -54,7 +58,8 @@ describe('V1 - Get areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -77,21 +82,22 @@ describe('V1 - Get areas tests', () => {
     });
 
     it('Getting areas should not return areas not owned by the current user', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         await new Area(createArea()).save();
 
         const response = await requester
             .get(`/api/v1/area`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
     it('Getting areas supports filtering by application', async () => {
-        mockGetUserFromToken(USERS.USER);
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const areaGFW = await new Area(createArea({
             userId: USERS.USER.id,
@@ -105,7 +111,8 @@ describe('V1 - Get areas tests', () => {
 
         const responseRW = await requester
             .get(`/api/v1/area?application=rw`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         responseRW.status.should.equal(200);
         responseRW.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -128,7 +135,8 @@ describe('V1 - Get areas tests', () => {
 
         const responseGFW = await requester
             .get(`/api/v1/area?application=gfw`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         responseGFW.status.should.equal(200);
         responseGFW.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -158,11 +166,12 @@ describe('V1 - Get areas tests', () => {
             await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
             await new Area(createArea({ userId: USERS.USER.id })).save();
 
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .get(`/api/v1/area`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').with.lengthOf(5);
@@ -176,14 +185,15 @@ describe('V1 - Get areas tests', () => {
             const areaTwo = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
             await new Area(createArea({ userId: USERS.USER.id })).save();
 
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .get(`/api/v1/area`)
                 .query({
                     env: 'custom'
                 })
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').with.lengthOf(2);
@@ -204,11 +214,12 @@ describe('V1 - Get areas tests', () => {
             await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
             await new Area(createArea({ userId: USERS.USER.id })).save();
 
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .get(`/api/v1/area`)
                 .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
                 .query({ env: ['custom', 'potato'].join(',') });
 
             response.status.should.equal(200);

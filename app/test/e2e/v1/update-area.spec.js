@@ -3,7 +3,7 @@ const chai = require('chai');
 const Area = require('models/area.model');
 const fs = require('fs');
 const config = require('config');
-const { createArea, mockGetUserFromToken } = require('../utils/helpers');
+const { createArea, mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken } = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
@@ -14,20 +14,24 @@ const { getTestServer } = require('../utils/test-server');
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-const requester = getTestServer();
+let requester;
 
 describe('V1 - Update area', () => {
-    before(() => {
+    before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     it('Updating an area without being logged in should return a 401 - "Not logged" error', async () => {
+        mockValidateRequestWithApiKey({});
         const testArea = await new Area(createArea()).save();
 
         const response = await requester
-            .patch(`/api/v1/area/${testArea.id}`);
+            .patch(`/api/v1/area/${testArea.id}`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(401);
 
@@ -36,13 +40,14 @@ describe('V1 - Update area', () => {
     });
 
     it('Updating an area while being logged in as user that does not own the area should return a 403 - "Not authorized" error', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea()).save();
 
         const response = await requester
             .patch(`/api/v1/area/${testArea.id}`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(403);
 
@@ -51,13 +56,14 @@ describe('V1 - Update area', () => {
     });
 
     it('Updating an area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
             .patch(`/api/v1/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 application: 'rw',
@@ -110,7 +116,7 @@ describe('V1 - Update area', () => {
     });
 
     it('Updating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
@@ -123,6 +129,7 @@ describe('V1 - Update area', () => {
         const response = await requester
             .patch(`/api/v1/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .attach('image', fileData, 'sample.png')
             .field('name', 'Portugal area')
             .field('application', 'rw')
@@ -169,13 +176,14 @@ describe('V1 - Update area', () => {
     });
 
     it('Updating an area with a custom env while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
             .patch(`/api/v1/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 application: 'rw',

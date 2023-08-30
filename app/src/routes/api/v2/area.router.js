@@ -118,7 +118,7 @@ class AreaRouterV2 {
 
         const areas = await AreaModel.paginate(filter, { page, limit, sort: filteredSort });
 
-        await Promise.all(areas.docs.map(SubscriptionService.mergeSubscriptionSpecificProps));
+        await Promise.all(areas.docs.map((el) => SubscriptionService.mergeSubscriptionSpecificProps(el, ctx.request.headers['x-api-key'])));
         ctx.body = AreaSerializerV2.serialize(areas, link);
     }
 
@@ -136,7 +136,7 @@ class AreaRouterV2 {
         // 3. if area doesn't exist
         if (!areaExists) {
             // get from subscriptions and return subscription mapped to have area props keys
-            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id], ctx.request.headers['x-api-key']);
 
             // if it doesn't exist, send rude message
             if (!subscription) {
@@ -153,7 +153,7 @@ class AreaRouterV2 {
             // if it has subscription get subscription also and merge props
             // if it doesn't have subscription just return the area
         } else if (area.subscriptionId) {
-            area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
+            area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
         }
 
         const user = ctx.state.loggedUser || null;
@@ -179,7 +179,7 @@ class AreaRouterV2 {
             area.subscriptionId = null;
         }
 
-        area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
+        area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
         ctx.body = AreaSerializerV2.serialize(area);
     }
 
@@ -308,7 +308,7 @@ class AreaRouterV2 {
 
         // If no datasets to register, no need to create a subscription
         if (area.fireAlerts || area.deforestationAlerts || area.monthlySummary) {
-            const subscriptionId = await SubscriptionService.createSubscriptionFromArea(area);
+            const subscriptionId = await SubscriptionService.createSubscriptionFromArea(area, ctx.request.headers['x-api-key']);
             if (subscriptionId) {
                 // Update the subscription id in the area and save again
                 area.subscriptionId = subscriptionId;
@@ -316,7 +316,7 @@ class AreaRouterV2 {
             }
         }
 
-        area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
+        area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
         ctx.body = AreaSerializerV2.serialize(area);
 
         if (email) {
@@ -336,7 +336,7 @@ class AreaRouterV2 {
         let area = await AreaModel.findById(ctx.params.id);
         if (!area) {
             // Try to find subscription with same ID
-            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id], ctx.request.headers['x-api-key']);
             if (!subscription) {
                 ctx.throw(404, 'Area not found');
                 return;
@@ -463,8 +463,8 @@ class AreaRouterV2 {
         // 1. The area already exists and has subscriptions preference in the request data
         if (area.fireAlerts || area.deforestationAlerts || area.monthlySummary) {
             const subscriptionId = previousArea.subscriptionId
-                ? await SubscriptionService.updateSubscriptionFromArea(area)
-                : await SubscriptionService.createSubscriptionFromArea(area);
+                ? await SubscriptionService.updateSubscriptionFromArea(area, ctx.request.headers['x-api-key'])
+                : await SubscriptionService.createSubscriptionFromArea(area, ctx.request.headers['x-api-key']);
 
             if (subscriptionId) {
                 area.subscriptionId = subscriptionId;
@@ -473,12 +473,12 @@ class AreaRouterV2 {
 
             // 2. The area already exists and doesn’t have subscription preferences in the data
         } else if (previousArea.subscriptionId) {
-            await SubscriptionService.deleteSubscription(area.subscriptionId);
+            await SubscriptionService.deleteSubscription(area.subscriptionId, ctx.request.headers['x-api-key']);
             area.subscriptionId = '';
             area = await area.save();
         }
 
-        area = await SubscriptionService.mergeSubscriptionSpecificProps(area);
+        area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
         ctx.body = AreaSerializerV2.serialize(area);
 
         if (area.email && area.status === 'saved') {
@@ -499,9 +499,9 @@ class AreaRouterV2 {
         if (areaToDelete) {
             if (areaToDelete.subscriptionId) {
                 // Try to find subscription and delete subscription
-                const [subscription] = await SubscriptionService.findByIds([areaToDelete.subscriptionId]);
+                const [subscription] = await SubscriptionService.findByIds([areaToDelete.subscriptionId], ctx.request.headers['x-api-key']);
                 if (subscription) {
-                    await SubscriptionService.deleteSubscription(areaToDelete.subscriptionId);
+                    await SubscriptionService.deleteSubscription(areaToDelete.subscriptionId, ctx.request.headers['x-api-key']);
                 }
             }
 
@@ -509,9 +509,9 @@ class AreaRouterV2 {
             await AreaModel.deleteOne({ _id: ctx.params.id });
         } else {
             // Try to find subscription and delete subscription
-            const [subscription] = await SubscriptionService.findByIds([ctx.params.id]);
+            const [subscription] = await SubscriptionService.findByIds([ctx.params.id], ctx.request.headers['x-api-key']);
             if (subscription) {
-                await SubscriptionService.deleteSubscription(ctx.params.id);
+                await SubscriptionService.deleteSubscription(ctx.params.id, ctx.request.headers['x-api-key']);
             }
         }
         logger.info(`Area ${ctx.params.id} deleted successfully`);
@@ -519,14 +519,14 @@ class AreaRouterV2 {
         const userId = ctx.state.loggedUser.id;
         let team = null;
         try {
-            team = await TeamService.getTeamByUserId(userId);
+            team = await TeamService.getTeamByUserId(userId, ctx.request.headers['x-api-key']);
         } catch (e) {
             logger.error(e);
         }
         if (team && team.areas.includes(ctx.params.id)) {
             const areas = team.areas.filter((area) => area !== ctx.params.id);
             try {
-                await TeamService.patchTeamById(team.id, { areas });
+                await TeamService.patchTeamById(team.id, { areas }, ctx.request.headers['x-api-key']);
                 logger.info('Team patched successful.');
 
             } catch (e) {
@@ -549,7 +549,7 @@ class AreaRouterV2 {
         const userIdToDelete = ctx.params.userId;
 
         try {
-            await UserService.getUserById(userIdToDelete);
+            await UserService.getUserById(userIdToDelete, ctx.request.headers['x-api-key']);
         } catch (error) {
             ctx.throw(404, `User ${userIdToDelete} does not exist`);
         }
@@ -562,16 +562,16 @@ class AreaRouterV2 {
 
             logger.debug('[AreasService]: Deleting subscriptions of area');
             if (currentArea.subscriptionId) {
-                const [subscription] = await SubscriptionService.findByIds([currentArea.subscriptionId]);
+                const [subscription] = await SubscriptionService.findByIds([currentArea.subscriptionId], ctx.request.headers['x-api-key']);
                 if (subscription) {
-                    await SubscriptionService.deleteSubscription(currentArea.subscriptionId);
+                    await SubscriptionService.deleteSubscription(currentArea.subscriptionId, ctx.request.headers['x-api-key']);
                 }
             }
 
             logger.debug('[AreasService]: Deleting areas from teams');
             let team = null;
             try {
-                team = await TeamService.getTeamByUserId(userIdToDelete);
+                team = await TeamService.getTeamByUserId(userIdToDelete, ctx.request.headers['x-api-key']);
             } catch (e) {
                 logger.error(e);
             }
@@ -579,7 +579,7 @@ class AreaRouterV2 {
             if (team && team.areas.includes(currentAreaId)) {
                 const areas = team.areas.filter((area) => area !== currentAreaId);
                 try {
-                    await TeamService.patchTeamById(team.id, { areas });
+                    await TeamService.patchTeamById(team.id, { areas }, ctx.request.headers['x-api-key']);
                 } catch (e) {
                     logger.error(e);
                 }
@@ -657,6 +657,7 @@ class AreaRouterV2 {
                     100,
                     startDate.toISOString(),
                     endDate.toISOString(),
+                    ctx.request.headers['x-api-key']
                 );
                 const subscriptions = response.data;
                 const { links } = response;

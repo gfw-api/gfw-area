@@ -2,14 +2,19 @@ const nock = require('nock');
 const chai = require('chai');
 
 const Area = require('models/area.modelV2');
-const { createArea, mockGetUserFromToken } = require('../utils/helpers');
+const {
+    createArea,
+
+    mockValidateRequestWithApiKeyAndUserToken,
+    mockValidateRequestWithApiKey
+} = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
 const { getTestServer } = require('../utils/test-server');
 
 chai.should();
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
-const requester = getTestServer();
+let requester;
 
 const assertValidAreaResponse = (response, email) => {
     response.status.should.equal(200);
@@ -23,10 +28,12 @@ describe('V2 - Area status', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     it('Getting a public area as the owner should return all the area info', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area = await new Area(createArea({
             userId: USERS.USER.id,
@@ -34,12 +41,13 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a private area as the owner should return all the area info', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area = await new Area(createArea({
             userId: USERS.USER.id,
@@ -47,12 +55,13 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a public area as an ADMIN should return all the area info', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const area = await new Area(createArea({
             userId: USERS.USER.id,
@@ -60,12 +69,13 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a private area as an ADMIN should return all the area info', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const area = await new Area(createArea({
             userId: USERS.USER.id,
@@ -73,11 +83,13 @@ describe('V2 - Area status', () => {
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd');
+        const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         assertValidAreaResponse(response, 'test@example.com');
     });
 
     it('Getting a public area without auth should return the area info except sensitive info', async () => {
+        mockValidateRequestWithApiKey({});
         const area = await new Area(createArea({
             userId: USERS.MANAGER.id,
             public: true,
@@ -85,19 +97,22 @@ describe('V2 - Area status', () => {
         })).save();
 
         const response = await requester
-            .get(`/api/v2/area/${area.id}`);
+            .get(`/api/v2/area/${area.id}`)
+            .set('x-api-key', 'api-key-test');
 
         assertValidAreaResponse(response, null);
     });
 
     it('Getting a private area without auth should return not found', async () => {
+        mockValidateRequestWithApiKey({});
         const area = await new Area(createArea({
             userId: USERS.USER.id,
             public: false,
             email: 'test@example.com',
         })).save();
 
-        const response = await requester.get(`/api/v2/area/${area.id}`);
+        const response = await requester.get(`/api/v2/area/${area.id}`)
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal('Area private');

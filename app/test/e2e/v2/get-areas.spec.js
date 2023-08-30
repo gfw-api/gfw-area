@@ -5,7 +5,11 @@ const config = require('config');
 const mongoose = require('mongoose');
 
 const Area = require('models/area.modelV2');
-const { createArea, mockGetUserFromToken } = require('../utils/helpers');
+const {
+    createArea,
+    mockValidateRequestWithApiKey,
+    mockValidateRequestWithApiKeyAndUserToken
+} = require('../utils/helpers');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
@@ -19,21 +23,24 @@ const {
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-const requester = getTestServer();
+let requester;
 
 describe('V2 - Get areas', () => {
-    before(() => {
+    before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     describe('Test pagination links', () => {
         it('Get areas without referer header should be successful and use the request host', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .get(`/api/v2/area`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -46,11 +53,12 @@ describe('V2 - Get areas', () => {
         });
 
         it('Get areas with referer header should be successful and use that header on the links on the response', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .get(`/api/v2/area`)
                 .set('referer', `https://potato.com/get-me-all-the-data`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -63,11 +71,12 @@ describe('V2 - Get areas', () => {
         });
 
         it('Get areas with x-rw-domain header should be successful and use that header on the links on the response', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .get(`/api/v2/area`)
                 .set('x-rw-domain', `potato.com`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -80,12 +89,13 @@ describe('V2 - Get areas', () => {
         });
 
         it('Get areas with x-rw-domain and referer headers should be successful and use the x-rw-domain header on the links on the response', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .get(`/api/v2/area`)
                 .set('x-rw-domain', `potato.com`)
                 .set('referer', `https://tomato.com/get-me-all-the-data`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -99,39 +109,44 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas without being logged in should return a 401 - "Not logged" error', async () => {
-        const response = await requester.get('/api/v2/area');
+        mockValidateRequestWithApiKey({});
+        const response = await requester.get('/api/v2/area')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
     });
 
     it('Getting areas being logged in should return a 200 OK with all the areas for the current user -- no areas', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
-        const response = await requester.get('/api/v2/area').set('Authorization', 'Bearer abcd');
+        const response = await requester.get('/api/v2/area').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(0);
     });
 
     it('Getting areas being logged in should return a 200 OK with all the areas for the current user -- areas belonging to the current user', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area = await new Area(createArea({ userId: USERS.USER.id })).save();
-        const response = await requester.get('/api/v2/area').set('Authorization', 'Bearer abcd');
+        const response = await requester.get('/api/v2/area').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(1);
         response.body.data[0].should.have.property('id').and.equal(area.id);
     });
 
     it('Getting areas having some subscriptions related to areas should return a 200 OK with all the areas and subscriptions for the current user', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const subId = new mongoose.Types.ObjectId().toString();
         const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
         const area2 = await new Area(createArea({ userId: USERS.USER.id, subscriptionId: subId })).save();
 
         mockSubscriptionFindByIds([subId], { userId: USERS.USER.id });
-        const response = await requester.get('/api/v2/area').set('Authorization', 'Bearer abcd');
+        const response = await requester.get('/api/v2/area').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(2);
 
@@ -141,27 +156,29 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas sending query param all as an USER/MANAGER should return a 200 OK with only the user areas (query filter is ignored)', async () => {
-        mockGetUserFromToken(USERS.USER);
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
 
         const userArea = await new Area(createArea({ userId: USERS.USER.id })).save();
         const managerArea = await new Area(createArea({ userId: USERS.MANAGER.id })).save();
         await new Area(createArea({ userId: USERS.ADMIN.id })).save();
 
-        const userResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd');
+        const userResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         userResponse.status.should.equal(200);
         userResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
         userResponse.body.data.find((element) => element.id === userArea.id).should.be.ok;
 
-        const managerResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd');
+        const managerResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         managerResponse.status.should.equal(200);
         managerResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
         managerResponse.body.data.find((element) => element.id === managerArea.id).should.be.ok;
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with all the areas (even not owned by the user)', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const subId1 = new mongoose.Types.ObjectId().toString();
         const subId2 = new mongoose.Types.ObjectId().toString();
@@ -178,7 +195,8 @@ describe('V2 - Get areas', () => {
         );
 
         // First sync areas
-        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd').send({});
+        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test').send({});
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('syncedAreas').and.equal(1);
@@ -189,7 +207,8 @@ describe('V2 - Get areas', () => {
         mockSubscriptionFindByIds([subId3], { userId: USERS.USER.id });
 
         // Get all areas
-        const getResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd');
+        const getResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(5);
         getResponse.body.data.map((area) => area.id).should.include.members([area1.id, area2.id, area3.id]);
@@ -197,19 +216,21 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas filtered by application should return a 200 OK with only areas for the application requested', async () => {
-        mockGetUserFromToken(USERS.USER);
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const rwArea = await new Area(createArea({ userId: USERS.USER.id, application: 'rw' })).save();
         const gfwArea = await new Area(createArea({ userId: USERS.USER.id, application: 'gfw' })).save();
 
-        const rwResponse = await requester.get('/api/v2/area?application=rw').set('Authorization', 'Bearer abcd');
+        const rwResponse = await requester.get('/api/v2/area?application=rw').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         rwResponse.status.should.equal(200);
         rwResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         rwResponse.body.data.find((element) => element.id === rwArea.id).should.be.ok;
         rwResponse.body.data.every((area) => area.attributes.application === 'rw').should.be.true;
 
-        const gfwResponse = await requester.get('/api/v2/area?application=gfw').set('Authorization', 'Bearer abcd');
+        const gfwResponse = await requester.get('/api/v2/area?application=gfw').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         gfwResponse.status.should.equal(200);
         gfwResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         gfwResponse.body.data.find((element) => element.id === gfwArea.id).should.be.ok;
@@ -217,13 +238,14 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas filtered by multiple applications should return a 200 OK with only areas for the applications requested', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         await new Area(createArea({ userId: USERS.USER.id, application: 'rw' })).save();
         await new Area(createArea({ userId: USERS.USER.id, application: 'gfw' })).save();
         await new Area(createArea({ userId: USERS.USER.id, application: 'fw' })).save();
 
-        const response = await requester.get('/api/v2/area?application=gfw,rw').set('Authorization', 'Bearer abcd');
+        const response = await requester.get('/api/v2/area?application=gfw,rw').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
 
@@ -234,54 +256,59 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas filtered by status should return a 200 OK with only areas for the status requested', async () => {
-        mockGetUserFromToken(USERS.USER);
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         await new Area(createArea({ userId: USERS.USER.id, status: 'saved' })).save();
         await new Area(createArea({ userId: USERS.USER.id, status: 'pending' })).save();
 
-        const savedResponse = await requester.get('/api/v2/area?status=saved').set('Authorization', 'Bearer abcd');
+        const savedResponse = await requester.get('/api/v2/area?status=saved').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         savedResponse.status.should.equal(200);
         savedResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         savedResponse.body.data.every((area) => area.attributes.status === 'saved').should.be.true;
 
-        const pendingResponse = await requester.get('/api/v2/area?status=pending').set('Authorization', 'Bearer abcd');
+        const pendingResponse = await requester.get('/api/v2/area?status=pending').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         pendingResponse.status.should.equal(200);
         pendingResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         pendingResponse.body.data.every((area) => area.attributes.status === 'pending').should.be.true;
     });
 
     it('Getting areas filtered by public should return a 200 OK with only public areas', async () => {
-        mockGetUserFromToken(USERS.USER);
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         await new Area(createArea({ userId: USERS.USER.id, public: true })).save();
         await new Area(createArea({ userId: USERS.USER.id, public: false })).save();
 
-        const publicResponse = await requester.get('/api/v2/area?public=true').set('Authorization', 'Bearer abcd');
+        const publicResponse = await requester.get('/api/v2/area?public=true').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         publicResponse.status.should.equal(200);
         publicResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         publicResponse.body.data.every((area) => area.attributes.public === true).should.be.true;
 
-        const privateResponse = await requester.get('/api/v2/area?public=false').set('Authorization', 'Bearer abcd');
+        const privateResponse = await requester.get('/api/v2/area?public=false').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         privateResponse.status.should.equal(200);
         privateResponse.body.should.have.property('data').and.be.an('array').and.length(1);
         privateResponse.body.data.every((area) => area.attributes.public === false).should.be.true;
     });
 
     it('Getting private areas as an ADMIN user providing all=true should return a 200 OK response with all areas', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const area = await new Area(createArea({ userId: USERS.USER.id, public: false })).save();
-        const response = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd');
+        const response = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(1);
         response.body.data.map((a) => a.id).should.include.members([area._id.toString()]);
     });
 
     it('Getting areas sending query param all as an ADMIN should return a 200 OK with ALL the areas', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const id1 = new mongoose.Types.ObjectId().toString();
         const id2 = new mongoose.Types.ObjectId().toString();
@@ -296,23 +323,25 @@ describe('V2 - Get areas', () => {
         );
 
         // First sync areas
-        const response = await requester.post('/api/v2/area/sync').set('Authorization', 'Bearer abcd');
+        const response = await requester.post('/api/v2/area/sync').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('syncedAreas').and.equal(0);
         response.body.data.should.have.property('createdAreas').and.equal(3);
 
         mockSubscriptionFindByIds([id1], { userId: USERS.USER.id }, 3);
-        const getResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd');
+        const getResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(5);
     });
 
     it('Getting areas sending query param all along with other filters should return a 200 OK with the correct data', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
-        mockGetUserFromToken(USERS.ADMIN);
-        mockGetUserFromToken(USERS.ADMIN);
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const id1 = new mongoose.Types.ObjectId().toString();
         const id2 = new mongoose.Types.ObjectId().toString();
@@ -330,6 +359,7 @@ describe('V2 - Get areas', () => {
         const syncResponse = await requester
             .post(`/api/v2/area/sync`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({});
         syncResponse.status.should.equal(200);
         syncResponse.body.should.have.property('data').and.be.an('object');
@@ -340,7 +370,8 @@ describe('V2 - Get areas', () => {
         mockSubscriptionFindByIds([id1], { userId: USERS.USER.id }, 3);
         const response = await requester
             .get(`/api/v2/area?all=true`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.have.length(5);
 
@@ -350,20 +381,22 @@ describe('V2 - Get areas', () => {
         mockSubscriptionFindByIds([id3], { userId: USERS.USER.id });
         const savedResponse = await requester
             .get(`/api/v2/area?all=true&status=saved`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         savedResponse.status.should.equal(200);
         savedResponse.body.should.have.property('data').and.be.an('array').and.have.length(4);
 
         // Requesting all areas with status pending => should return 4 areas
         const pendingResponse = await requester
             .get(`/api/v2/area?all=true&status=pending`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         pendingResponse.status.should.equal(200);
         pendingResponse.body.should.have.property('data').and.be.an('array').and.have.length(1);
     });
 
     it('Getting areas returns the correct paginated result', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
         const area2 = await new Area(createArea({ userId: USERS.USER.id })).save();
@@ -372,7 +405,8 @@ describe('V2 - Get areas', () => {
         const area5 = await new Area(createArea({ userId: USERS.USER.id })).save();
         const sortedAreaIds = [area1.id, area2.id, area3.id, area4.id, area5.id].sort();
 
-        const response = await requester.get(`/api/v2/area?page[size]=3`).set('Authorization', 'Bearer abcd');
+        const response = await requester.get(`/api/v2/area?page[size]=3`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').with.lengthOf(3);
         response.body.should.have.property('links').and.be.an('object');
@@ -387,11 +421,12 @@ describe('V2 - Get areas', () => {
             await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
             const areaTwo = await new Area(createArea({ userId: USERS.USER.id })).save();
 
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .get(`/api/v2/area`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').with.lengthOf(2);
@@ -411,14 +446,15 @@ describe('V2 - Get areas', () => {
             const areaThree = await new Area(createArea({ userId: USERS.USER.id })).save();
             const areaFour = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
 
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .get(`/api/v2/area`)
                 .query({
                     env: 'all'
                 })
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').with.lengthOf(4);
@@ -440,14 +476,15 @@ describe('V2 - Get areas', () => {
             const areaTwo = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
             await new Area(createArea({ userId: USERS.USER.id })).save();
 
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .get(`/api/v2/area`)
                 .query({
                     env: 'custom'
                 })
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').with.lengthOf(2);
@@ -468,11 +505,12 @@ describe('V2 - Get areas', () => {
             const areaThree = await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
             await new Area(createArea({ userId: USERS.USER.id })).save();
 
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
             const response = await requester
                 .get(`/api/v2/area`)
                 .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
                 .query({ env: ['custom', 'potato'].join(',') });
 
             response.status.should.equal(200);
@@ -489,7 +527,7 @@ describe('V2 - Get areas', () => {
     });
 
     it('Getting areas requesting the second page returns the correct paginated result', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
         const area2 = await new Area(createArea({ userId: USERS.USER.id })).save();
@@ -498,7 +536,8 @@ describe('V2 - Get areas', () => {
         const area5 = await new Area(createArea({ userId: USERS.USER.id })).save();
         const sortedAreaIds = [area1.id, area2.id, area3.id, area4.id, area5.id].sort();
 
-        const response = await requester.get(`/api/v2/area?page[number]=2&page[size]=2`).set('Authorization', 'Bearer abcd');
+        const response = await requester.get(`/api/v2/area?page[number]=2&page[size]=2`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
         response.body.should.have.property('data').with.lengthOf(2);
         response.body.should.have.property('links').and.be.an('object');

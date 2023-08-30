@@ -5,13 +5,13 @@ const AreaModel = require('models/area.modelV2');
 
 class SubscriptionsService {
 
-    static async mergeSubscriptionSpecificProps(area) {
+    static async mergeSubscriptionSpecificProps(area, apiKey) {
         // Set default values
         area.confirmed = false;
 
         // Find any subscription only props (such as confirmed) and merge them to the area being returned
         if (area.subscriptionId) {
-            const [sub] = await SubscriptionsService.findByIds([area.subscriptionId]);
+            const [sub] = await SubscriptionsService.findByIds([area.subscriptionId], apiKey);
             return sub ? SubscriptionsService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id }) : area;
         }
 
@@ -166,39 +166,51 @@ class SubscriptionsService {
         return {};
     }
 
-    static async getAllSubscriptions(pageNumber, pageSize, startDate, endDate) {
+    static async getAllSubscriptions(pageNumber, pageSize, startDate, endDate, apiKey) {
         return RWAPIMicroservice.requestToMicroservice({
             uri: `/v1/subscriptions/find-all?page[number]=${pageNumber}&page[size]=${pageSize}&updatedAtSince=${startDate}&updatedAtUntil=${endDate}`,
             method: 'GET',
+            headers: {
+                'x-api-key': apiKey
+            }
         });
     }
 
-    static async findByIds(ids) {
+    static async findByIds(ids, apiKey) {
         const result = await RWAPIMicroservice.requestToMicroservice({
             uri: `/v1/subscriptions/find-by-ids`,
             method: 'POST',
             body: { ids },
+            headers: {
+                'x-api-key': apiKey
+            }
         });
 
         return result.data;
     }
 
-    static async createSubscriptionFromArea(area) {
+    static async createSubscriptionFromArea(area, apiKey) {
         const createdSubscription = await RWAPIMicroservice.requestToMicroservice({
             uri: `/v1/subscriptions`,
             method: 'POST',
             body: SubscriptionsService.getRequestBodyForSubscriptionFromArea(area),
+            headers: {
+                'x-api-key': apiKey
+            }
         });
 
         return createdSubscription.data.id;
     }
 
-    static async updateSubscriptionFromArea(area) {
+    static async updateSubscriptionFromArea(area, apiKey) {
         try {
             const updatedSubscription = await RWAPIMicroservice.requestToMicroservice({
                 uri: `/v1/subscriptions/${area.subscriptionId}`,
                 method: 'PATCH',
                 body: SubscriptionsService.getRequestBodyForSubscriptionFromArea(area),
+                headers: {
+                    'x-api-key': apiKey
+                }
             });
 
             return updatedSubscription.data.id;
@@ -208,11 +220,14 @@ class SubscriptionsService {
         }
     }
 
-    static async deleteSubscription(id) {
+    static async deleteSubscription(id, apiKey) {
         try {
             await RWAPIMicroservice.requestToMicroservice({
                 uri: `/v1/subscriptions/${id}`,
                 method: 'DELETE',
+                headers: {
+                    'x-api-key': apiKey
+                }
             });
         } catch (e) {
             logger.warn(`Error while deleting subscription with id ${id}.`);

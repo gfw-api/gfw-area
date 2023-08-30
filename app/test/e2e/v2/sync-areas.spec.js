@@ -9,13 +9,14 @@ chai.should();
 
 const { getTestServer } = require('../utils/test-server');
 const {
-    createArea, mockSubscriptionFindAll, mockSubscriptionFindByIds, mockGetUserFromToken
+    createArea, mockSubscriptionFindAll, mockSubscriptionFindByIds, mockValidateRequestWithApiKey,
+    mockValidateRequestWithApiKeyAndUserToken
 } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-const requester = getTestServer();
+let requester;
 
 const validateSyncSuccessResponse = (response, syncedAreas, createdAreas, totalSubscriptions, affectedAreaIds = undefined) => {
     response.status.should.equal(200);
@@ -30,36 +31,42 @@ const validateSyncSuccessResponse = (response, syncedAreas, createdAreas, totalS
 };
 
 describe('V2 - Sync areas', () => {
-    before(() => {
+    before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     it('Sync areas can only be performed by ADMIN users, returning 401 Unauthorized otherwise', async () => {
-        const response1 = await requester.post(`/api/v2/area/sync`).send();
+        mockValidateRequestWithApiKey({});
+        const response1 = await requester.post(`/api/v2/area/sync`)
+            .set('x-api-key', 'api-key-test').send();
         response1.status.should.equal(401);
         response1.body.should.have.property('errors').and.be.an('array');
         response1.body.errors[0].should.have.property('detail').and.equal('Unauthorized');
 
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
-        const response2 = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd');
+        const response2 = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response2.status.should.equal(401);
         response2.body.should.have.property('errors').and.be.an('array');
         response2.body.errors[0].should.have.property('detail').and.equal(`Not authorized`);
 
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
 
-        const response3 = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd');
+        const response3 = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         response3.status.should.equal(401);
         response3.body.should.have.property('errors').and.be.an('array');
         response3.body.errors[0].should.have.property('detail').and.equal(`Not authorized`);
     });
 
     it('Sync areas as an ADMIN updates the areas in the database with overwrite information from associated subscriptions, returning the number of synced areas', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const subId1 = new mongoose.Types.ObjectId().toString();
         const subId2 = new mongoose.Types.ObjectId().toString();
@@ -74,14 +81,16 @@ describe('V2 - Sync areas', () => {
             [{ name: 'Updated subscription 1' }, { name: 'Updated subscription 2' }, { name: 'Updated subscription 3' }]
         );
 
-        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd');
+        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         validateSyncSuccessResponse(response, 3, 0, 3, [area1.id, area2.id, area3.id]);
 
         // Getting the subscription now returns the synced information
         mockSubscriptionFindByIds([subId1], { userId: USERS.USER.id });
         mockSubscriptionFindByIds([subId2], { userId: USERS.USER.id });
         mockSubscriptionFindByIds([subId3], { userId: USERS.USER.id });
-        const getResponse = await requester.get(`/api/v2/area?all=true`).set('Authorization', 'Bearer abcd');
+        const getResponse = await requester.get(`/api/v2/area?all=true`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(3);
         getResponse.body.data.find((area) => area.id === area1.id).attributes.should.have.property('name').and.equal('Old Name 1');
@@ -90,8 +99,8 @@ describe('V2 - Sync areas', () => {
     });
 
     it('Sync areas as an ADMIN creates new areas in the database with subscriptions that do not have a match with an existing area, returning the number of created areas', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const id1 = new mongoose.Types.ObjectId().toString();
         const id2 = new mongoose.Types.ObjectId().toString();
@@ -106,14 +115,16 @@ describe('V2 - Sync areas', () => {
             [{ name: 'Updated 1' }, { name: 'Updated 2' }, { name: 'Updated 3' }]
         );
 
-        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd');
+        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         validateSyncSuccessResponse(response, 0, 3, 3);
 
         // Getting the subscription now returns the synced information
         mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
         mockSubscriptionFindByIds([id2], { userId: USERS.USER.id });
         mockSubscriptionFindByIds([id3], { userId: USERS.USER.id });
-        const getResponse = await requester.get(`/api/v2/area?all=true`).set('Authorization', 'Bearer abcd');
+        const getResponse = await requester.get(`/api/v2/area?all=true`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(6);
         getResponse.body.data.find((area) => area.id === area1.id).attributes.should.have.property('name').and.equal('Old Name 1');
@@ -125,8 +136,8 @@ describe('V2 - Sync areas', () => {
     });
 
     it('Running sync areas with dryRun flag set to true does not apply the updates to the areas in the database', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const id1 = new mongoose.Types.ObjectId().toString();
         const id2 = new mongoose.Types.ObjectId().toString();
@@ -143,13 +154,15 @@ describe('V2 - Sync areas', () => {
 
         const response = await requester
             .post(`/api/v2/area/sync?dryRun=true`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         validateSyncSuccessResponse(response, 0, 3, 3);
 
         // Getting the subscription should just return the previously existing subs (not the ones that should have been created)
         const getResponse = await requester
             .get(`/api/v2/area?all=true`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         getResponse.status.should.equal(200);
         getResponse.body.should.have.property('data').and.be.an('array').and.have.length(3);
         getResponse.body.data.find((area) => area.id === area1.id).attributes.should.have.property('name').and.equal('Old Name 1');
@@ -158,7 +171,7 @@ describe('V2 - Sync areas', () => {
     });
 
     it('Failures syncing areas do not block a successful response', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const subId = new mongoose.Types.ObjectId().toString();
         await new Area(createArea({ subscriptionId: subId, name: 'Old Name 1' })).save();
@@ -178,7 +191,8 @@ describe('V2 - Sync areas', () => {
             }]
         );
 
-        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd');
+        const response = await requester.post(`/api/v2/area/sync`).set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
         validateSyncSuccessResponse(response, 0, 0, 1, []);
     });
 

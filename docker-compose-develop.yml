@@ -14,15 +14,17 @@ services:
       MONGO_PORT_27017_TCP_ADDR: mongo
       WAIT_HOSTS: mongo:27017
       FASTLY_ENABLED: "false"
+      AWS_REGION: "us-east-1"
+      AWS_ACCESS_KEY_ID: "test"
+      AWS_SECRET_ACCESS_KEY: "test"
     command: develop
     depends_on:
       - mongo
     volumes:
       - ./app:/opt/gfw-area/app
   mongo:
-    image: mongo:3.4
+    image: mongo:3.6
     container_name: gfw-areas-mongo
-    command: --smallfiles
     ports:
       - "27017"
     volumes:

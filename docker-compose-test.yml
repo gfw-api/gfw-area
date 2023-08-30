@@ -19,12 +19,14 @@ services:
       S3_BUCKET: s3bucket
       WAIT_HOSTS: mongo:27017
       FASTLY_ENABLED: "false"
+      AWS_REGION: "us-east-1"
+      AWS_ACCESS_KEY_ID: "test"
+      AWS_SECRET_ACCESS_KEY: "test"
     command: test
     depends_on:
       - mongo
 
   mongo:
     image: mongo:3.6
-    command: --smallfiles
     ports:
       - "27017"

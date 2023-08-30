@@ -126,7 +126,7 @@ class AreaService {
         return permission;
     }
 
-    static async deleteByUserId(userId) {
+    static async deleteByUserId(userId, apiKey) {
         logger.debug(`[AreaService]: Delete areas for user with id:  ${userId}`);
 
         const userAreas = await Area.find({ userId: { $eq: userId } }).exec();
@@ -138,7 +138,7 @@ class AreaService {
                 logger.debug('[AreasService]: Deleting areas from teams');
                 let team = null;
                 try {
-                    team = await TeamService.getTeamByUserId(userId);
+                    team = await TeamService.getTeamByUserId(userId, apiKey);
                 } catch (e) {
                     logger.error(e);
                 }
@@ -146,7 +146,7 @@ class AreaService {
                 if (team && team.areas.includes(currentAreaId)) {
                     const areas = team.areas.filter((area) => area !== currentAreaId);
                     try {
-                        await TeamService.patchTeamById(team.id, { areas });
+                        await TeamService.patchTeamById(team.id, { areas }, apiKey);
                     } catch (e) {
                         logger.error(e);
                     }

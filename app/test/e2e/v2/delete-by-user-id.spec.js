@@ -1,14 +1,15 @@
 const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.modelV2');
-const { createArea, getUUID } = require('../utils/helpers');
-const { mockGetUserFromToken } = require('../utils/helpers');
+const {
+    createArea, getUUID, mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken
+} = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
-const requester = getTestServer();
+let requester;
 
 describe('V2 - Delete areas by user id tests', () => {
 
@@ -16,6 +17,8 @@ describe('V2 - Delete areas by user id tests', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     beforeEach(async () => {
@@ -23,8 +26,10 @@ describe('V2 - Delete areas by user id tests', () => {
     });
 
     it('Deleting areas by user id without being logged in should return a 401 - "Unauthorized" error', async () => {
+        mockValidateRequestWithApiKey({});
         const response = await requester
-            .delete(`/api/v2/area/by-user/${USERS.USER.id}`);
+            .delete(`/api/v2/area/by-user/${USERS.USER.id}`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(401);
 
@@ -33,7 +38,7 @@ describe('V2 - Delete areas by user id tests', () => {
     });
 
     it('Deleting areas by user id without being logged in should return a 403 - "Forbidden" error', async () => {
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
         await new Area(createArea({
             userId: USERS.USER.id
         })).save();
@@ -41,6 +46,7 @@ describe('V2 - Delete areas by user id tests', () => {
         const response = await requester
             .delete(`/api/v2/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(403);
@@ -49,7 +55,7 @@ describe('V2 - Delete areas by user id tests', () => {
     });
 
     it('Deleting all areas of an user while being authenticated as ADMIN should return a 200 and all widgets deleted', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const teamId = getUUID();
         const subscriptionId = getUUID();
@@ -58,7 +64,11 @@ describe('V2 - Delete areas by user id tests', () => {
         const fakeAreaFromAdmin = await new Area(createArea({ env: 'production', userId: USERS.ADMIN.id })).save();
         const fakeAreaFromManager = await new Area(createArea({ env: 'staging', userId: USERS.MANAGER.id })).save();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -69,7 +79,11 @@ describe('V2 - Delete areas by user id tests', () => {
                 }
             });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -80,7 +94,11 @@ describe('V2 - Delete areas by user id tests', () => {
                 }
             });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .patch(`/v1/teams/${teamId}`)
             .reply(200, {
                 data: {
@@ -90,15 +108,27 @@ describe('V2 - Delete areas by user id tests', () => {
                     }
                 }
             });
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .post(`/v1/subscriptions/find-by-ids`)
             .reply(200, { data: [{ id: subscriptionId }] });
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .delete(`/v1/subscriptions/${subscriptionId}`)
             .reply(200, {
                 data: []
             });
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -109,6 +139,7 @@ describe('V2 - Delete areas by user id tests', () => {
         const response = await requester
             .delete(`/api/v2/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(200);
@@ -126,7 +157,7 @@ describe('V2 - Delete areas by user id tests', () => {
     });
 
     it('Deleting all areas of an user while being authenticated as a microservice should return a 200 and all widgets deleted', async () => {
-        mockGetUserFromToken(USERS.MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MICROSERVICE });
 
         const teamId = getUUID();
         const subscriptionId = getUUID();
@@ -135,7 +166,11 @@ describe('V2 - Delete areas by user id tests', () => {
         const fakeAreaFromAdmin = await new Area(createArea({ env: 'production', userId: USERS.ADMIN.id })).save();
         const fakeAreaFromManager = await new Area(createArea({ env: 'staging', userId: USERS.MANAGER.id })).save();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -146,7 +181,11 @@ describe('V2 - Delete areas by user id tests', () => {
                 }
             });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -157,7 +196,11 @@ describe('V2 - Delete areas by user id tests', () => {
                 }
             });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .patch(`/v1/teams/${teamId}`)
             .reply(200, {
                 data: {
@@ -167,16 +210,28 @@ describe('V2 - Delete areas by user id tests', () => {
                     }
                 }
             });
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .post(`/v1/subscriptions/find-by-ids`)
             .reply(200, { data: [{ id: subscriptionId }] });
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .delete(`/v1/subscriptions/${subscriptionId}`)
             .reply(200, {
                 data: []
             });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -186,6 +241,7 @@ describe('V2 - Delete areas by user id tests', () => {
         const response = await requester
             .delete(`/api/v2/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(200);
@@ -203,9 +259,13 @@ describe('V2 - Delete areas by user id tests', () => {
     });
 
     it('Deleting areas owned by a user that does not exist as a MICROSERVICE should return a 404', async () => {
-        mockGetUserFromToken(USERS.MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MICROSERVICE });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/potato`)
             .reply(403, {
                 errors: [
@@ -219,6 +279,7 @@ describe('V2 - Delete areas by user id tests', () => {
         const deleteResponse = await requester
             .delete(`/api/v2/area/by-user/potato`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         deleteResponse.status.should.equal(404);
@@ -227,7 +288,7 @@ describe('V2 - Delete areas by user id tests', () => {
     });
 
     it('Deleting all areas of an user while being authenticated as USER should return a 200 and all widgets deleted', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const teamId = getUUID();
         const subscriptionId = getUUID();
@@ -236,7 +297,11 @@ describe('V2 - Delete areas by user id tests', () => {
         const fakeAreaFromAdmin = await new Area(createArea({ env: 'production', userId: USERS.ADMIN.id })).save();
         const fakeAreaFromManager = await new Area(createArea({ env: 'staging', userId: USERS.MANAGER.id })).save();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .times(2)
             .reply(200, {
@@ -248,7 +313,11 @@ describe('V2 - Delete areas by user id tests', () => {
                 }
             });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .patch(`/v1/teams/${teamId}`)
             .reply(200, {
                 data: {
@@ -259,16 +328,28 @@ describe('V2 - Delete areas by user id tests', () => {
                 }
             });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .post(`/v1/subscriptions/find-by-ids`)
             .reply(200, { data: [{ id: subscriptionId }] });
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .delete(`/v1/subscriptions/${subscriptionId}`)
             .reply(200, {
                 data: []
             });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -279,6 +360,7 @@ describe('V2 - Delete areas by user id tests', () => {
         const response = await requester
             .delete(`/api/v2/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(200);
@@ -296,9 +378,13 @@ describe('V2 - Delete areas by user id tests', () => {
     });
 
     it('Deleting all areas of an user while being authenticated as USER should return a 200 and all areas deleted - no areas in the db', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -309,6 +395,7 @@ describe('V2 - Delete areas by user id tests', () => {
         const response = await requester
             .delete(`/api/v2/area/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(200);
@@ -316,14 +403,18 @@ describe('V2 - Delete areas by user id tests', () => {
     });
 
     it('Deleting areas from a user should delete them completely from a database (large number of areas)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         await Promise.all([...Array(50)].map(async () => {
             await new Area(createArea({ env: 'staging', userId: USERS.USER.id })).save();
             await new Area(createArea({ env: 'production', userId: USERS.USER.id })).save();
         }));
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -334,6 +425,7 @@ describe('V2 - Delete areas by user id tests', () => {
         const deleteResponse = await requester
             .delete(`/api/v2/area/by-user/${USERS.USER.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         deleteResponse.status.should.equal(200);

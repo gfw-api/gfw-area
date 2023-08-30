@@ -2,13 +2,13 @@ const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.model');
 
-const { createArea, mockGetUserFromToken } = require('../utils/helpers');
+const { createArea, mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
-const requester = getTestServer();
+let requester;
 
 describe('V1 - Get FW areas tests', () => {
 
@@ -16,6 +16,8 @@ describe('V1 - Get FW areas tests', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     beforeEach(async () => {
@@ -23,8 +25,11 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas without being logged in should return a 401 - "Not logged" error', async () => {
+        mockValidateRequestWithApiKey({});
+
         const response = await requester
-            .get(`/api/v1/area`);
+            .get(`/api/v1/area`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(401);
 
@@ -33,24 +38,33 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas with no data should be successful', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, { data: null });
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
     it('Getting FW areas should return local areas owned by the current user (happy case)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, { data: null });
 
@@ -60,7 +74,8 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -83,11 +98,15 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas should return areas owned by the current user\'s team (happy case)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area = await new Area(createArea()).save();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -124,7 +143,8 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -147,7 +167,7 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas should combine both user-owned and team-owned areas', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const userArea = await new Area(createArea({
             userId: USERS.USER.id
@@ -155,7 +175,11 @@ describe('V1 - Get FW areas tests', () => {
 
         const teamArea = await new Area(createArea()).save();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -192,7 +216,8 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
@@ -201,13 +226,17 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas should combine both user-owned and team-owned areas, removing duplicates', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area = await new Area(createArea({
             userId: USERS.USER.id
         })).save();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -244,7 +273,8 @@ describe('V1 - Get FW areas tests', () => {
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -267,7 +297,7 @@ describe('V1 - Get FW areas tests', () => {
     });
 
     it('Getting FW areas should hide areas that do not have a geostore id', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const area = await new Area(createArea({
             userId: USERS.USER.id,
@@ -285,13 +315,18 @@ describe('V1 - Get FW areas tests', () => {
 
         await new Area(areaWithoutGeostore).save();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/v1/teams/user/${USERS.USER.id}`)
             .reply(200, {});
 
         const response = await requester
             .get(`/api/v1/area/fw`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);

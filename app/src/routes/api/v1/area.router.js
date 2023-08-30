@@ -67,7 +67,7 @@ class AreaRouter {
         const userId = ctx.state.loggedUser.id;
         let team = null;
         try {
-            team = await TeamService.getTeamByUserId(userId);
+            team = await TeamService.getTeamByUserId(userId, ctx.request.headers['x-api-key']);
         } catch (e) {
             logger.error(e);
         }
@@ -89,7 +89,7 @@ class AreaRouter {
         logger.info('Obtaining all user areas + fw team areas', userId);
         let team = null;
         try {
-            team = await TeamService.getTeamByUserId(userId);
+            team = await TeamService.getTeamByUserId(userId, ctx.request.headers['x-api-key']);
         } catch (e) {
             logger.error(e);
         }
@@ -205,7 +205,7 @@ class AreaRouter {
         const userId = ctx.state.loggedUser.id;
         let team = null;
         try {
-            team = await TeamService.getTeamByUserId(userId);
+            team = await TeamService.getTeamByUserId(userId, ctx.request.headers['x-api-key']);
         } catch (e) {
             logger.error(e);
             ctx.throw(500, 'Team retrieval failed.');
@@ -213,7 +213,7 @@ class AreaRouter {
         if (team && team.areas.includes(ctx.params.id)) {
             const areas = team.areas.filter((area) => area !== ctx.params.id);
             try {
-                await TeamService.patchTeamById(team.id, { areas });
+                await TeamService.patchTeamById(team.id, { areas }, ctx.request.headers['x-api-key']);
             } catch (e) {
                 logger.error(e);
                 ctx.throw(500, 'Team patch failed.');
@@ -233,13 +233,13 @@ class AreaRouter {
         const userIdToDelete = ctx.params.userId;
 
         try {
-            await UserService.getUserById(userIdToDelete);
+            await UserService.getUserById(userIdToDelete, ctx.request.headers['x-api-key']);
         } catch (error) {
             ctx.throw(404, `User ${userIdToDelete} does not exist`);
         }
 
         try {
-            const deletedAreas = await AreaService.deleteByUserId(userIdToDelete);
+            const deletedAreas = await AreaService.deleteByUserId(userIdToDelete, ctx.request.headers['x-api-key']);
             ctx.body = AreaSerializer.serialize(deletedAreas);
         } catch (err) {
             logger.error(`Error deleting areas (v1) from user ${userIdToDelete}`, err);
@@ -261,7 +261,7 @@ class AreaRouter {
             generateImages = false;
         }
 
-        const response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages);
+        const response = await AlertsService.groupAlerts(result, ctx.query.precissionPoints, ctx.query.precissionBBOX, generateImages, ctx.request.headers['x-api-key']);
         ctx.body = response;
     }
 

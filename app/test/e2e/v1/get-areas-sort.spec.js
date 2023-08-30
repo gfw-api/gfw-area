@@ -1,15 +1,14 @@
 const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.model');
-const { createArea } = require('../utils/helpers');
+const { createArea, mockValidateRequestWithApiKeyAndUserToken } = require('../utils/helpers');
 
-const { mockGetUserFromToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
-const requester = getTestServer();
+let requester;
 
 describe('V1 - Get areas with sorting tests', () => {
 
@@ -17,6 +16,8 @@ describe('V1 - Get areas with sorting tests', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     beforeEach(async () => {
@@ -24,7 +25,7 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by non-existent field (implicit order) still returns areas', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const areaOne = await new Area(createArea({ userId: USERS.USER.id })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id })).save();
@@ -33,6 +34,7 @@ describe('V1 - Get areas with sorting tests', () => {
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: 'potato'
             });
@@ -49,7 +51,7 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by name (implicit order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
@@ -58,6 +60,7 @@ describe('V1 - Get areas with sorting tests', () => {
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: 'name'
             });
@@ -74,7 +77,7 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by name (explicit asc order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
@@ -83,6 +86,7 @@ describe('V1 - Get areas with sorting tests', () => {
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: '+name'
             });
@@ -99,7 +103,7 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by name (explicit desc order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'CC' })).save();
@@ -108,6 +112,7 @@ describe('V1 - Get areas with sorting tests', () => {
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: '-name'
             });
@@ -124,15 +129,25 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by createdAt (explicit desc order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
-        const areaOne = await new Area(createArea({ userId: USERS.USER.id, createdAt: new Date('2020-04-01T10:20:30Z') })).save();
-        const areaTwo = await new Area(createArea({ userId: USERS.USER.id, createdAt: new Date('2020-09-01T10:20:30Z') })).save();
-        const areaThree = await new Area(createArea({ userId: USERS.USER.id, createdAt: new Date('2020-07-01T10:20:30Z') })).save();
+        const areaOne = await new Area(createArea({
+            userId: USERS.USER.id,
+            createdAt: new Date('2020-04-01T10:20:30Z')
+        })).save();
+        const areaTwo = await new Area(createArea({
+            userId: USERS.USER.id,
+            createdAt: new Date('2020-09-01T10:20:30Z')
+        })).save();
+        const areaThree = await new Area(createArea({
+            userId: USERS.USER.id,
+            createdAt: new Date('2020-07-01T10:20:30Z')
+        })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: '-createdAt'
             });
@@ -149,15 +164,25 @@ describe('V1 - Get areas with sorting tests', () => {
     });
 
     it('Sorting areas by updatedAt (explicit desc order)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
-        const areaOne = await new Area(createArea({ userId: USERS.USER.id, updatedAt: new Date('2020-04-01T10:20:30Z') })).save();
-        const areaTwo = await new Area(createArea({ userId: USERS.USER.id, updatedAt: new Date('2020-09-01T10:20:30Z') })).save();
-        const areaThree = await new Area(createArea({ userId: USERS.USER.id, updatedAt: new Date('2020-07-01T10:20:30Z') })).save();
+        const areaOne = await new Area(createArea({
+            userId: USERS.USER.id,
+            updatedAt: new Date('2020-04-01T10:20:30Z')
+        })).save();
+        const areaTwo = await new Area(createArea({
+            userId: USERS.USER.id,
+            updatedAt: new Date('2020-09-01T10:20:30Z')
+        })).save();
+        const areaThree = await new Area(createArea({
+            userId: USERS.USER.id,
+            updatedAt: new Date('2020-07-01T10:20:30Z')
+        })).save();
 
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: '-updatedAt'
             });

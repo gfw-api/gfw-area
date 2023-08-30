@@ -8,13 +8,17 @@ const { USERS } = require('../utils/test.constants');
 chai.should();
 chai.use(require('chai-datetime'));
 
-const { mockGetUserFromToken } = require('../utils/helpers');
+const {
+
+    mockValidateRequestWithApiKey,
+    mockValidateRequestWithApiKeyAndUserToken
+} = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-const requester = getTestServer();
+let requester;
 
 describe('V1 - Create area FW', () => {
     before(async () => {
@@ -22,12 +26,14 @@ describe('V1 - Create area FW', () => {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
 
-        await Area.deleteMany({}).exec();
+        requester = await getTestServer();
     });
 
     it('Creating an area without being logged in should return a 401 - "Not logged" error', async () => {
+        mockValidateRequestWithApiKey({});
         const response = await requester
-            .post(`/api/v1/area/fw/${USERS.USER.id}`);
+            .post(`/api/v1/area/fw/${USERS.USER.id}`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(401);
 
@@ -36,11 +42,12 @@ describe('V1 - Create area FW', () => {
     });
 
     it('Creating an area while being logged in as a user that owns the area should return a 200 HTTP code and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const response = await requester
             .post(`/api/v1/area/fw/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 application: 'rw',
@@ -92,11 +99,12 @@ describe('V1 - Create area FW', () => {
     });
 
     it('Creating an area should automatically set the application field to "fw"', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const response = await requester
             .post(`/api/v1/area/fw/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: '713899292fc118a915741728ef84a2a7',
@@ -120,7 +128,7 @@ describe('V1 - Create area FW', () => {
     });
 
     it('Creating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the created area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         nock(`https://${config.get('s3.bucket')}.s3.amazonaws.com`)
             .put(/^\/areas-dev\/(\w|-)+.png/)
@@ -131,6 +139,7 @@ describe('V1 - Create area FW', () => {
         const response = await requester
             .post(`/api/v1/area/fw/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .attach('image', fileData, 'sample.png')
             .field('name', 'Portugal area')
             .field('application', 'rw')

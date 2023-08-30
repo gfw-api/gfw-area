@@ -2,6 +2,7 @@
 const USERS = {
     USER: {
         id: '1a10d7c6e0a37126611fd7a5',
+        name: 'Test user',
         role: 'USER',
         provider: 'local',
         email: 'user@resourcewatch.org',
@@ -19,6 +20,7 @@ const USERS = {
     },
     MANAGER: {
         id: '1a10d7c6e0a37126611fd7a6',
+        name: 'Test manager',
         role: 'MANAGER',
         provider: 'local',
         email: 'user@resourcewatch.org',
@@ -36,10 +38,10 @@ const USERS = {
     },
     ADMIN: {
         id: '1a10d7c6e0a37126611fd7a7',
+        name: 'Test admin',
         role: 'ADMIN',
         provider: 'local',
         email: 'user@resourcewatch.org',
-        name: 'John Admin',
         extraUserData: {
             apps: [
                 'rw',
@@ -53,7 +55,8 @@ const USERS = {
         }
     },
     MICROSERVICE: {
-        id: 'microservice'
+        id: 'microservice',
+        createdAt: '2016-09-14'
     }
 };
 

@@ -4,7 +4,7 @@ services:
   - docker
   - mongodb
 node_js:
-  - "16.15"
+  - "20.4"
 cache:
   directories:
   - "node_modules"
@@ -22,6 +22,9 @@ env:
     - S3_SECRET_ACCESS_KEY=1
     - S3_BUCKET=s3bucket
     - FASTLY_ENABLED=false
+    - AWS_REGION=us-east-1
+    - AWS_ACCESS_KEY_ID=test
+    - AWS_SECRET_ACCESS_KEY=test
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter

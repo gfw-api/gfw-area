@@ -12,11 +12,14 @@ const CONCURRENCY = 30;
 
 class DownloadService {
 
-    static async getBBox(geostoreId) {
+    static async getBBox(geostoreId, apiKey) {
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
                 uri: `/v1/geostore/${geostoreId}`,
                 method: 'GET',
+                headers: {
+                    'x-api-key': apiKey
+                }
             });
             return result.data.attributes.bbox;
         } catch (err) {
@@ -128,8 +131,8 @@ class DownloadService {
         return `${tmpDownload.name}/download.zip`;
     }
 
-    static async getTilesZip(geostoreId, minZoom, maxZoom, layerUrl, useExtension = true) {
-        const bbox = await DownloadService.getBBox(geostoreId);
+    static async getTilesZip(geostoreId, minZoom, maxZoom, layerUrl, apiKey, useExtension = true) {
+        const bbox = await DownloadService.getBBox(geostoreId, apiKey);
         const coordinates = DownloadService.calculateCoordinates(bbox, minZoom, maxZoom);
         logger.debug('Coordinates', coordinates);
         return DownloadService.downloadAndZipCoordinates(coordinates, layerUrl, useExtension);

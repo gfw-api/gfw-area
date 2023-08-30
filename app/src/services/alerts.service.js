@@ -136,12 +136,15 @@ class AlertService {
         return response;
     }
 
-    static async getGeostoreByWdpa(wdpaid) {
+    static async getGeostoreByWdpa(wdpaid, apiKey) {
         logger.debug('Obtaining geostore of wdpaid ', wdpaid);
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
                 uri: `/v1/geostore/wdpa/${wdpaid}`,
                 method: 'GET',
+                headers: {
+                    'x-api-key': apiKey
+                }
             });
             return result.data.id;
         } catch (err) {
@@ -154,7 +157,7 @@ class AlertService {
 
     }
 
-    static async getViirs(area, precisionPoint) {
+    static async getViirs(area, precisionPoint, apiKey) {
         logger.debug('Obtaining data of viirs');
         const viirsDataset = config.get('viirsDataset');
         const table = config.get('viirsDatasetTableName');
@@ -164,6 +167,9 @@ class AlertService {
             const result = await RWAPIMicroservice.requestToMicroservice({
                 uri,
                 method: 'GET',
+                headers: {
+                    'x-api-key': apiKey
+                }
             });
             return result;
         } catch (err) {
@@ -172,7 +178,7 @@ class AlertService {
         }
     }
 
-    static async getGlad(area, precisionPoint) {
+    static async getGlad(area, precisionPoint, apiKey) {
         logger.debug('Obtaining data of glad');
         const gladDataset = config.get('gladDataset');
         const uri = `/v1/query/${gladDataset}?sql=select count(*) as count from data where year > 2016 group by ST_GeoHash(the_geom_point, ${precisionPoint})&geostore=${area.geostore}`;
@@ -180,6 +186,9 @@ class AlertService {
             const result = await RWAPIMicroservice.requestToMicroservice({
                 uri,
                 method: 'GET',
+                headers: {
+                    'x-api-key': apiKey
+                }
             });
             return result;
         } catch (err) {
@@ -188,16 +197,16 @@ class AlertService {
         }
     }
 
-    static async groupAlerts(area, precisionPoint, precisionBbox, generateImages) {
+    static async groupAlerts(area, precisionPoint, precisionBbox, generateImages, apiKey) {
         logger.info('Generating groups with area', area);
         if (!area.geostore) {
-            area.geostore = await AlertService.getGeostoreByWdpa(area.wdpaid);
+            area.geostore = await AlertService.getGeostoreByWdpa(area.wdpaid, apiKey);
             await area.save();
         }
 
         try {
-            const viirs = await AlertService.getViirs(area, precisionPoint);
-            const glad = await AlertService.getGlad(area, precisionPoint);
+            const viirs = await AlertService.getViirs(area, precisionPoint, apiKey);
+            const glad = await AlertService.getGlad(area, precisionPoint, apiKey);
             const groups = AlertService.groupPoints(viirs ? viirs.data : [], glad ? glad.data : [], precisionBbox);
             return await AlertService.obtainImages(groups, generateImages);
         } catch (err) {

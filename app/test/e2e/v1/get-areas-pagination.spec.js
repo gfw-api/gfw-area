@@ -3,13 +3,13 @@ const chai = require('chai');
 const config = require('config');
 const Area = require('models/area.model');
 
-const { createArea, mockGetUserFromToken } = require('../utils/helpers');
+const { createArea, mockValidateRequestWithApiKeyAndUserToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
-const requester = getTestServer();
+let requester;
 
 describe('V1 - Get areas', () => {
 
@@ -17,6 +17,8 @@ describe('V1 - Get areas', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     beforeEach(async () => {
@@ -25,10 +27,11 @@ describe('V1 - Get areas', () => {
 
     describe('Test pagination links', () => {
         it('Get areas without referer header should be successful and use the request host', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .get(`/api/v1/area`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -41,11 +44,12 @@ describe('V1 - Get areas', () => {
         });
 
         it('Get areas with referer header should be successful and use that header on the links on the response', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .get(`/api/v1/area`)
                 .set('referer', `https://potato.com/get-me-all-the-data`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -58,11 +62,12 @@ describe('V1 - Get areas', () => {
         });
 
         it('Get areas with x-rw-domain header should be successful and use that header on the links on the response', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .get(`/api/v1/area`)
                 .set('x-rw-domain', `potato.com`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -75,12 +80,13 @@ describe('V1 - Get areas', () => {
         });
 
         it('Get areas with x-rw-domain and referer headers should be successful and use the x-rw-domain header on the links on the response', async () => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const response = await requester
                 .get(`/api/v1/area`)
                 .set('referer', `https://tomato.com/get-me-all-the-data`)
                 .set('x-rw-domain', `potato.com`)
-                .set('Authorization', 'Bearer abcd');
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -94,7 +100,7 @@ describe('V1 - Get areas', () => {
     });
 
     it('Get a page with 3 areas using pagination', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
@@ -103,6 +109,7 @@ describe('V1 - Get areas', () => {
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: 'name',
                 page: {
@@ -123,7 +130,7 @@ describe('V1 - Get areas', () => {
     });
 
     it('Get the first page with one area using pagination', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const areaOne = await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
@@ -132,6 +139,7 @@ describe('V1 - Get areas', () => {
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: 'name',
                 page: {
@@ -148,7 +156,7 @@ describe('V1 - Get areas', () => {
     });
 
     it('Get the second page with one area using pagination', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         await new Area(createArea({ userId: USERS.USER.id, name: 'AA' })).save();
         const areaTwo = await new Area(createArea({ userId: USERS.USER.id, name: 'BB' })).save();
@@ -157,6 +165,7 @@ describe('V1 - Get areas', () => {
         const response = await requester
             .get(`/api/v1/area`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .query({
                 sort: 'name',
                 page: {

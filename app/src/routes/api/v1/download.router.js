@@ -19,6 +19,7 @@ class DownloadRouter {
             parseInt(ctx.params.minZoom, 10),
             parseInt(ctx.params.maxZoom, 10),
             ctx.query.layerUrl,
+            ctx.request.headers['x-api-key'],
             JSON.parse(ctx.query.useExtension)
         );
         ctx.set('content-disposition', 'attachment; filename=download.zip');

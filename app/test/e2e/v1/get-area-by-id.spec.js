@@ -1,14 +1,13 @@
 const nock = require('nock');
 const chai = require('chai');
 const Area = require('models/area.model');
-const { createArea } = require('../utils/helpers');
-const { mockGetUserFromToken } = require('../utils/helpers');
+const { createArea, mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken } = require('../utils/helpers');
 const { getTestServer } = require('../utils/test-server');
 const { USERS } = require('../utils/test.constants');
 
 chai.should();
 
-const requester = getTestServer();
+let requester;
 
 describe('V1 - Get area by id tests', () => {
 
@@ -16,6 +15,8 @@ describe('V1 - Get area by id tests', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     beforeEach(async () => {
@@ -23,12 +24,14 @@ describe('V1 - Get area by id tests', () => {
     });
 
     it('Getting area by id without being logged in should return a 401 - "Not logged" error', async () => {
+        mockValidateRequestWithApiKey({});
         const area = await new Area(createArea({
             userId: USERS.USER.id
         })).save();
 
         const response = await requester
-            .get(`/api/v1/area/${area.id}`);
+            .get(`/api/v1/area/${area.id}`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(401);
 
@@ -37,14 +40,15 @@ describe('V1 - Get area by id tests', () => {
     });
 
     it('Getting area by id owned by the current user should be successful (happy case - USER role)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const area = await new Area(createArea({
             userId: USERS.USER.id
         })).save();
 
         const response = await requester
             .get(`/api/v1/area/${area.id}`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -67,14 +71,15 @@ describe('V1 - Get area by id tests', () => {
     });
 
     it('Getting area by id owned by the current user should be successful (happy case - MANAGER role)', async () => {
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
         const area = await new Area(createArea({
             userId: USERS.MANAGER.id
         })).save();
 
         const response = await requester
             .get(`/api/v1/area/${area.id}`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -97,14 +102,15 @@ describe('V1 - Get area by id tests', () => {
     });
 
     it('Getting area by id owned by the current user should be successful (happy case - ADMIN role)', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const area = await new Area(createArea({
             userId: USERS.ADMIN.id
         })).save();
 
         const response = await requester
             .get(`/api/v1/area/${area.id}`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -127,14 +133,15 @@ describe('V1 - Get area by id tests', () => {
     });
 
     it('Getting area by id owned by a different user should return a 404 - Area not found (ADMIN role)', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const area = await new Area(createArea({
             userId: USERS.USER.id
         })).save();
 
         const response = await requester
             .get(`/api/v1/area/${area.id}`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(404);
 
@@ -143,14 +150,15 @@ describe('V1 - Get area by id tests', () => {
     });
 
     it('Getting area by id owned by a different user should be successful (MICROSERVICE role)', async () => {
-        mockGetUserFromToken(USERS.MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MICROSERVICE });
         const area = await new Area(createArea({
             userId: USERS.USER.id
         })).save();
 
         const response = await requester
             .get(`/api/v1/area/${area.id}`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');

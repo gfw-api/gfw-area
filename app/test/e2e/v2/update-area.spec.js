@@ -13,29 +13,33 @@ chai.use(require('chai-datetime'));
 const { getTestServer } = require('../utils/test-server');
 const {
     createArea,
-    mockGetUserFromToken,
+
     mockSubscriptionCreation,
     mockSubscriptionEdition,
     mockSubscriptionDeletion,
-    mockSubscriptionFindByIds,
+    mockSubscriptionFindByIds, mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken,
 } = require('../utils/helpers');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-const requester = getTestServer();
+let requester;
 
 describe('V2 - Update area', () => {
-    before(() => {
+    before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
+
+        requester = await getTestServer();
     });
 
     it('Updating an area without being logged in should return a 401 - "Not logged" error', async () => {
+        mockValidateRequestWithApiKey({});
         const testArea = await new Area(createArea()).save();
 
-        const response = await requester.patch(`/api/v2/area/${testArea.id}`);
+        const response = await requester.patch(`/api/v2/area/${testArea.id}`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(401);
         response.body.should.have.property('errors').and.be.an('array');
@@ -43,13 +47,14 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area while being logged in as user that does not own the area should return a 403 - "Not authorized" error', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea()).save();
 
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
-            .set('Authorization', 'Bearer abcd');
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array');
@@ -57,13 +62,14 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 application: 'rw',
@@ -110,7 +116,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
@@ -123,6 +129,7 @@ describe('V2 - Update area', () => {
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .attach('image', fileData, 'sample.png')
             .field('name', 'Portugal area')
             .field('application', 'rw')
@@ -169,13 +176,14 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area with an env modifies the env', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .field('name', 'Portugal area')
             .field('application', 'rw')
             .field('geostore', '713899292fc118a915741728ef84a2a7')
@@ -222,13 +230,14 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area with an empty env returns a 400 error message', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .field('name', 'Portugal area')
             .field('application', 'rw')
             .field('geostore', '713899292fc118a915741728ef84a2a7')
@@ -247,7 +256,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area that did not have a subscription attached creates a subscription and should return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
         testArea.should.have.property('subscriptionId').and.equal('');
@@ -258,6 +267,7 @@ describe('V2 - Update area', () => {
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 deforestationAlerts: true,
                 deforestationAlertsType: 'glad-all',
@@ -275,13 +285,14 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area with an invalid alert type should return a 400 error message', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 deforestationAlertsType: 'potato',
             });
@@ -292,7 +303,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area that had a subscription attached but now with different values updates the subscription and should return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({
             userId: USERS.USER.id,
@@ -307,6 +318,7 @@ describe('V2 - Update area', () => {
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({ fireAlerts: false });
 
         response.status.should.equal(200);
@@ -320,7 +332,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area that had a subscription attached to not having deletes the subscription and should return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({
             userId: USERS.USER.id,
@@ -334,6 +346,7 @@ describe('V2 - Update area', () => {
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({ deforestationAlerts: false });
 
         response.status.should.equal(200);
@@ -347,7 +360,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area that didn\'t have subscription attached to continue not having does nothing to subscriptions and should return a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const testArea = await new Area(createArea({
             userId: USERS.USER.id,
@@ -358,6 +371,7 @@ describe('V2 - Update area', () => {
         const response = await requester
             .patch(`/api/v2/area/${testArea.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({ name: 'Bla bla' });
 
         response.status.should.equal(200);
@@ -371,7 +385,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area that didn\'t exist (existing subscription) creates a new area and PATCHes subscription, returning a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1333']);
         mockSubscriptionEdition('5e3bf82fad36f4001abe1333');
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1333'], { userId: USERS.USER.id });
@@ -379,6 +393,7 @@ describe('V2 - Update area', () => {
         const response = await requester
             .patch(`/api/v2/area/5e3bf82fad36f4001abe1333`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({ fireAlerts: true });
 
         response.status.should.equal(200);
@@ -392,13 +407,14 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area that didn\'t exist (existing subscription) creates a new area and DELETEs subscription, returning a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         mockSubscriptionFindByIds(['5e3bf82fad36f4001abe1333']);
         mockSubscriptionDeletion('5e3bf82fad36f4001abe1333');
 
         const response = await requester
             .patch(`/api/v2/area/5e3bf82fad36f4001abe1333`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({ fireAlerts: false });
 
         response.status.should.equal(200);
@@ -412,7 +428,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area that is associated with an invalid sub does not throw an error (sub to update not found), returning a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const fakeId = new mongoose.Types.ObjectId().toString();
         const area = await new Area(createArea({
@@ -423,7 +439,11 @@ describe('V2 - Update area', () => {
         })).save();
 
         // Mock failed update on subscription
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .patch(`/v1/subscriptions/${fakeId}`)
             .reply(404, () => ({ errors: {} }));
         mockSubscriptionFindByIds([]);
@@ -431,6 +451,7 @@ describe('V2 - Update area', () => {
         const response = await requester
             .patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({ fireAlerts: false });
 
         response.status.should.equal(200);
@@ -445,7 +466,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area that is associated with an invalid sub does not throw an error (sub to delete not found), returning a 200 HTTP code and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const fakeId = new mongoose.Types.ObjectId().toString();
         const area = await new Area(createArea({
@@ -455,12 +476,17 @@ describe('V2 - Update area', () => {
         })).save();
 
         // Mock failed update on subscription
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .delete(`/v1/subscriptions/${fakeId}`)
             .reply(404, () => ({ errors: {} }));
 
         const response = await requester.patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 fireAlerts: false,
             });
@@ -477,7 +503,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Providing non-empty values for geostore and geostoreDataApi throws a 400 Bad Request error', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostore = '713899292fc118a915741728ef84a2a7';
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
@@ -485,6 +511,7 @@ describe('V2 - Update area', () => {
 
         const response = await requester.patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore,
@@ -497,13 +524,14 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area only with a geostore ID for the Data API returns 200 OK and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
         const area = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester.patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: null,
@@ -522,13 +550,14 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area only with a geostore ID for the RW API returns 200 OK and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostore = '713899292fc118a915741728ef84a2a7';
         const area = await new Area(createArea({ userId: USERS.USER.id, geostore })).save();
 
         const response = await requester.patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore,
@@ -547,7 +576,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area with fire alerts and multiple geostore IDs returns 400 Bad Request with the correct error message', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostore = '713899292fc118a915741728ef84a2a7';
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
@@ -560,6 +589,7 @@ describe('V2 - Update area', () => {
 
         const response = await requester.patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore,
@@ -572,7 +602,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area with fire alerts and a geostore ID for the Data API returns 200 OK and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
         const subId = '5e3bf82fad36f4001abe1333';
@@ -588,6 +618,7 @@ describe('V2 - Update area', () => {
 
         const response = await requester.patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore: null,
@@ -607,7 +638,7 @@ describe('V2 - Update area', () => {
     });
 
     it('Updating an area with fire alerts and a geostore ID for the RW API returns 200 OK and the updated area object', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const geostore = '713899292fc118a915741728ef84a2a7';
         const geostoreDataApi = 'bd4ddc38-c4ae-0da0-ac0e-0a03e4567221';
@@ -626,6 +657,7 @@ describe('V2 - Update area', () => {
 
         const response = await requester.patch(`/api/v2/area/${area._id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'Portugal area',
                 geostore,
@@ -647,10 +679,11 @@ describe('V2 - Update area', () => {
     it('Updating an area providing an invalid language code will default the language to \'en\' and return a 200 HTTP code and the updated area object', async () => {
 
         const requestAndValidateAreaWithLangCode = async (requestLang, responseLang, initialLang = 'en') => {
-            mockGetUserFromToken(USERS.USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
             const area = await new Area(createArea({ userId: USERS.USER.id, language: initialLang })).save();
             const response = await requester.patch(`/api/v2/area/${area._id}`)
                 .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
                 .send({
                     name: 'Portugal area',
                     geostore: '713899292fc118a915741728ef84a2a7',
