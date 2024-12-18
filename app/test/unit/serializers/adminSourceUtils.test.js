@@ -18,6 +18,21 @@ describe('adminSourceUtils', () => {
             addV1SourceForAdministrativeAreas(serializedAreaFragment);
             expect(serializedAreaFragment.attributes.iso).to.deep.include({ source: { provider: 'gadm', version: '2.8' } });
         });
+
+        describe('An Area That Is NOT An Administrative Boundary', () => {
+            const serializedCustomAreaFragment = {
+                attributes: {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {},
+                }
+            };
+
+            it('should not add source information to the iso attribute', () => {
+                addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
+                expect(serializedCustomAreaFragment.attributes.iso).to.not.have.property('source');
+            });
+        });
     });
 
     describe('Adding GADM 3.6 Source Information', () => {
@@ -34,6 +49,29 @@ describe('adminSourceUtils', () => {
         it('should add GADM 3.6 source information', () => {
             addV2SourceForAdministrativeAreas(serializedAreaFragment);
             expect(serializedAreaFragment.attributes.iso).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
+        });
+
+        describe('An Area That Is NOT An Administrative Boundary', () => {
+            const serializedCustomAreaFragment = {
+                attributes: {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {},
+                    admin: {
+                        adm0: null,
+                    }
+                }
+            };
+
+            it('should not add source information to the iso attribute', () => {
+                addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
+                expect(serializedCustomAreaFragment.attributes.iso).to.not.have.property('source');
+            });
+
+            it('should not add source information to the admin attribute', () => {
+                addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
+                expect(serializedCustomAreaFragment.attributes.admin).to.not.have.property('source');
+            });
         });
     });
 });
