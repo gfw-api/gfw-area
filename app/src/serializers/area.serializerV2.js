@@ -43,6 +43,7 @@ function isAdministrativeBoundary(area) {
     if (area.attributes && area.attributes.iso && area.attributes.iso.country) {
         return !!area.attributes.iso.country;
     }
+
     return area.attributes && area.attributes.admin
         ? !!area.attributes.admin.adm0
         : false;
@@ -57,13 +58,13 @@ function addSource(adminInfo) {
 }
 
 function addSourceToIsoAttribute(area) {
-    if (area.attributes ? area.attributes.iso : undefined) {
+    if (area.attributes ? area.attributes.iso : null) {
         addSource(area.attributes.iso);
     }
 }
 
 function addSourceToAdminAttribute(area) {
-    if (area.attributes ? area.attributes.admin : undefined) {
+    if (area.attributes ? area.attributes.admin : null) {
         addSource(area.attributes.admin);
     }
 }
