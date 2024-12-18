@@ -49,21 +49,22 @@ function isAdministrativeBoundary(area) {
 
 }
 
+function addSource(adminInfo) {
+    adminInfo.source = {
+        provider: 'gadm',
+        version: '3.6',
+    };
+}
+
 function addSourceToIsoAttribute(area) {
     if (area.attributes ? area.attributes.iso : undefined) {
-        area.attributes.iso.source = {
-            provider: 'gadm',
-            version: '3.6',
-        };
+        addSource(area.attributes.iso);
     }
 }
 
 function addSourceToAdminAttribute(area) {
     if (area.attributes ? area.attributes.admin : undefined) {
-        area.attributes.admin.source = {
-            provider: 'gadm',
-            version: '3.6',
-        };
+        addSource(area.attributes.admin);
     }
 }
 
