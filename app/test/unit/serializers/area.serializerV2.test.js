@@ -54,5 +54,26 @@ describe('Area Serializer V2', () => {
                 expect(result.data.attributes.admin).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
             });
         });
+
+        describe('An Area That Is NOT An Administrative Boundary', () => {
+            const customArea = {
+                name: 'Distrito Central, Francisco Morazán, Honduras',
+                geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                iso: {},
+                admin: {
+                    adm0: null,
+                }
+            };
+
+            it('should not add source information to the iso attribute', () => {
+                const result = areaSerializerV2.serialize(new AreaModel(customArea));
+                expect(result.data.attributes.iso).to.not.have.property('source');
+            });
+
+            it('should not add source information to the admin attribute', () => {
+                const result = areaSerializerV2.serialize(new AreaModel(customArea));
+                expect(result.data.attributes.admin).to.not.have.property('source');
+            });
+        });
     });
 });

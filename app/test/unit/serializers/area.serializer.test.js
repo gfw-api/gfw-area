@@ -37,4 +37,17 @@ describe('Area Serializer', () => {
             });
         });
     });
+
+    describe('An Area That Is NOT An Administrative Boundary', () => {
+        const customArea = {
+            name: 'Distrito Central, Francisco Morazán, Honduras',
+            geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+            iso: {},
+        };
+
+        it('should not add source information to the iso attribute', () => {
+            const result = areaSerializer.serialize(new AreaModel(customArea));
+            expect(result.data.attributes.iso).to.not.have.property('source');
+        });
+    });
 });
