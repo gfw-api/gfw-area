@@ -37,12 +37,21 @@ describe('Area Serializer V2', () => {
                 expect(result.data.attributes.iso).to.deep.include({ country: 'HND', region: '8', subregion: '4' });
             });
 
+            it('should include the administrative ID provider and version', () => {
+                const result = areaSerializerV2.serialize(new AreaModel(area));
+                expect(result.data.attributes.iso).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
+            });
         });
 
         describe('The Admin attribute', () => {
             it('should include the adm0, adm1, and adm2 IDs', () => {
                 const result = areaSerializerV2.serialize(new AreaModel(area));
                 expect(result.data.attributes.admin).to.deep.include({ adm0: 'HND', adm1: 8, adm2: 4 });
+            });
+
+            it('should include the administrative ID provider and version', () => {
+                const result = areaSerializerV2.serialize(new AreaModel(area));
+                expect(result.data.attributes.admin).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
             });
         });
     });
