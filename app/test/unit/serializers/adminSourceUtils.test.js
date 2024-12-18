@@ -3,8 +3,6 @@ const { addV1SourceForAdministrativeAreas, addV2SourceForAdministrativeAreas } =
 
 const { expect } = chai;
 
-
-
 describe('adminSourceUtils', () => {
     describe('Adding GADM 2.8 Source Information', () => {
         const serializedAreaFragment = {

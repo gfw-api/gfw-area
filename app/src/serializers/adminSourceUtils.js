@@ -4,14 +4,9 @@ const GADM_VERSION_3_6 = '3.6';
 let gadmVersion = GADM_VERSION_2_8;
 
 function isAdministrativeBoundary(area) {
-    if (area.attributes && area.attributes.iso && area.attributes.iso.country) {
-        return !!area.attributes.iso.country;
-    }
-
-    return area.attributes && area.attributes.admin
-        ? !!area.attributes.admin.adm0
-        : false;
-
+    const iso = area.attributes ? area.attributes.iso : null;
+    const admin = area.attributes ? area.attributes.admin : null;
+    return (iso && iso.country) || (admin && admin.adm0);
 }
 
 function addSource(adminInfo) {
