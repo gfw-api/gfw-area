@@ -11,12 +11,14 @@ services:
       PORT: 4100
       NODE_ENV: dev
       NODE_PATH: app/src
-      MONGO_PORT_27017_TCP_ADDR: mongo
+      MONGO_PORT_27017_TCP_ADDR: gfw-areas-mongo
       WAIT_HOSTS: mongo:27017
       FASTLY_ENABLED: "false"
       AWS_REGION: "us-east-1"
       AWS_ACCESS_KEY_ID: "test"
       AWS_SECRET_ACCESS_KEY: "test"
+      REQUIRE_API_KEY: "false"
+      AWS_CLOUD_WATCH_LOGGING_ENABLED: "false"
     command: develop
     depends_on:
       - mongo
