@@ -39,6 +39,42 @@ const areaSerializer = new JSONAPISerializer('area', {
     keyForAttribute: 'camelCase'
 });
 
+function isAdministrativeBoundary(area) {
+    if (area.attributes && area.attributes.iso && area.attributes.iso.country) {
+        return !!area.attributes.iso.country;
+    }
+    return area.attributes && area.attributes.admin
+        ? !!area.attributes.admin.adm0
+        : false;
+
+}
+
+function addSourceToIsoAttribute(area) {
+    if (area.attributes ? area.attributes.iso : undefined) {
+        area.attributes.iso.source = {
+            provider: 'gadm',
+            version: '3.6',
+        };
+    }
+}
+
+function addSourceToAdminAttribute(area) {
+    if (area.attributes ? area.attributes.admin : undefined) {
+        area.attributes.admin.source = {
+            provider: 'gadm',
+            version: '3.6',
+        };
+    }
+}
+
+const addSourceForAdministrativeAreas = (data) => {
+    const areas = Array.isArray(data) ? data : [data];
+    areas.filter(isAdministrativeBoundary).forEach((area) => {
+        addSourceToIsoAttribute(area);
+        addSourceToAdminAttribute(area);
+    });
+};
+
 class AreaSerializer {
 
     static serialize(data, link = null) {
@@ -52,6 +88,8 @@ class AreaSerializer {
                 }
             });
         }
+
+        addSourceForAdministrativeAreas(serializedData.data);
 
         if (link) {
             serializedData.links = {
