@@ -97,7 +97,11 @@ describe('V2 - Update area', () => {
         });
         response.body.data.attributes.should.have.property('iso').and.deep.equal({
             country: 'updatedCountryIso',
-            region: 'updatedRegionIso'
+            region: 'updatedRegionIso',
+            source: {
+                provider: 'gadm',
+                version: '3.6',
+            }
         });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');
@@ -156,7 +160,11 @@ describe('V2 - Update area', () => {
         });
         response.body.data.attributes.should.have.property('iso').and.deep.equal({
             country: 'updatedCountryIso',
-            region: 'updatedRegionIso'
+            region: 'updatedRegionIso',
+            source: {
+                provider: 'gadm',
+                version: '3.6',
+            }
         });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');
@@ -211,7 +219,11 @@ describe('V2 - Update area', () => {
         });
         response.body.data.attributes.should.have.property('iso').and.deep.equal({
             country: 'updatedCountryIso',
-            region: 'updatedRegionIso'
+            region: 'updatedRegionIso',
+            source: {
+                provider: 'gadm',
+                version: '3.6',
+            }
         });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');

@@ -54,7 +54,7 @@ class AreaSerializer {
             });
         }
 
-        addV2SourceForAdministrativeAreas(serializedData.data);
+        serializedData.data = addV2SourceForAdministrativeAreas(serializedData.data);
 
         if (link) {
             serializedData.links = {
