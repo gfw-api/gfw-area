@@ -10,21 +10,25 @@ function isAdministrativeBoundary(area) {
 }
 
 function addSource(adminInfo) {
-    adminInfo.source = {
-        provider: 'gadm',
-        version: gadmVersion,
+    const result = {
+        ...adminInfo,
+        source: {
+            provider: 'gadm',
+            version: gadmVersion,
+        }
     };
+    return result;
 }
 
 function addSourceToIsoAttribute(area) {
     if (area.attributes ? area.attributes.iso : null) {
-        addSource(area.attributes.iso);
+        area.attributes.iso = addSource(area.attributes.iso);
     }
 }
 
 function addSourceToAdminAttribute(area) {
     if (area.attributes ? area.attributes.admin : null) {
-        addSource(area.attributes.admin);
+        area.attributes.admin = addSource(area.attributes.admin);
     }
 }
 
@@ -37,13 +41,17 @@ function addSourceForAdministrativeAreas(data) {
 }
 
 const addV1SourceForAdministrativeAreas = (data) => {
+    const plainObject = JSON.parse(JSON.stringify(data));
     gadmVersion = GADM_VERSION_2_8;
-    addSourceForAdministrativeAreas(data);
+    addSourceForAdministrativeAreas(plainObject);
+    return plainObject;
 };
 
 const addV2SourceForAdministrativeAreas = (data) => {
+    const plainObject = JSON.parse(JSON.stringify(data));
     gadmVersion = GADM_VERSION_3_6;
-    addSourceForAdministrativeAreas(data);
+    addSourceForAdministrativeAreas(plainObject);
+    return plainObject;
 };
 
 module.exports = { addV1SourceForAdministrativeAreas, addV2SourceForAdministrativeAreas };
