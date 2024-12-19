@@ -36,7 +36,7 @@ class AreaSerializer {
             result = areaSerializer.serialize(data);
         }
 
-        result.data = addV1SourceForAdministrativeAreas(result.data);
+        result.data = addV1SourceForAdministrativeAreas(JSON.parse(JSON.stringify(result.data)));
 
         if (link) {
             result.links = {
