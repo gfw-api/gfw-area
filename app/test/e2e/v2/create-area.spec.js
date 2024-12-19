@@ -96,6 +96,60 @@ describe('V2 - Create area', () => {
         });
     });
 
+    it('Creating an area while being logged in as a user that owns the area and using admin instead of iso should return a 200 HTTP code and the created area object', async () => {
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+        const response = await requester
+            .post(`/api/v2/area`)
+            .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
+            .send({
+                name: 'Portugal area',
+                application: 'rw',
+                geostore: '713899292fc118a915741728ef84a2a7',
+                wdpaid: 3,
+                use: { id: 'bbb', name: 'created name' },
+                admin: { adm0: 'createdCountryIso', adm1: 15, adm2: 8 },
+                datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastCreate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                templateId: 'createdTemplateId'
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+        response.body.data.should.have.property('type').and.equal('area');
+        response.body.data.should.have.property('id');
+        response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+        response.body.data.attributes.should.have.property('application').and.equal('rw');
+        response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
+        response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+        response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
+        response.body.data.attributes.should.have.property('env').and.equal('production');
+        response.body.data.attributes.should.have.property('use').and.deep.equal({ id: 'bbb', name: 'created name' });
+        response.body.data.attributes.should.have.property('admin').and.deep.equal({
+            adm0: 'createdCountryIso',
+            adm1: 15,
+            adm2: 8,
+            source: {
+                provider: 'gadm',
+                version: '3.6',
+            }
+        });
+        response.body.data.attributes.should.have.property('iso').and.eql({});
+        response.body.data.attributes.should.have.property('createdAt');
+        response.body.data.attributes.should.have.property('updatedAt');
+        new Date(response.body.data.attributes.updatedAt).should.closeToTime(new Date(response.body.data.attributes.createdAt), 5);
+        response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
+        response.body.data.attributes.datasets[0].should.deep.equal({
+            cache: true,
+            active: true,
+            _id: '5a3aa9eb98b5910011731f66',
+            slug: 'viirs',
+            name: 'VIIRS',
+            startDate: '7',
+            endDate: '1'
+        });
+    });
+
     describe('Custom envs', () => {
 
         it('Creating an area with no env should be successful and have the default env value', async () => {
