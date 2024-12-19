@@ -44,20 +44,17 @@ function addSourceForAdministrativeAreas(data) {
         addSourceToIsoAttribute(area);
         addSourceToAdminAttribute(area);
     });
+    return data;
 }
 
 const addV1SourceForAdministrativeAreas = (data) => {
-    const plainObject = JSON.parse(JSON.stringify(data));
     gadmVersion = GADM_VERSION_2_8;
-    addSourceForAdministrativeAreas(plainObject);
-    return plainObject;
+    return addSourceForAdministrativeAreas(data);
 };
 
 const addV2SourceForAdministrativeAreas = (data) => {
-    const plainObject = JSON.parse(JSON.stringify(data));
     gadmVersion = GADM_VERSION_3_6;
-    addSourceForAdministrativeAreas(plainObject);
-    return plainObject;
+    return addSourceForAdministrativeAreas(data);
 };
 
 module.exports = { addV1SourceForAdministrativeAreas, addV2SourceForAdministrativeAreas };
