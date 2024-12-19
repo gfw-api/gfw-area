@@ -15,8 +15,8 @@ describe('adminSourceUtils', () => {
         };
 
         it('should add GADM 2.8 source information', () => {
-            addV1SourceForAdministrativeAreas(serializedAreaFragment);
-            expect(serializedAreaFragment.attributes.iso).to.deep.include({ source: { provider: 'gadm', version: '2.8' } });
+            const result = addV1SourceForAdministrativeAreas(serializedAreaFragment);
+            expect(result.attributes.iso).to.deep.include({ source: { provider: 'gadm', version: '2.8' } });
         });
 
         describe('An Area That Is NOT An Administrative Boundary', () => {
@@ -29,8 +29,8 @@ describe('adminSourceUtils', () => {
             };
 
             it('should not add source information to the iso attribute', () => {
-                addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
-                expect(serializedCustomAreaFragment.attributes.iso).to.not.have.property('source');
+                const result = addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
+                expect(result.attributes.iso).to.not.have.property('source');
             });
         });
     });
@@ -47,8 +47,8 @@ describe('adminSourceUtils', () => {
         };
 
         it('should add GADM 3.6 source information', () => {
-            addV2SourceForAdministrativeAreas(serializedAreaFragment);
-            expect(serializedAreaFragment.attributes.iso).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
+            const result = addV2SourceForAdministrativeAreas(serializedAreaFragment);
+            expect(result.attributes.iso).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
         });
 
         describe('An Area That Is NOT An Administrative Boundary', () => {
@@ -64,13 +64,13 @@ describe('adminSourceUtils', () => {
             };
 
             it('should not add source information to the iso attribute', () => {
-                addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
-                expect(serializedCustomAreaFragment.attributes.iso).to.not.have.property('source');
+                const result = addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
+                expect(result.attributes.iso).to.not.have.property('source');
             });
 
             it('should not add source information to the admin attribute', () => {
-                addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
-                expect(serializedCustomAreaFragment.attributes.admin).to.not.have.property('source');
+                const result = addV1SourceForAdministrativeAreas(serializedCustomAreaFragment);
+                expect(result.attributes.admin).to.not.have.property('source');
             });
         });
     });

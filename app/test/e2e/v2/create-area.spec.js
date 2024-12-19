@@ -75,7 +75,11 @@ describe('V2 - Create area', () => {
         response.body.data.attributes.should.have.property('use').and.deep.equal({ id: 'bbb', name: 'created name' });
         response.body.data.attributes.should.have.property('iso').and.deep.equal({
             country: 'createdCountryIso',
-            region: 'createdRegionIso'
+            region: 'createdRegionIso',
+            source: {
+                provider: 'gadm',
+                version: '3.6',
+            }
         });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');
@@ -128,7 +132,11 @@ describe('V2 - Create area', () => {
             });
             response.body.data.attributes.should.have.property('iso').and.deep.equal({
                 country: 'createdCountryIso',
-                region: 'createdRegionIso'
+                region: 'createdRegionIso',
+                source: {
+                    provider: 'gadm',
+                    version: '3.6',
+                }
             });
             response.body.data.attributes.should.have.property('createdAt');
             response.body.data.attributes.should.have.property('updatedAt');
@@ -180,7 +188,11 @@ describe('V2 - Create area', () => {
             });
             response.body.data.attributes.should.have.property('iso').and.deep.equal({
                 country: 'createdCountryIso',
-                region: 'createdRegionIso'
+                region: 'createdRegionIso',
+                source: {
+                    provider: 'gadm',
+                    version: '3.6',
+                }
             });
             response.body.data.attributes.should.have.property('createdAt');
             response.body.data.attributes.should.have.property('updatedAt');
@@ -238,7 +250,11 @@ describe('V2 - Create area', () => {
             });
             response.body.data.attributes.should.have.property('iso').and.deep.equal({
                 country: 'createdCountryIso',
-                region: 'createdRegionIso'
+                region: 'createdRegionIso',
+                source: {
+                    provider: 'gadm',
+                    version: '3.6',
+                }
             });
             response.body.data.attributes.should.have.property('createdAt');
             response.body.data.attributes.should.have.property('updatedAt');
@@ -294,7 +310,11 @@ describe('V2 - Create area', () => {
         response.body.data.attributes.should.have.property('use').and.deep.equal({ id: 'bbb', name: 'created name' });
         response.body.data.attributes.should.have.property('iso').and.deep.equal({
             country: 'createdCountryIso',
-            region: 'createdRegionIso'
+            region: 'createdRegionIso',
+            source: {
+                provider: 'gadm',
+                version: '3.6',
+            }
         });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');

@@ -81,7 +81,11 @@ describe('V1 - Create area FW', () => {
         });
         response.body.data.attributes.should.have.property('iso').and.deep.equal({
             country: 'createdCountryIso',
-            region: 'createdRegionIso'
+            region: 'createdRegionIso',
+            source: {
+                provider: 'gadm',
+                version: '2.8',
+            }
         });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');
@@ -166,7 +170,11 @@ describe('V1 - Create area FW', () => {
         });
         response.body.data.attributes.should.have.property('iso').and.deep.equal({
             country: 'createdCountryIso',
-            region: 'createdRegionIso'
+            region: 'createdRegionIso',
+            source: {
+                provider: 'gadm',
+                version: '2.8',
+            }
         });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');
