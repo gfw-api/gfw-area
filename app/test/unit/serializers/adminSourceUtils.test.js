@@ -51,6 +51,24 @@ describe('adminSourceUtils', () => {
             expect(result.attributes.iso).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
         });
 
+        describe('An Administrative Boundary Area with Both an "iso" and "admin" Property', () => {
+            it('should NOT add source information to an empty "iso" object', () => {
+                const serializedAreaFragmentWithEmptyIsoAndAdmin = {
+                    attributes: {
+                        iso: {},
+                        admin: {
+                            adm0: 'HND',
+                            adm1: 8,
+                            adm2: 4
+                        },
+                    },
+                };
+
+                const result = addV2SourceForAdministrativeAreas(serializedAreaFragmentWithEmptyIsoAndAdmin);
+                expect(result.attributes.iso).to.eql({});
+            });
+        });
+
         describe('An Area That Is NOT An Administrative Boundary', () => {
             const serializedCustomAreaFragment = {
                 attributes: {
