@@ -22,6 +22,7 @@ module.exports = (grunt) => {
         mochaTest: {
             unit: {
                 options: {
+                    timout: 10000,
                     reporter: 'spec',
                     quiet: false, // Optionally suppress output to standard out (defaults to false)
                     clearRequireCache: true, // Optionally clear the require cache before running tests (defaults to false)
@@ -57,7 +58,7 @@ module.exports = (grunt) => {
                 ],
                 tasks: ['mochaTest:unit'],
                 options: {
-                    spawn: false
+                    spawn: false,
                 }
             },
             e2eTest: {
@@ -86,7 +87,6 @@ module.exports = (grunt) => {
             }
         }
     });
-
 
     grunt.registerTask('unitTest', ['mochaTest:unit']);
 
