@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
+const logger = require('logger');
 const mongoosePaginate = require('mongoose-paginate');
 const mongooseHistory = require('mongoose-history');
 const gladAlertTypes = require('models/glad-alert-types');
+const AreaEntity = require('entities/areaV2.entity');
 
 const { Schema } = mongoose;
 
@@ -14,6 +16,24 @@ const Dataset = new Schema({
     endDate: { type: String, required: true, trim: true },
     lastUpdate: { type: Number, required: false },
 });
+
+const AdminVersion = new Schema({
+    provider: { type: String, required: true, trim: true },
+    version: { type: String, required: true, trim: true },
+    geostore: { type: String, required: false, trim: true }, // MD5
+    country: {
+        id: { type: String, required: true, trim: true },
+        name: { type: String, required: true, trim: true },
+    },
+    region: {
+        id: { type: String, required: false, trim: true },
+        name: { type: String, required: false, trim: true },
+    },
+    subregion: {
+        id: { type: String, required: false, trim: true },
+        name: { type: String, required: false, trim: true },
+    },
+}, { _id: false });
 
 const Area = new Schema({
     name: { type: String, required: false, trim: true },
@@ -82,6 +102,10 @@ const Area = new Schema({
     language: {
         type: String, trim: true, required: false, default: 'en'
     },
+    adminVersions: {
+        type: [AdminVersion],
+        required: false,
+    },
 });
 
 Area.statics.existsSavedAreaForGeostore = async function existsSavedAreaForGeostore(geostore) {
@@ -96,5 +120,16 @@ Area.statics.existsSavedAreaForGeostoreDataApi = async function existsSavedAreaF
 
 Area.plugin(mongooseHistory);
 Area.plugin(mongoosePaginate);
+
+Area.pre('validate', function (next) {
+    try {
+        const areaEntity = new AreaEntity(this);
+        areaEntity.populateAdminVersions();
+    } catch (e) {
+        logger.error(`[AREAS-V2-Model] Could not populate AdminVersions for userId: '${this.userId}' and Area name: '${this.name}'`, e);
+    } finally {
+        next();
+    }
+});
 
 module.exports = mongoose.model('area', Area);
