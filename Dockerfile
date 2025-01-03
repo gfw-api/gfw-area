@@ -1,38 +1,89 @@
-FROM node:20.9-alpine3.18
-MAINTAINER info@vizzuality.com
+###############################################################################
+# Use Amazon Linux 2023
+###############################################################################
+FROM amazonlinux:2023
 
-ENV NAME gfw-area
-ENV USER gfw-area
+# Metadata
+LABEL maintainer="datalab@wri.org"
 
-RUN apk update && apk upgrade && \
-    apk add --no-cache --update bash git openssh python3 build-base
+###############################################################################
+# Environment Variables
+###############################################################################
+ARG NODE_VERSION=20.9.0
+ENV NODE_VERSION=${NODE_VERSION} \
+    NAME=gfw-area \
+    USER=gfw-area \
+    PATH=/usr/local/bin:$PATH
 
-RUN addgroup $USER && adduser -s /bin/bash -D -G $USER $USER
+###############################################################################
+# Install System Dependencies
+###############################################################################
+RUN dnf -y update \
+ && dnf -y install tar xz bash git openssh python3 gcc g++ make \
+ && dnf clean all \
+ && rm -rf /var/cache/dnf
 
-RUN yarn global add grunt-cli bunyan
+###############################################################################
+# Install Node (ARM64 build)
+###############################################################################
+RUN curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-arm64.tar.xz" \
+ && tar -xJf "node-v${NODE_VERSION}-linux-arm64.tar.xz" -C /usr/local --strip-components=1 \
+ && rm "node-v${NODE_VERSION}-linux-arm64.tar.xz"
 
-RUN mkdir -p /opt/$NAME
-COPY package.json /opt/$NAME/package.json
-COPY yarn.lock /opt/$NAME/yarn.lock
-RUN cd /opt/$NAME && yarn install
+###############################################################################
+# Verify Node Installation
+###############################################################################
+RUN node --version && npm --version
 
-COPY entrypoint.sh /opt/$NAME/entrypoint.sh
-COPY config /opt/$NAME/config
+###############################################################################
+# Create a Non-Root User
+###############################################################################
+RUN groupadd "$USER" \
+ && useradd -s /bin/bash -m -g "$USER" "$USER"
 
-WORKDIR /opt/$NAME
+###############################################################################
+# Install Global Node Tools (Yarn, Grunt, Bunyan)
+###############################################################################
+RUN npm install --global yarn grunt-cli bunyan
 
-COPY ./app /opt/$NAME/app
-RUN chown -R $USER:$USER /opt/$NAME
+###############################################################################
+# Copy Only Package Files First for Better Caching
+###############################################################################
+WORKDIR /opt/${NAME}
+COPY package.json yarn.lock ./
 
-# Tell Docker we are going to use this ports
+RUN yarn install
+
+###############################################################################
+# Copy the Rest of the Files
+###############################################################################
+COPY entrypoint.sh ./entrypoint.sh
+COPY config ./config
+COPY app ./app
+
+###############################################################################
+# Set Correct Ownership
+###############################################################################
+RUN chown -R "$USER":"$USER" /opt/${NAME}
+
+###############################################################################
+# Expose the Application Port
+###############################################################################
 EXPOSE 4100
 
+###############################################################################
+# Fetch docker-compose-wait
+###############################################################################
+RUN curl -sL "https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait" -o /wait \
+ && chmod +x /wait
 
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait /wait
-RUN chmod +x /wait
-
-CMD /wait
-
-USER $USER
-
+###############################################################################
+# Set User and Entrypoint
+###############################################################################
+USER "$USER"
 ENTRYPOINT ["./entrypoint.sh"]
+
+###############################################################################
+# Default CMD (docker-compose-wait)
+###############################################################################
+CMD ["/wait"]
