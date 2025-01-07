@@ -113,7 +113,11 @@ describe('V2 - GET download tiles', () => {
         response.headers.should.be.an('object');
 
         response.headers.should.have.property('content-disposition').and.equal('attachment; filename=download.zip');
-        response.headers.should.have.property('content-length').and.equal('21818');
+
+        response.headers.should.have.property('content-length');
+        const size = parseInt(response.headers['content-length'], 10);
+        size.should.be.within(21000, 24000); // accounts for zip implementation differences
+
         response.headers.should.have.property('content-type').and.equal('application/zip');
         response.headers.should.have.property('last-modified').and.be.a('string');
         response.headers.should.have.property('date').and.be.a('string');
