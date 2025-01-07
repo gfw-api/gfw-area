@@ -24,11 +24,16 @@ RUN dnf -y update \
  && rm -rf /var/cache/dnf
 
 ###############################################################################
-# Install Node (ARM64 build)
+# Install Node (ARM64 or x64 (CI/CD) build)
 ###############################################################################
-RUN curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-arm64.tar.xz" \
- && tar -xJf "node-v${NODE_VERSION}-linux-arm64.tar.xz" -C /usr/local --strip-components=1 \
- && rm "node-v${NODE_VERSION}-linux-arm64.tar.xz"
+RUN ARCH=$(uname -m) \
+ && case "$ARCH" in \
+     aarch64) ARCH="arm64" ;; \
+     x86_64) ARCH="x64" ;; \
+   esac \
+ && curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz" \
+ && tar -xJf "node-v${NODE_VERSION}-linux-${ARCH}.tar.xz" -C /usr/local --strip-components=1 \
+ && rm "node-v${NODE_VERSION}-linux-${ARCH}.tar.xz"
 
 ###############################################################################
 # Verify Node Installation
