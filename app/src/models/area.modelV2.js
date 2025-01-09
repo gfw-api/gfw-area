@@ -23,7 +23,7 @@ const AdminVersion = new Schema({
     geostore: { type: String, required: false, trim: true }, // MD5
     country: {
         id: { type: String, required: true, trim: true },
-        name: { type: String, required: true, trim: true },
+        name: { type: String, required: false, trim: true }, // because Area.name is optional
     },
     region: {
         id: { type: String, required: false, trim: true },
