@@ -7,7 +7,8 @@
     "dev": "LOCAL_URL=http://mymachine:3005 NODE_PATH=app/src PORT=3005 node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js",
     "start": "NODE_PATH=app/src node $NODE_DEBUG_OPTION app/index.js",
     "test": "NODE_PATH=app/src node $NODE_DEBUG_OPTION ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js test",
-    "coverage": "NODE_PATH=app/src node $NODE_DEBUG_OPTION ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js nyc"
+    "coverage": "NODE_PATH=app/src node $NODE_DEBUG_OPTION ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js nyc",
+    "validate-areas": "NODE_PATH=app/src node ./app/devUtilities/validate-areas.js"
   },
   "keywords": [],
   "license": "ISC",
@@ -26,6 +27,8 @@
     "chai": "^4.3.6",
     "chai-datetime": "^1.8.0",
     "chai-http": "^4.3.0",
+    "cli-progress": "^3.12.0",
+    "commander": "^13.0.0",
     "eslint": "^9.17.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-plugin-import": "^2.31.0",

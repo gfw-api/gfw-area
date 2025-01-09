@@ -10,7 +10,7 @@ describe('Area Entity V2', () => {
         describe('Administrative Boundary Versions', () => {
             describe('An Area That Does NOT Have A History Of Versions', () => {
                 describe('And Is An Administrative Boundary', () => {
-                    describe('Uses Admin Property', () => {
+                    describe('By Using the Admin Property', () => {
                         const areaDataWithAdmin = {
                             name: 'Distrito Central, Francisco Morazán, Honduras',
                             geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -34,9 +34,27 @@ describe('Area Entity V2', () => {
                             areaEntity.populateAdminVersions();
                             expect(area.adminVersions).to.not.be.empty;
                         });
+
+                        describe('But Does Not Have An Area Name', () => {
+                            const areaDataWithAdminButNoName = { ...areaDataWithAdmin, name: '' };
+
+                            it('creates an adminVersions collection', () => {
+                                const area = new AreaModel(areaDataWithAdminButNoName);
+                                const areaEntity = new AreaEntity(area);
+                                areaEntity.populateAdminVersions();
+                                expect(area.adminVersions).to.be.instanceof(Array);
+                            });
+
+                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', () => {
+                                const area = new AreaModel(areaDataWithAdminButNoName);
+                                const areaEntity = new AreaEntity(area);
+                                areaEntity.populateAdminVersions();
+                                expect(area.adminVersions).to.not.be.empty;
+                            });
+                        });
                     });
 
-                    describe('Uses ISO Property', () => {
+                    describe('By Using the ISO Property', () => {
                         const areaDataWithIso = {
                             name: 'Distrito Central, Francisco Morazán, Honduras',
                             geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -59,6 +77,42 @@ describe('Area Entity V2', () => {
                             const areaEntity = new AreaEntity(area);
                             areaEntity.populateAdminVersions();
                             expect(area.adminVersions).to.not.be.empty;
+                        });
+
+                        describe('Has a Name But It Is Missing Its Country Part', () => {
+                            const areaDataWithIsoButNameWithNoCountry = { ...areaDataWithIso, name: 'Distrito Central, Francisco Morazán,' };
+
+                            it('creates an adminVersions collection', () => {
+                                const area = new AreaModel(areaDataWithIsoButNameWithNoCountry);
+                                const areaEntity = new AreaEntity(area);
+                                areaEntity.populateAdminVersions();
+                                expect(area.adminVersions).to.be.instanceof(Array);
+                            });
+
+                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', () => {
+                                const area = new AreaModel(areaDataWithIsoButNameWithNoCountry);
+                                const areaEntity = new AreaEntity(area);
+                                areaEntity.populateAdminVersions();
+                                expect(area.adminVersions).to.not.be.empty;
+                            });
+                        });
+
+                        describe('But Does Not Have An Area Name', () => {
+                            const areaDataWithIsoButNoName = { ...areaDataWithIso, name: '' };
+
+                            it('creates an adminVersions collection', () => {
+                                const area = new AreaModel(areaDataWithIsoButNoName);
+                                const areaEntity = new AreaEntity(area);
+                                areaEntity.populateAdminVersions();
+                                expect(area.adminVersions).to.be.instanceof(Array);
+                            });
+
+                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', () => {
+                                const area = new AreaModel(areaDataWithIsoButNoName);
+                                const areaEntity = new AreaEntity(area);
+                                areaEntity.populateAdminVersions();
+                                expect(area.adminVersions).to.not.be.empty;
+                            });
                         });
                     });
                 });
@@ -180,7 +234,10 @@ describe('Area Entity V2', () => {
                             const areaEntity = new AreaEntity(area);
 
                             areaEntity.populateAdminVersions();
-                            expect(area.adminVersions[0]).to.have.deep.property('subregion', { id: '8', name: 'Altamira' });
+                            expect(area.adminVersions[0]).to.have.deep.property('subregion', {
+                                id: '8',
+                                name: 'Altamira'
+                            });
                         });
 
                         it('removes a subregion when it is NOT defined', () => {
@@ -439,6 +496,119 @@ describe('Area Entity V2', () => {
                                 areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.not.have.deep.property('subregion');
+                            });
+                        });
+
+                        describe('But Has A Name That is Missing Its Country', () => { // example from a real Area in production
+                            const areaDataWithIsoButMissingCountryInName = { ...areaDataWithIso, name: 'Distrito Central, Francisco Morazán,' };
+
+                            it('adds an AdministrativeVersion to the adminVersions collection', () => {
+                                const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
+                                const areaEntity = new AreaEntity(area);
+                                areaEntity.populateAdminVersions();
+                                expect(area.adminVersions[0].toJSON()).to.be.instanceof(Object);
+                            });
+
+                            it('sets the provider to `gadm`', () => {
+                                const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
+                                const areaEntity = new AreaEntity(area);
+
+                                areaEntity.populateAdminVersions();
+
+                                expect(area.adminVersions[0].toObject()).to.have.deep.property('provider', 'gadm');
+                            });
+
+                            it('set the version to `3.6`', () => {
+                                const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
+                                const areaEntity = new AreaEntity(area);
+
+                                areaEntity.populateAdminVersions();
+
+                                expect(area.adminVersions[0].toObject()).to.have.deep.property('version', '3.6');
+                            });
+
+                            it('includes the geostore', () => {
+                                const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
+                                const areaEntity = new AreaEntity(area);
+
+                                areaEntity.populateAdminVersions();
+
+                                expect(area.adminVersions[0].toObject()).to.have.deep.property('geostore', 'abcf7041e2fbc5e8e7774178157ababe');
+                            });
+
+                            it('includes the country with an empty name', () => {
+                                const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
+                                const areaEntity = new AreaEntity(area);
+
+                                areaEntity.populateAdminVersions();
+
+                                expect(area.adminVersions[0].toObject()).to.have.deep.property('country', {
+                                    id: 'HND',
+                                    name: '',
+                                });
+                            });
+
+                            describe('Including A Region', () => {
+                                it('includes the region when it is defined', () => {
+                                    const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
+                                    const areaEntity = new AreaEntity(area);
+
+                                    areaEntity.populateAdminVersions();
+
+                                    expect(area.adminVersions[0].toObject()).to.have.deep.property(
+                                        'region',
+                                        { id: '8', name: 'Francisco Morazán' }
+                                    );
+                                });
+
+                                it('does NOT include a region when it is NOT defined', () => {
+                                    const countryOnlyWithIso = {
+                                        name: 'Honduras',
+                                        geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                                        iso: {
+                                            country: 'HND',
+                                        }
+                                    };
+
+                                    const area = new AreaModel(countryOnlyWithIso);
+                                    const areaEntity = new AreaEntity(area);
+
+                                    areaEntity.populateAdminVersions();
+
+                                    expect(area.adminVersions[0].toObject()).to.not.have.deep.property('region');
+                                });
+                            });
+
+                            describe('Including a Subregion', () => {
+                                it('includes the subregion when it is defined', () => {
+                                    const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
+                                    const areaEntity = new AreaEntity(area);
+
+                                    areaEntity.populateAdminVersions();
+
+                                    expect(area.adminVersions[0].toObject()).to.have.deep.property(
+                                        'subregion',
+                                        { id: '4', name: 'Distrito Central' }
+                                    );
+                                });
+
+                                it('does NOT include a subregion when it is NOT defined', () => {
+                                    const countryAndRegionOnlyWithIso = {
+                                        name: 'Francisco Morazán, Honduras',
+                                        geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                                        iso: {
+                                            country: 'HND',
+                                            region: '8',
+                                        }
+                                    };
+
+                                    const area = new AreaModel(countryAndRegionOnlyWithIso);
+                                    const areaEntity = new AreaEntity(area);
+
+                                    areaEntity.populateAdminVersions();
+
+                                    expect(area.adminVersions[0].toObject()).to.not.have.deep.property('subregion');
+                                });
                             });
                         });
                     });
