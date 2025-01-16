@@ -22,17 +22,17 @@ describe('Area Serializer V2', () => {
                 adm1: 8,
                 adm2: 4,
             },
-            adminVersions: [
-                {
-                    provider: 'gadm',
-                    version: '3.6',
-                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
-                    country: { id: 'HND', name: 'Honduras' },
-                    region: { id: '8', name: 'Francisco Morazán' },
-                    subregion: { id: '4', name: 'Distrito Central' },
-                }
-            ]
-        };
+        adminVersions: [
+            {
+                provider: 'gadm',
+                version: '3.6',
+                geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                country: { id: 'HND', name: 'Honduras' },
+                region: { id: '8', name: 'Francisco Morazán' },
+                subregion: { id: '4', name: 'Distrito Central' },
+            }
+        ]
+    };
 
         it('should include the name of the Area', () => {
             const result = areaSerializerV2.serialize(new AreaModel(area));

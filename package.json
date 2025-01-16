@@ -56,6 +56,7 @@
     "@mapbox/tilebelt": "^1.0.1",
     "JSONStream": "^1.3.0",
     "aws-sdk": "^2.1138.0",
+    "axios": "^1.7.9",
     "bunyan": "^1.8.15",
     "config": "^1.21.0",
     "jsonapi-serializer": "2.1.1",

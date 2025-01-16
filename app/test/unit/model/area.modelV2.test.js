@@ -6,6 +6,7 @@ const logger = require('logger');
 
 const AreaModel = require('models/area.modelV2');
 const AreaEntity = require('entities/areaV2.entity');
+const AdminLookupService = require('services/adminLookup.service');
 
 const { expect } = chai;
 
@@ -20,11 +21,14 @@ describe('Area Model V2', () => {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
+
+        sinon.stub(AdminLookupService, 'findMatch').resolves([]);
     });
 
     after(async () => {
         await mongoose.connection.close();
         await mongoServer.stop();
+        sinon.restore();
     });
 
     beforeEach(async () => {

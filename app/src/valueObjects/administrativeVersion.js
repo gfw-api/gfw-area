@@ -66,11 +66,11 @@ class AdministrativeVersion {
         this.version = version;
         this.geostore = geostore;
         this.country = country;
-        if (region) {
+        if (region && region.id) {
             this.region = region;
         }
 
-        if (subregion) {
+        if (subregion && subregion.id) {
             this.subregion = subregion;
         }
     }

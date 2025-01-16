@@ -48,6 +48,21 @@ describe('V2 - Area emails', () => {
         // eslint-disable-next-line no-promise-executor-return
         const fake = sandbox.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
 
+        nock('https://data-api.globalforestwatch.org')
+            .get('/political/id-lookup')
+            .query({
+                admin_version: '4.1',
+                country: 'Portugal area',
+            })
+            .reply(200, {
+                data: {
+                    adminSource: 'GADM',
+                    adminVersion: '4.1',
+                    matches: []
+                },
+                status: 'success'
+            });
+
         const response = await requester
             .post(`/api/v2/area`)
             .set('Authorization', 'Bearer abcd')

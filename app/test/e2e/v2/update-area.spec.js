@@ -64,6 +64,21 @@ describe('V2 - Update area', () => {
     it('Updating an area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
         mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
+        nock('https://data-api.globalforestwatch.org')
+            .get('/political/id-lookup')
+            .query({
+                admin_version: '4.1',
+                country: 'Portugal area',
+            })
+            .reply(200, {
+                data: {
+                    adminSource: 'GADM',
+                    adminVersion: '4.1',
+                    matches: []
+                },
+                status: 'success'
+            });
+
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
         const response = await requester
@@ -121,6 +136,21 @@ describe('V2 - Update area', () => {
 
     it('Updating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the updated area object', async () => {
         mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+        nock('https://data-api.globalforestwatch.org')
+            .get('/political/id-lookup')
+            .query({
+                admin_version: '4.1',
+                country: 'Portugal area',
+            })
+            .reply(200, {
+                data: {
+                    adminSource: 'GADM',
+                    adminVersion: '4.1',
+                    matches: []
+                },
+                status: 'success'
+            });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
@@ -185,6 +215,21 @@ describe('V2 - Update area', () => {
 
     it('Updating an area with an env modifies the env', async () => {
         mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+        nock('https://data-api.globalforestwatch.org')
+            .get('/political/id-lookup')
+            .query({
+                admin_version: '4.1',
+                country: 'Portugal area',
+            })
+            .reply(200, {
+                data: {
+                    adminSource: 'GADM',
+                    adminVersion: '4.1',
+                    matches: []
+                },
+                status: 'success'
+            });
 
         const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
 
