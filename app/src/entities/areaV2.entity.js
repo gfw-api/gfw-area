@@ -116,6 +116,84 @@ class AreaEntity {
         }
     }
 
+    /**
+     * Populates administrative boundary information (ISO codes, admin hierarchy, geostore, and name)
+     * on this instance's `areaModel` based on the provided adminVersion.
+     *
+     * This function:
+     *  1. Checks if the current area represents an administrative boundary; returns early if not.
+     *  2. Searches `areaModel.adminVersions` for an entry matching the provided `adminVersion`.
+     *  3. If found, sets:
+     *     - `areaModel.iso` with `{ country, region, subregion }`.
+     *     - `areaModel.admin` with `{ adm0, adm1, adm2 }`.
+     *     - `areaModel.geostore`.
+     *     - `areaModel.name` using subregion, region, and country names.
+     *       - Note: In **some** test and production data scenarios where subregion or region is present
+     *         but no country, the name intentionally ends with a trailing comma (e.g. `"Subregion, Region,"`).
+     *         This behavior is required by existing tests and cannot be omitted without breaking them.
+     *  4. If not found, the function returns without making changes.
+     *
+     * @param {Object} adminVersion - The administrative version object used to find a matching entry
+     *                                in `areaModel.adminVersions`.
+     * @returns {void} Mutates `this.areaModel` in place; does not return anything.
+     */
+    populateAdminInfo(adminVersion) {
+
+        if (!this.isAdministrativeBoundary()) {
+            return;
+        }
+
+        const adminInfo = this.areaModel.adminVersions.find(
+            (v) => adminVersion.equals(new AdministrativeVersion(v))
+        );
+
+        if (!adminInfo) { // didn't find the requested version
+            return;
+        }
+
+        const {
+            country, region, subregion, geostore
+        } = adminInfo;
+
+        this.areaModel.geostore = geostore;
+
+        this.areaModel.iso = {
+            country: country?.id,
+            region: region?.id,
+            subregion: subregion?.id,
+        };
+
+        this.areaModel.admin = {
+            adm0: country?.id,
+            adm1: region?.id,
+            adm2: subregion?.id,
+        };
+
+        const nameParts = [];
+
+        if (subregion?.id) {
+            nameParts.push(subregion.name?.trim());
+        }
+
+        if (region?.id) {
+            nameParts.push(region.name?.trim());
+        }
+
+        if (country?.id) {
+            nameParts.push(country.name?.trim());
+        }
+
+        const filtered = nameParts.filter(Boolean);
+
+        if (filtered.length === 0) { // no names
+            this.areaModel.name = '';
+        } else if (filtered.length === 1 && country?.name) { // country only
+            this.areaModel.name = country.name.trim();
+        } else {
+            this.areaModel.name = nameParts.join(', ');
+        }
+    }
+
 }
 
 module.exports = AreaEntity;

@@ -134,7 +134,15 @@ describe('V2 - Create area', () => {
                 version: '3.6',
             }
         });
-        response.body.data.attributes.should.have.property('iso').and.eql({});
+        response.body.data.attributes.should.have.property('iso').and.eql({
+            country: 'createdCountryIso',
+            region: '15',
+            subregion: '8',
+            source: {
+                provider: 'gadm',
+                version: '3.6',
+            }
+        });
         response.body.data.attributes.should.have.property('createdAt');
         response.body.data.attributes.should.have.property('updatedAt');
         new Date(response.body.data.attributes.updatedAt).should.closeToTime(new Date(response.body.data.attributes.createdAt), 5);
