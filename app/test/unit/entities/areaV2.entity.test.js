@@ -2,6 +2,7 @@
 const chai = require('chai');
 const AreaModel = require('models/area.modelV2');
 const AreaEntity = require('entities/areaV2.entity');
+const AdministrativeVersion = require('valueObjects/administrativeVersion');
 
 const { expect } = chai;
 
@@ -612,6 +613,408 @@ describe('Area Entity V2', () => {
                             });
                         });
                     });
+                });
+            });
+        });
+
+        describe('Using Admin Versions to Populate Area Admin Information', () => {
+            context('Complete Administrative Boundary Info', () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                    },
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    },
+                    adminVersions: [
+                        {
+                            provider: 'gadm',
+                            version: '3.6',
+                            geostore: '923f7035e2fbc5e8e6134178157abab4',
+                            country: { id: 'KEN', name: 'Kenya' },
+                            region: { id: '15', name: 'Kirinyaga' },
+                            subregion: { id: '1', name: 'Gichugu' },
+                        }
+                    ]
+                };
+
+                let areaModel;
+                let areaEntity;
+
+                beforeEach(() => {
+                    areaModel = new AreaModel(areaData);
+                    areaEntity = new AreaEntity(areaModel);
+                    areaEntity.populateAdminInfo(new AdministrativeVersion());
+                });
+
+                it('sets the iso attribute\'s country, region, and subregion', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                        country: 'KEN',
+                        region: '15',
+                        subregion: '1',
+                    });
+                });
+
+                it('sets the admin attribute\'s adm0, adm1, and adm2', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                        adm0: 'KEN',
+                        adm1: 15,
+                        adm2: 1,
+                    });
+                });
+
+                it('sets the geostore', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).geostore).to.equal('923f7035e2fbc5e8e6134178157abab4');
+                });
+
+                it('sets the name as a comma separated subregion, region, country', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('Gichugu, Kirinyaga, Kenya');
+                });
+            });
+            context('Country Level Administrative Boundary Info', () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                    },
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    },
+                    adminVersions: [
+                        {
+                            provider: 'gadm',
+                            version: '3.6',
+                            country: { id: 'KEN', name: 'Kenya' },
+                        }
+                    ]
+                };
+
+                let areaModel;
+                let areaEntity;
+
+                beforeEach(() => {
+                    areaModel = new AreaModel(areaData);
+                    areaEntity = new AreaEntity(areaModel);
+                    areaEntity.populateAdminInfo(new AdministrativeVersion());
+                });
+
+                it('sets the iso attribute\'s country', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                        country: 'KEN',
+                    });
+                });
+
+                it('sets the admin attribute\'s adm0', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                        adm0: 'KEN',
+                    });
+                });
+
+                it('sets the name to only be the country', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('Kenya');
+                });
+            });
+            context('Region Level Administrative Boundary Info', () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                    },
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    },
+                    adminVersions: [
+                        {
+                            provider: 'gadm',
+                            version: '3.6',
+                            country: { id: 'KEN', name: 'Kenya' },
+                            region: { id: '15', name: 'Kirinyaga' },
+                        }
+                    ]
+                };
+
+                let areaModel;
+                let areaEntity;
+
+                beforeEach(() => {
+                    areaModel = new AreaModel(areaData);
+                    areaEntity = new AreaEntity(areaModel);
+                    areaEntity.populateAdminInfo(new AdministrativeVersion());
+                });
+
+                it('sets the iso attribute\'s country and region', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                        country: 'KEN',
+                        region: '15',
+                    });
+                });
+
+                it('sets the admin attribute\'s adm0 and adm1', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                        adm0: 'KEN',
+                        adm1: 15,
+                    });
+                });
+
+                it('sets the name to be a comma separated region and country', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('Kirinyaga, Kenya');
+                });
+            });
+            context('Complete IDs for an Administrative Boundary But Names are Missing', () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                    },
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    },
+                    adminVersions: [
+                        {
+                            provider: 'gadm',
+                            version: '3.6',
+                            country: { id: 'KEN' },
+                            region: { id: '15' },
+                            subregion: { id: '1' },
+                        }
+                    ]
+                };
+
+                let areaModel;
+                let areaEntity;
+
+                beforeEach(() => {
+                    areaModel = new AreaModel(areaData);
+                    areaEntity = new AreaEntity(areaModel);
+                    areaEntity.populateAdminInfo(new AdministrativeVersion());
+                });
+
+                it('sets the iso attribute\'s country, region, and subregion', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                        country: 'KEN',
+                        region: '15',
+                        subregion: '1',
+                    });
+                });
+
+                it('sets the admin attribute\'s adm0, adm1, and adm2', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                        adm0: 'KEN',
+                        adm1: 15,
+                        adm2: 1,
+                    });
+                });
+
+                it('sets the name to an empty string', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('');
+                });
+            });
+            context('Region and Subregion Have Names But Country Name is Missing', () => {
+                // this is an example straight from production data
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                    },
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    },
+                    adminVersions: [
+                        {
+                            provider: 'gadm',
+                            version: '3.6',
+                            country: { id: 'KEN' },
+                            region: { id: '15', name: 'Kirinyaga' },
+                            subregion: { id: '1', name: 'Gichugu' },
+                        }
+                    ]
+                };
+
+                let areaModel;
+                let areaEntity;
+
+                beforeEach(() => {
+                    areaModel = new AreaModel(areaData);
+                    areaEntity = new AreaEntity(areaModel);
+                    areaEntity.populateAdminInfo(new AdministrativeVersion());
+                });
+
+                it('sets the iso attribute\'s country, region, and subregion', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                        country: 'KEN',
+                        region: '15',
+                        subregion: '1',
+                    });
+                });
+
+                it('sets the admin attribute\'s adm0, adm1, and adm2', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                        adm0: 'KEN',
+                        adm1: 15,
+                        adm2: 1,
+                    });
+                });
+
+                it('sets the name to a comma separated subregion, region, and empty string for country', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('Gichugu, Kirinyaga,');
+                });
+            });
+            context('Geostore is not present in the Administrative Boundary', () => {
+                const areaData = {
+                    name: 'Honduras',
+                    iso: {
+                        country: 'HND',
+                    },
+                    admin: {
+                        adm0: 'HND',
+                    },
+                    adminVersions: [
+                        {
+                            provider: 'gadm',
+                            version: '3.6',
+                            country: { id: 'KEN' },
+                        }
+                    ]
+                };
+
+                let areaModel;
+                let areaEntity;
+
+                beforeEach(() => {
+                    areaModel = new AreaModel(areaData);
+                    areaEntity = new AreaEntity(areaModel);
+                    areaEntity.populateAdminInfo(new AdministrativeVersion());
+                });
+
+                it('removes the geostore attribute', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel))).not.to.have.property('geostore');
+                });
+            });
+            context('Region Level Administrative Boundary Info But Region Name is Missing', () => {
+                // this example can be found in the legacy integration tests
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                    },
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    },
+                    adminVersions: [
+                        {
+                            provider: 'gadm',
+                            version: '3.6',
+                            country: { id: 'KEN', name: 'Kenya' },
+                            region: { id: '15' },
+                        }
+                    ]
+                };
+
+                let areaModel;
+                let areaEntity;
+
+                beforeEach(() => {
+                    areaModel = new AreaModel(areaData);
+                    areaEntity = new AreaEntity(areaModel);
+                    areaEntity.populateAdminInfo(new AdministrativeVersion());
+                });
+
+                it('sets the iso attribute\'s country and region', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                        country: 'KEN',
+                        region: '15',
+                    });
+                });
+
+                it('sets the admin attribute\'s adm0 and adm1', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                        adm0: 'KEN',
+                        adm1: 15,
+                    });
+                });
+
+                it('sets the name to be the country name', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('Kenya');
+                });
+            });
+            context('Entity Does Not Have the Admin Version Requested', () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                    },
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    },
+                    adminVersions: [] // no versions to match!
+                };
+
+                let areaModel;
+                let areaEntity;
+
+                beforeEach(() => {
+                    areaModel = new AreaModel(areaData);
+                    areaEntity = new AreaEntity(areaModel);
+                    areaEntity.populateAdminInfo(new AdministrativeVersion());
+                });
+
+                it('keeps the original iso attribute\'s country, region, and subregion', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                    });
+                });
+
+                it('keeps the original admin attribute\'s adm0, adm1, and adm2', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    });
+                });
+
+                it('keeps the original geostore', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).geostore).to.equal('abcf7041e2fbc5e8e7774178157ababe');
+                });
+
+                it('keeps the original name', () => {
+                    expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('Distrito Central, Francisco Morazán, Honduras');
                 });
             });
         });
