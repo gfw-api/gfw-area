@@ -218,6 +218,21 @@ describe('V2 - Create area', () => {
         it('Creating an area with custom env should be successful and have the correct env value', async () => {
             mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
+            nock('https://data-api.globalforestwatch.org')
+                .get('/political/id-lookup')
+                .query({
+                    admin_version: '4.1',
+                    country: 'Portugal area',
+                })
+                .reply(200, {
+                    data: {
+                        adminSource: 'GADM',
+                        adminVersion: '4.1',
+                        matches: []
+                    },
+                    status: 'success'
+                });
+
             const response = await requester
                 .post(`/api/v2/area`)
                 .set('Authorization', 'Bearer abcd')

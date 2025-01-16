@@ -121,10 +121,10 @@ Area.statics.existsSavedAreaForGeostoreDataApi = async function existsSavedAreaF
 Area.plugin(mongooseHistory);
 Area.plugin(mongoosePaginate);
 
-Area.pre('validate', function (next) {
+Area.pre('validate', async function (next) {
     try {
         const areaEntity = new AreaEntity(this);
-        areaEntity.populateAdminVersions();
+        await areaEntity.populateAdminVersions();
     } catch (e) {
         logger.error(`[AREAS-V2-Model] Could not populate AdminVersions for userId: '${this.userId}' and Area name: '${this.name}'`, e);
     } finally {

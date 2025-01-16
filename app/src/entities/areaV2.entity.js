@@ -1,4 +1,5 @@
 const AdministrativeVersion = require('valueObjects/administrativeVersion');
+const AdminLookupService = require('services/adminLookup.service');
 
 class AreaEntity {
 
@@ -83,7 +84,7 @@ class AreaEntity {
      * Build and add (or update) an AdministrativeVersion entry in `areaModel.adminVersions`.
      * Will only proceed if the area is an administrative boundary.
      */
-    populateAdminVersions() {
+    async populateAdminVersions() {
         if (!this.isAdministrativeBoundary()) return;
 
         const adminVersion = AdministrativeVersion.build(
@@ -93,6 +94,11 @@ class AreaEntity {
         );
 
         this.addAdminVersion(adminVersion);
+
+        const gadm41AdminVersionMatches = await AdminLookupService.findMatch(adminVersion);
+        if (gadm41AdminVersionMatches?.length === 1) {
+            this.addAdminVersion(gadm41AdminVersionMatches.pop());
+        }
     }
 
     /**

@@ -1,13 +1,73 @@
 /* eslint mocha/no-skipped-tests: "off", no-unused-vars: "off", no-unused-expressions: "off" */
 const chai = require('chai');
+const sinon = require('sinon');
 const AreaModel = require('models/area.modelV2');
 const AreaEntity = require('entities/areaV2.entity');
 const AdministrativeVersion = require('valueObjects/administrativeVersion');
+const AdminLookupService = require('services/adminLookup.service');
 
 const { expect } = chai;
 
 describe('Area Entity V2', () => {
+    describe('Adding a GADM 4.1 AdministrativeVersion', () => {
+        let sandbox;
+
+        before(() => {
+            sandbox = sinon.createSandbox();
+            sandbox.stub(AdminLookupService, 'findMatch').resolves([
+                new AdministrativeVersion({
+                    provider: 'gadm',
+                    version: '4.1',
+                    country: { id: 'HND', name: 'Honduras' },
+                    region: { id: '8', name: 'Francisco Morazán' },
+                    subregion: { id: '4', name: 'Distrito Central' }
+                })
+            ]);
+        });
+
+        after(() => {
+            sandbox.restore();
+        });
+
+        describe('The AdministrativeVersion is Found', () => {
+            it('adds the AdministrativeVersion to the collection of adminVersions', async () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                    }
+                };
+                const areaModel = new AreaModel(areaData);
+                const areaEntity = new AreaEntity(areaModel);
+
+                await areaEntity.populateAdminVersions(AdminLookupService);
+
+                expect(areaModel.toObject().adminVersions[1]).to.deep.include({
+                    provider: 'gadm',
+                    version: '4.1',
+                    country: { id: 'HND', name: 'Honduras' },
+                    region: { id: '8', name: 'Francisco Morazán' },
+                    subregion: { id: '4', name: 'Distrito Central' }
+                });
+            });
+        });
+    });
+
     describe('Legacy GADM v3.6 Areas', () => {
+        let sandbox;
+
+        before(() => {
+            sandbox = sinon.createSandbox();
+            sandbox.stub(AdminLookupService, 'findMatch').resolves([]);
+        });
+
+        after(() => {
+            sandbox.restore();
+        });
+
         describe('Administrative Boundary Versions', () => {
             describe('An Area That Does NOT Have A History Of Versions', () => {
                 describe('And Is An Administrative Boundary', () => {
@@ -22,34 +82,34 @@ describe('Area Entity V2', () => {
                             }
                         };
 
-                        it('creates an adminVersions collection', () => {
+                        it('creates an adminVersions collection', async () => {
                             const area = new AreaModel(areaDataWithAdmin);
                             const areaEntity = new AreaEntity(area);
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions).to.be.instanceof(Array);
                         });
 
-                        it('creates an AdministrativeVersion and adds it to the adminVersion collection', () => {
+                        it('creates an AdministrativeVersion and adds it to the adminVersion collection', async () => {
                             const area = new AreaModel(areaDataWithAdmin);
                             const areaEntity = new AreaEntity(area);
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions).to.not.be.empty;
                         });
 
                         describe('But Does Not Have An Area Name', () => {
                             const areaDataWithAdminButNoName = { ...areaDataWithAdmin, name: '' };
 
-                            it('creates an adminVersions collection', () => {
+                            it('creates an adminVersions collection', async () => {
                                 const area = new AreaModel(areaDataWithAdminButNoName);
                                 const areaEntity = new AreaEntity(area);
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
                                 expect(area.adminVersions).to.be.instanceof(Array);
                             });
 
-                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', () => {
+                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', async () => {
                                 const area = new AreaModel(areaDataWithAdminButNoName);
                                 const areaEntity = new AreaEntity(area);
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
                                 expect(area.adminVersions).to.not.be.empty;
                             });
                         });
@@ -66,34 +126,34 @@ describe('Area Entity V2', () => {
                             }
                         };
 
-                        it('creates an adminVersions collection', () => {
+                        it('creates an adminVersions collection', async () => {
                             const area = new AreaModel(areaDataWithIso);
                             const areaEntity = new AreaEntity(area);
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions).to.be.instanceof(Array);
                         });
 
-                        it('creates an AdministrativeVersion and adds it to the adminVersion collection', () => {
+                        it('creates an AdministrativeVersion and adds it to the adminVersion collection', async () => {
                             const area = new AreaModel(areaDataWithIso);
                             const areaEntity = new AreaEntity(area);
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions).to.not.be.empty;
                         });
 
                         describe('Has a Name But It Is Missing Its Country Part', () => {
                             const areaDataWithIsoButNameWithNoCountry = { ...areaDataWithIso, name: 'Distrito Central, Francisco Morazán,' };
 
-                            it('creates an adminVersions collection', () => {
+                            it('creates an adminVersions collection', async () => {
                                 const area = new AreaModel(areaDataWithIsoButNameWithNoCountry);
                                 const areaEntity = new AreaEntity(area);
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
                                 expect(area.adminVersions).to.be.instanceof(Array);
                             });
 
-                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', () => {
+                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', async () => {
                                 const area = new AreaModel(areaDataWithIsoButNameWithNoCountry);
                                 const areaEntity = new AreaEntity(area);
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
                                 expect(area.adminVersions).to.not.be.empty;
                             });
                         });
@@ -101,17 +161,17 @@ describe('Area Entity V2', () => {
                         describe('But Does Not Have An Area Name', () => {
                             const areaDataWithIsoButNoName = { ...areaDataWithIso, name: '' };
 
-                            it('creates an adminVersions collection', () => {
+                            it('creates an adminVersions collection', async () => {
                                 const area = new AreaModel(areaDataWithIsoButNoName);
                                 const areaEntity = new AreaEntity(area);
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
                                 expect(area.adminVersions).to.be.instanceof(Array);
                             });
 
-                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', () => {
+                            it('creates an AdministrativeVersion and adds it to the adminVersion collection', async () => {
                                 const area = new AreaModel(areaDataWithIsoButNoName);
                                 const areaEntity = new AreaEntity(area);
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
                                 expect(area.adminVersions).to.not.be.empty;
                             });
                         });
@@ -119,7 +179,7 @@ describe('Area Entity V2', () => {
                 });
 
                 describe('And Is NOT An Administrative Boundary', () => {
-                    it('does not create an adminVersions collection', () => {
+                    it('does not create an adminVersions collection', async () => {
                         const noAdminArea = {
                             name: 'Distrito Central, Francisco Morazán, Honduras',
                             geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -127,7 +187,7 @@ describe('Area Entity V2', () => {
 
                         const area = new AreaModel(noAdminArea);
                         const areaEntity = new AreaEntity(area);
-                        areaEntity.populateAdminVersions();
+                        await areaEntity.populateAdminVersions();
                         expect(area.adminVersions).to.be.empty;
                     });
                 });
@@ -162,26 +222,26 @@ describe('Area Entity V2', () => {
                         }
                     };
 
-                    it('does NOT add a duplicate AdministrativeVersion to the adminVersions collection', () => {
+                    it('does NOT add a duplicate AdministrativeVersion to the adminVersions collection', async () => {
                         const area = new AreaModel(areaDataWithAdminVersions);
                         const areaEntity = new AreaEntity(area);
 
-                        areaEntity.populateAdminVersions();
+                        await areaEntity.populateAdminVersions();
 
                         expect(area.adminVersions).to.have.length(1);
                     });
 
-                    it('updates the geostore', () => {
+                    it('updates the geostore', async () => {
                         areaDataWithAdminVersions.geostore = 'ffff000000000000000000000000ffff';
                         const area = new AreaModel(areaDataWithAdminVersions);
                         const areaEntity = new AreaEntity(area);
 
-                        areaEntity.populateAdminVersions();
+                        await areaEntity.populateAdminVersions();
 
                         expect(area.adminVersions[0]).to.have.property('geostore', 'ffff000000000000000000000000ffff');
                     });
 
-                    it('updates the country', () => {
+                    it('updates the country', async () => {
                         areaDataWithAdminVersions.name = 'Altamira, Pará, Brazil';
                         areaDataWithAdminVersions.iso = {
                             country: 'BRA',
@@ -191,12 +251,12 @@ describe('Area Entity V2', () => {
                         const area = new AreaModel(areaDataWithAdminVersions);
                         const areaEntity = new AreaEntity(area);
 
-                        areaEntity.populateAdminVersions();
+                        await areaEntity.populateAdminVersions();
                         expect(area.adminVersions[0]).to.have.deep.property('country', { id: 'BRA', name: 'Brazil' });
                     });
 
                     describe('Updating A Region', () => {
-                        it('updates the region when it is defined', () => {
+                        it('updates the region when it is defined', async () => {
                             areaDataWithAdminVersions.name = 'Pará, Brazil';
                             areaDataWithAdminVersions.iso = {
                                 country: 'BRA',
@@ -205,11 +265,11 @@ describe('Area Entity V2', () => {
                             const area = new AreaModel(areaDataWithAdminVersions);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions[0]).to.have.deep.property('region', { id: '14', name: 'Pará' });
                         });
 
-                        it('removes a region when it is NOT defined', () => {
+                        it('removes a region when it is NOT defined', async () => {
                             areaDataWithAdminVersions.name = 'Brazil';
                             areaDataWithAdminVersions.iso = {
                                 country: 'BRA',
@@ -217,14 +277,14 @@ describe('Area Entity V2', () => {
                             const area = new AreaModel(areaDataWithAdminVersions);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0]).to.not.have.property('region');
                         });
                     });
 
                     describe('Updating a Subregion', () => {
-                        it('updates the subregion when it is defined', () => {
+                        it('updates the subregion when it is defined', async () => {
                             areaDataWithAdminVersions.name = 'Altamira, Pará, Brazil';
                             areaDataWithAdminVersions.iso = {
                                 country: 'BRA',
@@ -234,14 +294,14 @@ describe('Area Entity V2', () => {
                             const area = new AreaModel(areaDataWithAdminVersions);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions[0]).to.have.deep.property('subregion', {
                                 id: '8',
                                 name: 'Altamira'
                             });
                         });
 
-                        it('removes a subregion when it is NOT defined', () => {
+                        it('removes a subregion when it is NOT defined', async () => {
                             areaDataWithAdminVersions.name = 'Pará, Brazil';
                             areaDataWithAdminVersions.iso = {
                                 country: 'BRA',
@@ -250,7 +310,7 @@ describe('Area Entity V2', () => {
                             const area = new AreaModel(areaDataWithAdminVersions);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions[0]).to.not.have.property('subregion');
                         });
                     });
@@ -268,45 +328,45 @@ describe('Area Entity V2', () => {
                             }
                         };
 
-                        it('adds an AdministrativeVersion to the adminVersions collection', () => {
+                        it('adds an AdministrativeVersion to the adminVersions collection', async () => {
                             const area = new AreaModel(areaData);
                             const areaEntity = new AreaEntity(area);
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions[0].toJSON()).to.be.instanceof(Object);
                         });
 
-                        it('sets the provider to `gadm`', () => {
+                        it('sets the provider to `gadm`', async () => {
                             const area = new AreaModel(areaData);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0].toObject()).to.have.deep.property('provider', 'gadm');
                         });
 
-                        it('set the version to `3.6`', () => {
+                        it('set the version to `3.6`', async () => {
                             const area = new AreaModel(areaData);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0].toObject()).to.have.deep.property('version', '3.6');
                         });
 
-                        it('includes the geostore', () => {
+                        it('includes the geostore', async () => {
                             const area = new AreaModel(areaData);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0].toObject()).to.have.deep.property('geostore', 'abcf7041e2fbc5e8e7774178157ababe');
                         });
 
-                        it('includes the country', () => {
+                        it('includes the country', async () => {
                             const area = new AreaModel(areaData);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0].toObject()).to.have.deep.property('country', {
                                 id: 'HND',
@@ -315,11 +375,11 @@ describe('Area Entity V2', () => {
                         });
 
                         describe('Including A Region', () => {
-                            it('includes the region when it is defined', () => {
+                            it('includes the region when it is defined', async () => {
                                 const area = new AreaModel(areaData);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.have.deep.property(
                                     'region',
@@ -327,7 +387,7 @@ describe('Area Entity V2', () => {
                                 );
                             });
 
-                            it('does NOT include a region when it is NOT defined', () => {
+                            it('does NOT include a region when it is NOT defined', async () => {
                                 const countryOnly = {
                                     name: 'Honduras',
                                     geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -341,18 +401,18 @@ describe('Area Entity V2', () => {
                                 const area = new AreaModel(countryOnly);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.not.have.deep.property('region');
                             });
                         });
 
                         describe('Including a Subregion', () => {
-                            it('includes the subregion when it is defined', () => {
+                            it('includes the subregion when it is defined', async () => {
                                 const area = new AreaModel(areaData);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.have.deep.property(
                                     'subregion',
@@ -360,7 +420,7 @@ describe('Area Entity V2', () => {
                                 );
                             });
 
-                            it('does NOT include a subregion when it is NOT defined', () => {
+                            it('does NOT include a subregion when it is NOT defined', async () => {
                                 const countryAndRegionOnly = {
                                     name: 'Francisco Morazán, Honduras',
                                     geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -373,7 +433,7 @@ describe('Area Entity V2', () => {
                                 const area = new AreaModel(countryAndRegionOnly);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.not.have.deep.property('subregion');
                             });
@@ -391,45 +451,45 @@ describe('Area Entity V2', () => {
                             }
                         };
 
-                        it('adds an AdministrativeVersion to the adminVersions collection', () => {
+                        it('adds an AdministrativeVersion to the adminVersions collection', async () => {
                             const area = new AreaModel(areaDataWithIso);
                             const areaEntity = new AreaEntity(area);
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
                             expect(area.adminVersions[0].toJSON()).to.be.instanceof(Object);
                         });
 
-                        it('sets the provider to `gadm`', () => {
+                        it('sets the provider to `gadm`', async () => {
                             const area = new AreaModel(areaDataWithIso);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0].toObject()).to.have.deep.property('provider', 'gadm');
                         });
 
-                        it('set the version to `3.6`', () => {
+                        it('set the version to `3.6`', async () => {
                             const area = new AreaModel(areaDataWithIso);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0].toObject()).to.have.deep.property('version', '3.6');
                         });
 
-                        it('includes the geostore', () => {
+                        it('includes the geostore', async () => {
                             const area = new AreaModel(areaDataWithIso);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0].toObject()).to.have.deep.property('geostore', 'abcf7041e2fbc5e8e7774178157ababe');
                         });
 
-                        it('includes the country', () => {
+                        it('includes the country', async () => {
                             const area = new AreaModel(areaDataWithIso);
                             const areaEntity = new AreaEntity(area);
 
-                            areaEntity.populateAdminVersions();
+                            await areaEntity.populateAdminVersions();
 
                             expect(area.adminVersions[0].toObject()).to.have.deep.property('country', {
                                 id: 'HND',
@@ -438,11 +498,11 @@ describe('Area Entity V2', () => {
                         });
 
                         describe('Including A Region', () => {
-                            it('includes the region when it is defined', () => {
+                            it('includes the region when it is defined', async () => {
                                 const area = new AreaModel(areaDataWithIso);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.have.deep.property(
                                     'region',
@@ -450,7 +510,7 @@ describe('Area Entity V2', () => {
                                 );
                             });
 
-                            it('does NOT include a region when it is NOT defined', () => {
+                            it('does NOT include a region when it is NOT defined', async () => {
                                 const countryOnlyWithIso = {
                                     name: 'Honduras',
                                     geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -462,18 +522,18 @@ describe('Area Entity V2', () => {
                                 const area = new AreaModel(countryOnlyWithIso);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.not.have.deep.property('region');
                             });
                         });
 
                         describe('Including a Subregion', () => {
-                            it('includes the subregion when it is defined', () => {
+                            it('includes the subregion when it is defined', async () => {
                                 const area = new AreaModel(areaDataWithIso);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.have.deep.property(
                                     'subregion',
@@ -481,7 +541,7 @@ describe('Area Entity V2', () => {
                                 );
                             });
 
-                            it('does NOT include a subregion when it is NOT defined', () => {
+                            it('does NOT include a subregion when it is NOT defined', async () => {
                                 const countryAndRegionOnlyWithIso = {
                                     name: 'Francisco Morazán, Honduras',
                                     geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -494,7 +554,7 @@ describe('Area Entity V2', () => {
                                 const area = new AreaModel(countryAndRegionOnlyWithIso);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.not.have.deep.property('subregion');
                             });
@@ -503,45 +563,45 @@ describe('Area Entity V2', () => {
                         describe('But Has A Name That is Missing Its Country', () => { // example from a real Area in production
                             const areaDataWithIsoButMissingCountryInName = { ...areaDataWithIso, name: 'Distrito Central, Francisco Morazán,' };
 
-                            it('adds an AdministrativeVersion to the adminVersions collection', () => {
+                            it('adds an AdministrativeVersion to the adminVersions collection', async () => {
                                 const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
                                 const areaEntity = new AreaEntity(area);
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
                                 expect(area.adminVersions[0].toJSON()).to.be.instanceof(Object);
                             });
 
-                            it('sets the provider to `gadm`', () => {
+                            it('sets the provider to `gadm`', async () => {
                                 const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.have.deep.property('provider', 'gadm');
                             });
 
-                            it('set the version to `3.6`', () => {
+                            it('set the version to `3.6`', async () => {
                                 const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.have.deep.property('version', '3.6');
                             });
 
-                            it('includes the geostore', () => {
+                            it('includes the geostore', async () => {
                                 const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.have.deep.property('geostore', 'abcf7041e2fbc5e8e7774178157ababe');
                             });
 
-                            it('includes the country with an empty name', () => {
+                            it('includes the country with an empty name', async () => {
                                 const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
                                 const areaEntity = new AreaEntity(area);
 
-                                areaEntity.populateAdminVersions();
+                                await areaEntity.populateAdminVersions();
 
                                 expect(area.adminVersions[0].toObject()).to.have.deep.property('country', {
                                     id: 'HND',
@@ -550,11 +610,11 @@ describe('Area Entity V2', () => {
                             });
 
                             describe('Including A Region', () => {
-                                it('includes the region when it is defined', () => {
+                                it('includes the region when it is defined', async () => {
                                     const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
                                     const areaEntity = new AreaEntity(area);
 
-                                    areaEntity.populateAdminVersions();
+                                    await areaEntity.populateAdminVersions();
 
                                     expect(area.adminVersions[0].toObject()).to.have.deep.property(
                                         'region',
@@ -562,7 +622,7 @@ describe('Area Entity V2', () => {
                                     );
                                 });
 
-                                it('does NOT include a region when it is NOT defined', () => {
+                                it('does NOT include a region when it is NOT defined', async () => {
                                     const countryOnlyWithIso = {
                                         name: 'Honduras',
                                         geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -574,18 +634,18 @@ describe('Area Entity V2', () => {
                                     const area = new AreaModel(countryOnlyWithIso);
                                     const areaEntity = new AreaEntity(area);
 
-                                    areaEntity.populateAdminVersions();
+                                    await areaEntity.populateAdminVersions();
 
                                     expect(area.adminVersions[0].toObject()).to.not.have.deep.property('region');
                                 });
                             });
 
                             describe('Including a Subregion', () => {
-                                it('includes the subregion when it is defined', () => {
+                                it('includes the subregion when it is defined', async () => {
                                     const area = new AreaModel(areaDataWithIsoButMissingCountryInName);
                                     const areaEntity = new AreaEntity(area);
 
-                                    areaEntity.populateAdminVersions();
+                                    await areaEntity.populateAdminVersions();
 
                                     expect(area.adminVersions[0].toObject()).to.have.deep.property(
                                         'subregion',
@@ -593,7 +653,7 @@ describe('Area Entity V2', () => {
                                     );
                                 });
 
-                                it('does NOT include a subregion when it is NOT defined', () => {
+                                it('does NOT include a subregion when it is NOT defined', async () => {
                                     const countryAndRegionOnlyWithIso = {
                                         name: 'Francisco Morazán, Honduras',
                                         geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -606,7 +666,7 @@ describe('Area Entity V2', () => {
                                     const area = new AreaModel(countryAndRegionOnlyWithIso);
                                     const areaEntity = new AreaEntity(area);
 
-                                    areaEntity.populateAdminVersions();
+                                    await areaEntity.populateAdminVersions();
 
                                     expect(area.adminVersions[0].toObject()).to.not.have.deep.property('subregion');
                                 });
