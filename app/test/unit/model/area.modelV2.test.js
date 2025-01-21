@@ -108,6 +108,60 @@ describe('Area Model V2', () => {
                     });
                 });
             });
+
+            describe('But Area Name Is An Empty String', () => {
+                const areaWithISOButNoName = { ...areaData, name: '' };
+
+                describe('The `AdministrativeVersion` Object That Is Created', () => {
+                    it('has a provider', async () => {
+                        const area = new AreaModel(areaWithISOButNoName);
+                        await area.save();
+                        expect(area.adminVersions[0]).to.have.property('provider');
+                    });
+
+                    it('has a provider version', async () => {
+                        const area = new AreaModel(areaWithISOButNoName);
+                        await area.save();
+                        expect(area.adminVersions[0]).to.have.property('version');
+                    });
+
+                    it('has a country ID but no name', async () => {
+                        const area = new AreaModel(areaWithISOButNoName);
+
+                        await area.save();
+                        const result = JSON.parse(JSON.stringify(area));
+
+                        expect(result.adminVersions[0]).to.have.property('country');
+                        expect(result.adminVersions[0].country).to.deep.equal({
+                            id: 'HND',
+                        });
+                    });
+
+                    it('has a region ID but no name', async () => {
+                        const area = new AreaModel(areaWithISOButNoName);
+
+                        await area.save();
+                        const result = JSON.parse(JSON.stringify(area));
+
+                        expect(result.adminVersions[0]).to.have.property('region');
+                        expect(result.adminVersions[0].region).to.deep.equal({
+                            id: '8',
+                        });
+                    });
+
+                    it('has a subregion ID but no name', async () => {
+                        const area = new AreaModel(areaWithISOButNoName);
+
+                        await area.save();
+                        const result = JSON.parse(JSON.stringify(area));
+
+                        expect(result.adminVersions[0]).to.have.property('subregion');
+                        expect(result.adminVersions[0].subregion).to.deep.equal({
+                            id: '4',
+                        });
+                    });
+                });
+            });
         });
 
         describe('An Exception Occurs During AdminVersions Creation On Save', () => {
