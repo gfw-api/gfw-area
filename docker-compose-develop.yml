@@ -3,16 +3,16 @@ services:
   develop:
     build: .
     ports:
-      - "4200:4100"
+      - "30504:30504"
     container_name: gfw-area
     env_file:
       - dev.env
     environment:
-      PORT: 4100
+      PORT: 30504
       NODE_ENV: dev
       NODE_PATH: app/src
       MONGO_PORT_27017_TCP_ADDR: gfw-areas-mongo
-      WAIT_HOSTS: mongo:27017
+      WAIT_HOSTS: gfw-areas-mongo
       FASTLY_ENABLED: "false"
       AWS_REGION: "us-east-1"
       AWS_ACCESS_KEY_ID: "test"
