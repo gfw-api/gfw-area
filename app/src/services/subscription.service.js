@@ -70,7 +70,7 @@ class SubscriptionsService {
             }
         }
 
-        body.params = { ...body.params, 'area': area.id }
+        body.params = { ...body.params, area: area._id };
 
         return body;
     }
