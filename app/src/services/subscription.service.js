@@ -42,11 +42,11 @@ class SubscriptionsService {
             body.params = { wdpaid: area.wdpaid };
         }
 
-        if (area.use.name && area.use.id) {
+        if (area.use?.name && area.use?.id) {
             body.params = { use: area.use.name, useid: area.use.id };
         }
 
-        if (area.iso.country) {
+        if (area.iso?.country) {
             body.params = { iso: {} };
 
             if (area.iso.region) {
@@ -58,7 +58,7 @@ class SubscriptionsService {
             }
         }
 
-        if (area.admin.adm0) {
+        if (area.admin?.adm0) {
             body.params = { iso: {} };
 
             if (area.admin.adm1) {
