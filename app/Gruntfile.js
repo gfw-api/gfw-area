@@ -22,10 +22,10 @@ module.exports = (grunt) => {
         mochaTest: {
             unit: {
                 options: {
-                    timout: 10000,
+                    timeout: 10000,
                     reporter: 'spec',
                     quiet: false, // Optionally suppress output to standard out (defaults to false)
-                    clearRequireCache: true, // Optionally clear the require cache before running tests (defaults to false)
+                    clearRequireCache: false, // Optionally clear the require cache before running tests (defaults to false)
                 },
                 src: ['app/test/unit/**/*.test.js']
             },
