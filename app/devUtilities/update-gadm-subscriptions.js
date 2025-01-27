@@ -103,17 +103,7 @@ async function updateSubscriptions() {
     const totalDocumentsCount = await AreaForConnection.countDocuments();
     // Count the total number of documents in the collection for progress tracking
     const areas = await AreaForConnection.find({
-        $and: [
-            {
-                subscriptionId: { $nin: ['', null] },
-            },
-            {
-                $or: [
-                    { 'admin.adm0': { $nin: ['', null] } },
-                    { 'iso.country': { $nin: ['', null] } }
-                ]
-            }
-        ]
+        subscriptionId: { $nin: ['', null] },
     });
     areasWithSubscriptionsCount = areas.length;
     if (areasWithSubscriptionsCount.length === 0) {
