@@ -3,12 +3,12 @@ services:
   develop:
     build: .
     ports:
-      - "30504:30504"
+      - "30504:4100"
     container_name: gfw-area
     env_file:
       - dev.env
     environment:
-      PORT: 30504
+      PORT: 4100
       NODE_ENV: dev
       NODE_PATH: app/src
       MONGO_PORT_27017_TCP_ADDR: gfw-areas-mongo
