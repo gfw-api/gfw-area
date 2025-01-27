@@ -1,5 +1,5 @@
 
-# 🚀 EC2 Instance Setup Guide with Node.js and DocumentDB Connectivity for the `Validate-Areas` Utility Script
+# 🚀 EC2 Instance Setup Guide with Node.js and DocumentDB Connectivity for the `Validate-Areas` and `Update-Gadm-Subscriptions` Utility Scripts
 
 This guide walks you through launching an **AWS EC2 instance** in the **same subnet and VPC as your DocumentDB cluster** to run your **Validate-Areas** script. 
 
@@ -185,7 +185,7 @@ npx yarn install
 
 ---
 
-## ✅ Step 9: Run the Batch Update Utility
+## ✅ Step 9: Run the Batch Area Update Utility
 
 ### Verify All Areas (effectively a dry run as there are no writes)
 ```bash
@@ -211,8 +211,37 @@ NODE_PATH=./app/src node ./app/devUtilities/validate-areas.js \
 --logfile save_results.log
 ```
 
+## ✅ Step 10: Run the Batch Subscription Update Utility
+This updates subscriptions to GADM administrative user areas adding `area` attribute representing the `id` of the the parent area.
+
+### Verify that the subscriptions exists (effectively a dry run as there are no writes)
+```bash
+NODE_PATH=./app/src node ./app/devUtilities/update-gadm-subscriptions.js --dryrun \
+--host <DocumentDB hostname> \
+--username <DocumentDB username> \
+--password <DocumentDB password> \
+--area-port <Areas DocumentDB port> \
+--subscription-port <Subscriptions DocumentDB port> \
+--area-database <Areas DocumentDB database name> \
+--subscription-database <Subscriptions DocumentDB database name> \
+--logfile updated_gadm_subscriptions.log
+```
+
+### Update Subscriptions 
+```bash
+NODE_PATH=./app/src node ./app/devUtilities/update-gadm-subscriptions.js \
+--host <DocumentDB hostname> \
+--username <DocumentDB username> \
+--password <DocumentDB password> \
+--area-port <Areas DocumentDB port> \
+--subscription-port <Subscriptions DocumentDB port \
+--area-database <Areas DocumentDB database name> \
+--subscription-database <Subscriptions DocumentDB database name> \
+--logfile updated_gadm_subscriptions.log
+```
+
 ---
 
 ## 🎯 Summary
 
-By following this guide, you will have a **secure and efficient environment** for running your **Validate-Areas** on **AWS EC2** with **DocumentDB connectivity**.
+By following this guide, you will have a **secure and efficient environment** for running your **Validate-Areas** and **Update-Gadm-Subscriptions** on **AWS EC2** with **DocumentDB connectivity**.
