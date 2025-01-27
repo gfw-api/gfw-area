@@ -43,15 +43,19 @@ describe('Subscription Service', () => {
     it('should construct the correct subscription body for a given area', () => {
         const result = SubscriptionsService.getRequestBodyForSubscriptionFromArea(mockArea);
 
-        expect(result).to.be.an('object');
-        expect(result.name).to.equal('Kiambu, Kenya');
-        expect(result.language).to.equal('en');
-        expect(result.datasets).to.deep.equal(['glad-all', 'viirs-active-fires']);
-        expect(result.userId).to.equal('user123');
-        expect(result.params).to.deep.equal({
-            iso: { country: 'KEN', region: '13' },
-            area: '7604df303569488fbf928561',
+        expect(result).to.deep.includes({
+            name: 'Kiambu, Kenya',
+            language: 'en',
+            userId: 'user123',
+            params: {
+                iso: { country: 'KEN', region: '13' },
+                area: '7604df303569488fbf928561',
+            }
         });
+    });
 
+    it('should have the correct subscription datasets', () => {
+        const result = SubscriptionsService.getRequestBodyForSubscriptionFromArea(mockArea);
+        expect(result.datasets).to.have.members(['glad-all', 'viirs-active-fires']);
     });
 });
