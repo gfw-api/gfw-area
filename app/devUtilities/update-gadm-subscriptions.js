@@ -35,6 +35,11 @@ if (options.logfile) {
     console.log(`📄 Logs will be saved to: ${options.logfile}`);
 }
 
+// Function to check if a document is an Administrative Boundary
+function isAdministrativeBoundary(area) {
+    return area.admin?.adm0 || area.iso?.country;
+}
+
 // Function to log messages to both console and file
 function logMessage(message) {
     if (!options.logfile) {
@@ -52,11 +57,6 @@ function logStats(message) {
         logStream.write(`${message}\n`);
     }
 }
-
-// Statistics
-let processedGadmAreas = 0;
-let areasWithSubscriptionsCount = 0;
-let updatedSubscriptions = 0;
 
 // Function to connect to MongoDB
 /* eslint-disable consistent-return */
@@ -95,19 +95,26 @@ async function connectDB(database, port) {
 
 }
 
+// Statistics
+let processedSubscriptionAreas = 0;
+let gadmAreasWithSubscriptions = 0;
+let areasWithSubscriptions;
+
+let updatedGadmSubscriptions = 0;
+let updatedSubscriptions = 0;
+
 // Function to add Area id to Subscription records
 async function updateSubscriptions() {
 
     const areaConnection = await connectDB(options.areaDatabase, options.areaPort);
     const AreaForConnection = areaConnection.model('area', Area.Schema);
-    const totalDocumentsCount = await AreaForConnection.countDocuments();
     // Count the total number of documents in the collection for progress tracking
     const areas = await AreaForConnection.find({
         subscriptionId: { $nin: ['', null] },
     });
-    areasWithSubscriptionsCount = areas.length;
-    if (areasWithSubscriptionsCount.length === 0) {
-        logMessage('No GADM areas found in the Area collection.');
+    areasWithSubscriptions = areas.length;
+    if (areasWithSubscriptions.length === 0) {
+        logMessage('No areas with subscriptions found in the Area collection.');
         return;
     }
 
@@ -132,7 +139,7 @@ async function updateSubscriptions() {
     );
 
     // Start the progress bar
-    progressBar.start(areasWithSubscriptionsCount, 0, {
+    progressBar.start(areasWithSubscriptions, 0, {
         speed: 'N/A',
         eta: 'N/A',
     });
@@ -143,29 +150,31 @@ async function updateSubscriptions() {
     /* eslint-disable no-restricted-syntax */
     for (const area of areas) {
         try {
-            processedGadmAreas++;
+            processedSubscriptionAreas++;
 
             // Calculate the elapsed time and update seconds/doc
             const elapsedTime = (Date.now() - startTime) / 1000; // Convert to seconds
-            const secondsPerDoc = (elapsedTime / processedGadmAreas).toFixed(2);
+            const secondsPerDoc = (elapsedTime / processedSubscriptionAreas).toFixed(2);
 
             // Calculate ETA
-            const remainingDocs = totalDocumentsCount - processedGadmAreas;
+            const remainingDocs = areasWithSubscriptions - processedSubscriptionAreas;
             const eta = (remainingDocs * secondsPerDoc).toFixed(0);
 
             // Update the progress bar
-            progressBar.update(processedGadmAreas, {
+            progressBar.update(processedSubscriptionAreas, {
                 speed: secondsPerDoc,
                 eta,
             });
 
+            if (isAdministrativeBoundary(area)) gadmAreasWithSubscriptions++;
+
             if (options.dryrun) {
                 const subscription = await Subscription.findById(area.subscriptionId);
-                if (subscription) {
-                    updatedSubscriptions++;
-                } else {
+                if (!subscription) {
                     logMessage(`❌ Can't find subscription ${area.subscriptionId}`);
-
+                } else {
+                    updatedSubscriptions++;
+                    if (isAdministrativeBoundary(area)) updatedGadmSubscriptions++;
                 }
             } else {
                 const subscription = await Subscription.findById(area.subscriptionId);
@@ -173,11 +182,14 @@ async function updateSubscriptions() {
                 subscription.params = { ...subscription.params, area: area.id };
 
                 await subscription.save();
+
+                if (isAdministrativeBoundary(area)) updatedGadmSubscriptions++;
+
                 updatedSubscriptions++;
             }
 
         } catch (err) {
-            logMessage(`❌  Error during batch processing: ${err}`);
+            logMessage(`❌  Error during batch processing ${area.id}: ${err}`);
         }
     }
     areaConnection.close();
@@ -190,10 +202,13 @@ async function updateSubscriptions() {
 // Function to log the final statistics
 function logFinalStats() {
     logStats('\n🔎  Validation Metrics:');
-    logStats(`🌍  Total GADM Areas with Subscriptions: ${areasWithSubscriptionsCount}`);
+    logStats(`🌍  Total GADM areas with Subscriptions: ${gadmAreasWithSubscriptions}`);
+    logStats(`✅  Total GADM subscriptions updated Successfully: ${updatedGadmSubscriptions}`);
+    logStats(`❌  Total failed GADM subscription updates: ${gadmAreasWithSubscriptions - updatedGadmSubscriptions}`);
+    logStats(`📈  GADM subscriptions success rate: ${((updatedGadmSubscriptions / gadmAreasWithSubscriptions) * 100).toFixed(2)}%`);
     logStats(`✅  Total subscriptions updated Successfully: ${updatedSubscriptions}`);
-    logStats(`❌  Total failed subscription updates: ${areasWithSubscriptionsCount - updatedSubscriptions}`);
-    logStats(`📈  Success Rate: ${((updatedSubscriptions / areasWithSubscriptionsCount) * 100).toFixed(2)}%`);
+    logStats(`❌  Total failed subscription updates: ${areasWithSubscriptions - updatedSubscriptions}`);
+    logStats(`📈  Total subscriptions success rate: ${((updatedSubscriptions / areasWithSubscriptions) * 100).toFixed(2)}%`);
 
     if (options.dryrun) {
         logStats('💡 [Dry Run] No changes were saved to the database.');
