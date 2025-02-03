@@ -12,7 +12,7 @@ class DataApiAdminLookup {
             logger.info(`[AREAS-V2-DataApiAdminLookup-Adapter] GADM 3.6: ${JSON.stringify(administrativeVersion)} -> GADM 4.1 Lookup: ${JSON.stringify(matches)}`);
             return matches;
         } catch (e) {
-            logger.error(`[AREAS-V2-DataApiAdminLookup-Adapter] Failed to encode AdministrativeVersion: ${administrativeVersion} \n response from DataApi Service was: ${e}`, e);
+            logger.error(`[AREAS-V2-DataApiAdminLookup-Adapter] Failed to encode AdministrativeVersion: ${JSON.stringify(administrativeVersion)} \n response from DataApi Service was: ${e}`, e);
             return [];
         }
     }
