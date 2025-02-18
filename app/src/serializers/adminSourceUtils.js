@@ -1,5 +1,4 @@
 const GADM_VERSION_2_8 = '2.8';
-const GADM_VERSION_3_6 = '3.6';
 
 let gadmVersion = GADM_VERSION_2_8;
 
@@ -52,9 +51,4 @@ const addV1SourceForAdministrativeAreas = (data) => {
     return addSourceForAdministrativeAreas(data);
 };
 
-const addV2SourceForAdministrativeAreas = (data) => {
-    gadmVersion = GADM_VERSION_3_6;
-    return addSourceForAdministrativeAreas(data);
-};
-
-module.exports = { addV1SourceForAdministrativeAreas, addV2SourceForAdministrativeAreas };
+module.exports = { addV1SourceForAdministrativeAreas };

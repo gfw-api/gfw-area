@@ -35,6 +35,11 @@ const AdminVersion = new Schema({
     },
 }, { _id: false });
 
+const Source = new Schema({
+    provider: { type: String, required: true, trim: true },
+    version: { type: String, required: true, trim: true },
+}, { _id: false });
+
 const Area = new Schema({
     name: { type: String, required: false, trim: true },
     application: {
@@ -54,12 +59,20 @@ const Area = new Schema({
         country: { type: String, required: false, trim: true },
         region: { type: String, required: false, trim: true },
         subregion: { type: String, required: false, trim: true },
+        source: {
+            type: Source,
+            required: false,
+        }
     },
     admin: {
         _id: false,
         adm0: { type: String, required: false, trim: true },
         adm1: { type: Number, required: false, trim: true },
-        adm2: { type: Number, required: false, trim: true }
+        adm2: { type: Number, required: false, trim: true },
+        source: {
+            type: Source,
+            required: false,
+        },
     },
     env: {
         type: String, required: true, default: 'production', trim: true

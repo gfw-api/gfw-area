@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const Router = require('koa-router');
 const logger = require('logger');
 const config = require('config');
@@ -10,6 +11,8 @@ const SubscriptionService = require('services/subscription.service');
 const mongoose = require('mongoose');
 const MailService = require('services/mail.service');
 const gladAlertTypes = require('models/glad-alert-types');
+const AreaEntity = require('entities/areaV2.entity');
+const AdministrativeVersion = require('valueObjects/administrativeVersion');
 const UserService = require('../../../services/user.service');
 
 const shouldUseAllFilter = (ctx) => ctx.state.loggedUser.role === 'ADMIN' && ctx.query.all && ctx.query.all.trim().toLowerCase() === 'true';
@@ -222,23 +225,28 @@ class AreaRouterV2 {
             use.id = ctx.request.body.use ? ctx.request.body.use.id : null;
             use.name = ctx.request.body.use ? ctx.request.body.use.name : null;
         }
+
+        const { iso: isoBody, admin: adminBody } = ctx.request.body;
         const iso = {};
-        if (ctx.request.body.iso) {
-            iso.country = ctx.request.body.iso ? ctx.request.body.iso.country : null;
-            iso.region = ctx.request.body.iso ? ctx.request.body.iso.region : null;
+        const admin = {};
+        if (isoBody) {
+            iso.country = isoBody.country ?? null;
+            iso.region = isoBody.region ?? null;
+            iso.source = isoBody.source ? { ...isoBody.source } : null;
             if (iso.country || iso.region) {
                 isSaved = true;
             }
         }
-        const admin = {};
-        if (ctx.request.body.admin) {
-            admin.adm0 = ctx.request.body.admin ? ctx.request.body.admin.adm0 : null;
-            admin.adm1 = ctx.request.body.admin ? ctx.request.body.admin.adm1 : null;
-            admin.adm2 = ctx.request.body.admin ? ctx.request.body.admin.adm2 : null;
+        if (adminBody) {
+            admin.adm0 = adminBody.adm0 ?? null;
+            admin.adm1 = adminBody.adm1 ?? null;
+            admin.adm2 = adminBody.adm2 ?? null;
+            admin.source = adminBody.source ? { ...adminBody.source } : null;
             if (admin.adm0) {
                 isSaved = true;
             }
         }
+
         let wdpaid = null;
         if (ctx.request.body.wdpaid) {
             wdpaid = ctx.request.body.wdpaid;
@@ -317,7 +325,8 @@ class AreaRouterV2 {
         }
 
         area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
-        ctx.body = AreaSerializerV2.serialize(area);
+        const administrativeVersion = new AdministrativeVersion(new AreaEntity(area).gatherSourceInfo());
+        ctx.body = AreaSerializerV2.serialize(area, null, administrativeVersion);
 
         if (email) {
             const { application, status, language } = area;
@@ -406,19 +415,30 @@ class AreaRouterV2 {
             use.name = body.use ? body.use.name : null;
         }
         area.use = use;
+
+        const { iso: isoBody, admin: adminBody } = body;
         const iso = {};
-        if (body.iso) {
-            iso.country = body.iso ? body.iso.country : null;
-            iso.region = body.iso ? body.iso.region : null;
+        const admin = {};
+        if (isoBody) {
+            iso.country = isoBody.country ?? null;
+            iso.region = isoBody.region ?? null;
+            iso.source = isoBody.source ? { ...isoBody.source } : null;
+            if (iso.country || iso.region) {
+                isSaved = true;
+            }
         }
         area.iso = iso;
-        const admin = {};
-        if (body.admin) {
-            admin.adm0 = body.admin ? body.admin.adm0 : null;
-            admin.adm1 = body.admin ? body.admin.adm1 : null;
-            admin.adm2 = body.admin ? body.admin.adm2 : null;
+        if (adminBody) {
+            admin.adm0 = adminBody.adm0 ?? null;
+            admin.adm1 = adminBody.adm1 ?? null;
+            admin.adm2 = adminBody.adm2 ?? null;
+            admin.source = adminBody.source ? { ...adminBody.source } : null;
+            if (admin.adm0) {
+                isSaved = true;
+            }
         }
         area.admin = admin;
+
         if (body.datasets) {
             area.datasets = JSON.parse(body.datasets);
         }
@@ -479,7 +499,8 @@ class AreaRouterV2 {
         }
 
         area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
-        ctx.body = AreaSerializerV2.serialize(area);
+        const administrativeVersion = new AdministrativeVersion(new AreaEntity(area).gatherSourceInfo());
+        ctx.body = AreaSerializerV2.serialize(area, null, administrativeVersion);
 
         if (area.email && area.status === 'saved') {
             const { email, application } = area;
