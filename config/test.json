@@ -1,1 +1,8 @@
-{}
+{
+  "logger": {
+    "name": "gfw-area-TEST",
+    "level": "fatal",
+    "toFile": false,
+    "dirLogFile": null
+  }
+}
