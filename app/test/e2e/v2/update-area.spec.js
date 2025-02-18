@@ -134,6 +134,296 @@ describe('V2 - Update area', () => {
         });
     });
 
+    describe('Explicitly Update A GADM 4.1 Administrative Area', () => {
+        it('updates an `iso` area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            const response = await requester
+                .patch(`/api/v2/area/${testArea.id}`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    application: 'rw',
+                    geostore: '713899292fc118a915741728ef84a2a7',
+                    wdpaid: 3,
+                    use: { id: 'bbb', name: 'updated name' },
+                    iso: {
+                        country: 'updatedCountryIso',
+                        region: 'updatedRegionIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    },
+                    datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastUpdate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                    templateId: 'updatedTemplateId'
+                });
+
+            response.status.should.equal(200);
+
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.should.have.property('id').and.equal(testArea.id);
+            response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+            response.body.data.attributes.should.have.property('application').and.equal('rw');
+            response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
+            response.body.data.attributes.should.have.property('userId').and.equal(testArea.userId);
+            response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
+            response.body.data.attributes.should.have.property('use').and.deep.equal({
+                id: 'bbb',
+                name: 'updated name'
+            });
+            response.body.data.attributes.should.have.property('iso').and.deep.equal({
+                country: 'updatedCountryIso',
+                region: 'updatedRegionIso',
+                source: {
+                    provider: 'gadm',
+                    version: '4.1',
+                }
+            });
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            new Date(response.body.data.attributes.updatedAt).should.afterTime(new Date(response.body.data.attributes.createdAt));
+            response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
+            response.body.data.attributes.datasets[0].should.deep.equal({
+                cache: true,
+                active: true,
+                _id: '5a3aa9eb98b5910011731f66',
+                slug: 'viirs',
+                name: 'VIIRS',
+                startDate: '7',
+                endDate: '1',
+                lastUpdate: 1513793462776
+            });
+        });
+
+        it('updates an `admin` area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            const response = await requester
+                .patch(`/api/v2/area/${testArea.id}`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    application: 'rw',
+                    geostore: '713899292fc118a915741728ef84a2a7',
+                    wdpaid: 3,
+                    use: { id: 'bbb', name: 'updated name' },
+                    admin: {
+                        adm0: 'updatedCountryIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    },
+                    datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastUpdate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                    templateId: 'updatedTemplateId'
+                });
+
+            response.status.should.equal(200);
+
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.should.have.property('id').and.equal(testArea.id);
+            response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+            response.body.data.attributes.should.have.property('application').and.equal('rw');
+            response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
+            response.body.data.attributes.should.have.property('userId').and.equal(testArea.userId);
+            response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
+            response.body.data.attributes.should.have.property('use').and.deep.equal({
+                id: 'bbb',
+                name: 'updated name'
+            });
+            response.body.data.attributes.should.have.property('admin').and.deep.equal({
+                adm0: 'updatedCountryIso',
+                source: {
+                    provider: 'gadm',
+                    version: '4.1',
+                }
+            });
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            new Date(response.body.data.attributes.updatedAt).should.afterTime(new Date(response.body.data.attributes.createdAt));
+            response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
+            response.body.data.attributes.datasets[0].should.deep.equal({
+                cache: true,
+                active: true,
+                _id: '5a3aa9eb98b5910011731f66',
+                slug: 'viirs',
+                name: 'VIIRS',
+                startDate: '7',
+                endDate: '1',
+                lastUpdate: 1513793462776
+            });
+        });
+    });
+
+    describe('Explicitly Update A GADM 3.6 Administrative Area', () => {
+        it('updates an `iso` area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            nock('https://data-api.globalforestwatch.org')
+                .get('/political/id-lookup')
+                .query({
+                    admin_version: '4.1',
+                    country: 'Portugal area',
+                })
+                .reply(200, {
+                    data: {
+                        adminSource: 'GADM',
+                        adminVersion: '4.1',
+                        matches: []
+                    },
+                    status: 'success'
+                });
+
+            const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            const response = await requester
+                .patch(`/api/v2/area/${testArea.id}`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    application: 'rw',
+                    geostore: '713899292fc118a915741728ef84a2a7',
+                    wdpaid: 3,
+                    use: { id: 'bbb', name: 'updated name' },
+                    iso: {
+                        country: 'updatedCountryIso',
+                        region: 'updatedRegionIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '3.6',
+                        }
+                    },
+                    datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastUpdate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                    templateId: 'updatedTemplateId'
+                });
+
+            response.status.should.equal(200);
+
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.should.have.property('id').and.equal(testArea.id);
+            response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+            response.body.data.attributes.should.have.property('application').and.equal('rw');
+            response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
+            response.body.data.attributes.should.have.property('userId').and.equal(testArea.userId);
+            response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
+            response.body.data.attributes.should.have.property('use').and.deep.equal({
+                id: 'bbb',
+                name: 'updated name'
+            });
+            response.body.data.attributes.should.have.property('iso').and.deep.equal({
+                country: 'updatedCountryIso',
+                region: 'updatedRegionIso',
+                source: {
+                    provider: 'gadm',
+                    version: '3.6',
+                }
+            });
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            new Date(response.body.data.attributes.updatedAt).should.afterTime(new Date(response.body.data.attributes.createdAt));
+            response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
+            response.body.data.attributes.datasets[0].should.deep.equal({
+                cache: true,
+                active: true,
+                _id: '5a3aa9eb98b5910011731f66',
+                slug: 'viirs',
+                name: 'VIIRS',
+                startDate: '7',
+                endDate: '1',
+                lastUpdate: 1513793462776
+            });
+        });
+
+        it('updates an `admin` area while being logged in as a user that owns the area should return a 200 HTTP code and the updated area object', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            nock('https://data-api.globalforestwatch.org')
+                .get('/political/id-lookup')
+                .query({
+                    admin_version: '4.1',
+                    country: 'Portugal area',
+                })
+                .reply(200, {
+                    data: {
+                        adminSource: 'GADM',
+                        adminVersion: '4.1',
+                        matches: []
+                    },
+                    status: 'success'
+                });
+
+            const testArea = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            const response = await requester
+                .patch(`/api/v2/area/${testArea.id}`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    application: 'rw',
+                    geostore: '713899292fc118a915741728ef84a2a7',
+                    wdpaid: 3,
+                    use: { id: 'bbb', name: 'updated name' },
+                    admin: {
+                        adm0: 'updatedCountryIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '3.6',
+                        }
+                    },
+                    datasets: '[{"slug":"viirs","name":"VIIRS","startDate":"7","endDate":"1","lastUpdate":1513793462776.0,"_id":"5a3aa9eb98b5910011731f66","active":true,"cache":true}]',
+                    templateId: 'updatedTemplateId'
+                });
+
+            response.status.should.equal(200);
+
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.should.have.property('id').and.equal(testArea.id);
+            response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+            response.body.data.attributes.should.have.property('application').and.equal('rw');
+            response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
+            response.body.data.attributes.should.have.property('userId').and.equal(testArea.userId);
+            response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
+            response.body.data.attributes.should.have.property('use').and.deep.equal({
+                id: 'bbb',
+                name: 'updated name'
+            });
+            response.body.data.attributes.should.have.property('admin').and.deep.equal({
+                adm0: 'updatedCountryIso',
+                source: {
+                    provider: 'gadm',
+                    version: '3.6',
+                }
+            });
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            new Date(response.body.data.attributes.updatedAt).should.afterTime(new Date(response.body.data.attributes.createdAt));
+            response.body.data.attributes.should.have.property('datasets').and.be.an('array').and.length(1);
+            response.body.data.attributes.datasets[0].should.deep.equal({
+                cache: true,
+                active: true,
+                _id: '5a3aa9eb98b5910011731f66',
+                slug: 'viirs',
+                name: 'VIIRS',
+                startDate: '7',
+                endDate: '1',
+                lastUpdate: 1513793462776
+            });
+        });
+    });
+
     it('Updating an area with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the updated area object', async () => {
         mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 

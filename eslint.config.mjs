@@ -29,7 +29,7 @@ export default [...compat.extends("airbnb", "plugin:mocha/recommended"), {
             afterEach: true,
         },
 
-        ecmaVersion: 2020,
+        ecmaVersion: 2022,
         sourceType: "module",
     },
 

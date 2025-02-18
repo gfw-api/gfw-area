@@ -43,7 +43,7 @@ describe('Area Entity V2', () => {
                 const areaModel = new AreaModel(areaData);
                 const areaEntity = new AreaEntity(areaModel);
 
-                await areaEntity.populateAdminVersions(AdminLookupService);
+                await areaEntity.populateAdminVersions();
 
                 expect(areaModel.toObject().adminVersions[1]).to.deep.include({
                     provider: 'gadm',
@@ -718,6 +718,10 @@ describe('Area Entity V2', () => {
                         country: 'KEN',
                         region: '15',
                         subregion: '1',
+                        source: {
+                            provider: 'gadm',
+                            version: '3.6',
+                        },
                     });
                 });
 
@@ -726,6 +730,10 @@ describe('Area Entity V2', () => {
                         adm0: 'KEN',
                         adm1: 15,
                         adm2: 1,
+                        source: {
+                            provider: 'gadm',
+                            version: '3.6',
+                        },
                     });
                 });
 
@@ -770,13 +778,13 @@ describe('Area Entity V2', () => {
                 });
 
                 it('sets the iso attribute\'s country', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.include({
                         country: 'KEN',
                     });
                 });
 
                 it('sets the admin attribute\'s adm0', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.include({
                         adm0: 'KEN',
                     });
                 });
@@ -819,14 +827,14 @@ describe('Area Entity V2', () => {
                 });
 
                 it('sets the iso attribute\'s country and region', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.include({
                         country: 'KEN',
                         region: '15',
                     });
                 });
 
                 it('sets the admin attribute\'s adm0 and adm1', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.include({
                         adm0: 'KEN',
                         adm1: 15,
                     });
@@ -871,7 +879,7 @@ describe('Area Entity V2', () => {
                 });
 
                 it('sets the iso attribute\'s country, region, and subregion', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.include({
                         country: 'KEN',
                         region: '15',
                         subregion: '1',
@@ -879,7 +887,7 @@ describe('Area Entity V2', () => {
                 });
 
                 it('sets the admin attribute\'s adm0, adm1, and adm2', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.include({
                         adm0: 'KEN',
                         adm1: 15,
                         adm2: 1,
@@ -925,7 +933,7 @@ describe('Area Entity V2', () => {
                 });
 
                 it('sets the iso attribute\'s country, region, and subregion', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.include({
                         country: 'KEN',
                         region: '15',
                         subregion: '1',
@@ -933,7 +941,7 @@ describe('Area Entity V2', () => {
                 });
 
                 it('sets the admin attribute\'s adm0, adm1, and adm2', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.include({
                         adm0: 'KEN',
                         adm1: 15,
                         adm2: 1,
@@ -1010,14 +1018,14 @@ describe('Area Entity V2', () => {
                 });
 
                 it('sets the iso attribute\'s country and region', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.include({
                         country: 'KEN',
                         region: '15',
                     });
                 });
 
                 it('sets the admin attribute\'s adm0 and adm1', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.include({
                         adm0: 'KEN',
                         adm1: 15,
                     });
@@ -1027,7 +1035,7 @@ describe('Area Entity V2', () => {
                     expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('Kenya');
                 });
             });
-            context('Entity Does Not Have the Admin Version Requested', () => {
+            context('Entity Does Not Have Any Version Information', () => {
                 const areaData = {
                     name: 'Distrito Central, Francisco Morazán, Honduras',
                     geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -1041,7 +1049,7 @@ describe('Area Entity V2', () => {
                         adm1: 8,
                         adm2: 4,
                     },
-                    adminVersions: [] // no versions to match!
+                    adminVersions: [] // no versions!
                 };
 
                 let areaModel;
@@ -1054,18 +1062,36 @@ describe('Area Entity V2', () => {
                 });
 
                 it('keeps the original iso attribute\'s country, region, and subregion', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).iso).to.deep.include({
                         country: 'HND',
                         region: '8',
                         subregion: '4',
                     });
                 });
 
+                it('assigns GADM 3.6 as the `iso` source', () => {
+                    expect(areaModel.toObject().iso).to.deep.include({
+                        source: {
+                            provider: 'gadm',
+                            version: '3.6',
+                        },
+                    });
+                });
+
                 it('keeps the original admin attribute\'s adm0, adm1, and adm2', () => {
-                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.equal({
+                    expect(JSON.parse(JSON.stringify(areaModel)).admin).to.deep.include({
                         adm0: 'HND',
                         adm1: 8,
                         adm2: 4,
+                    });
+                });
+
+                it('assigns GADM 3.6 as the `admin` source', () => {
+                    expect(areaModel.toObject().admin).to.deep.include({
+                        source: {
+                            provider: 'gadm',
+                            version: '3.6',
+                        },
                     });
                 });
 
@@ -1076,6 +1102,126 @@ describe('Area Entity V2', () => {
                 it('keeps the original name', () => {
                     expect(JSON.parse(JSON.stringify(areaModel)).name).to.equal('Distrito Central, Francisco Morazán, Honduras');
                 });
+            });
+        });
+    });
+
+    describe('Specifying GADM 4.1 Before Adding the AdministrativeVersion', () => {
+        let sandbox;
+        let adminLookupServiceMock;
+
+        beforeEach(() => {
+            sandbox = sinon.createSandbox();
+            adminLookupServiceMock = sandbox.stub(AdminLookupService, 'findMatch');
+        });
+
+        afterEach(() => {
+            sandbox.restore();
+        });
+
+        context('Only `admin` Is Populated', () => {
+            it('adds the 4.1 AdministrativeVersion to the collection of adminVersions', async () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    }
+                };
+                const areaModel = new AreaModel(areaData);
+                const areaEntity = new AreaEntity(areaModel);
+
+                await areaEntity.populateAdminVersions();
+
+                expect(areaModel.toObject().adminVersions.length).to.equal(1, 'adminVersions should only have one entry');
+                expect(areaModel.toObject().adminVersions[0]).to.deep.include({
+                    provider: 'gadm',
+                    version: '4.1',
+                    country: { id: 'HND', name: 'Honduras' },
+                    region: { id: '8', name: 'Francisco Morazán' },
+                    subregion: { id: '4', name: 'Distrito Central' }
+                });
+            });
+
+            it('does NOT use the AdminLookupService', async () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    admin: {
+                        adm0: 'HND',
+                        adm1: 8,
+                        adm2: 4,
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    }
+                };
+                const areaModel = new AreaModel(areaData);
+                const areaEntity = new AreaEntity(areaModel);
+
+                await areaEntity.populateAdminVersions();
+
+                sinon.assert.notCalled(adminLookupServiceMock);
+            });
+        });
+
+        context('Only `iso` Is Populated', () => {
+            it('adds the 4.1 AdministrativeVersion to the collection of adminVersions', async () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    }
+                };
+                const areaModel = new AreaModel(areaData);
+                const areaEntity = new AreaEntity(areaModel);
+
+                await areaEntity.populateAdminVersions();
+
+                expect(areaModel.toObject().adminVersions.length).to.equal(1, 'adminVersions should only have one entry');
+                expect(areaModel.toObject().adminVersions[0]).to.deep.include({
+                    provider: 'gadm',
+                    version: '4.1',
+                    country: { id: 'HND', name: 'Honduras' },
+                    region: { id: '8', name: 'Francisco Morazán' },
+                    subregion: { id: '4', name: 'Distrito Central' }
+                });
+            });
+
+            it('does NOT use the AdminLookupService', async () => {
+                const areaData = {
+                    name: 'Distrito Central, Francisco Morazán, Honduras',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    iso: {
+                        country: 'HND',
+                        region: '8',
+                        subregion: '4',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    }
+                };
+                const areaModel = new AreaModel(areaData);
+                const areaEntity = new AreaEntity(areaModel);
+
+                await areaEntity.populateAdminVersions();
+
+                sinon.assert.notCalled(adminLookupServiceMock);
             });
         });
     });
