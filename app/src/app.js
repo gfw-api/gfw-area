@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const Koa = require('koa');
 const logger = require('logger');
 const koaLogger = require('koa-logger');
@@ -81,7 +82,9 @@ async function init() {
 
             });
 
-            app.use(koaLogger());
+            if (process.env.NODE_ENV !== 'test') {
+                app.use(koaLogger());
+            }
 
             app.use(RWAPIMicroservice.bootstrap({
                 logger,
