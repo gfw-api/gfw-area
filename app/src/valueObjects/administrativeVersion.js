@@ -6,6 +6,16 @@
  */
 class AdministrativeVersion {
 
+    static Sources = {
+        GADM_3_6: { provider: 'gadm', version: '3.6' },
+        GADM_4_1: { provider: 'gadm', version: '4.1' },
+    };
+
+    static Versions = {
+        GADM_3_6: new AdministrativeVersion(this.Sources.GADM_3_6),
+        GADM_4_1: new AdministrativeVersion(this.Sources.GADM_4_1),
+    };
+
     /**
      * Constructs a new AdministrativeVersion object from given geostore and
      * administrative level data.
@@ -18,7 +28,8 @@ class AdministrativeVersion {
     static build(
         geostore,
         [countryName, regionName, subregionName],
-        [countryId, regionId, subregionId]
+        [countryId, regionId, subregionId],
+        { provider, version } = this.Sources.GADM_3_6
     ) {
         return new AdministrativeVersion({
             geostore,
@@ -34,6 +45,8 @@ class AdministrativeVersion {
                 id: subregionId,
                 name: subregionName,
             },
+            provider,
+            version,
         });
     }
 

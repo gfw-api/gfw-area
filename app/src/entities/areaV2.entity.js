@@ -1,3 +1,4 @@
+const { isEqual } = require('lodash');
 const AdministrativeVersion = require('valueObjects/administrativeVersion');
 const AdminLookupService = require('services/adminLookup.service');
 
@@ -81,23 +82,65 @@ class AreaEntity {
     }
 
     /**
+     * Retrieves source information from the area model.
+     *
+     * This function checks for a valid source object in both the `admin` and `iso` properties of the area model.
+     * Both `admin` and `iso` are considered aliases and may contain a source object, with the `admin` source being
+     * prioritized. If both the provider and version are available in the admin source, that information is returned.
+     * Otherwise, the function falls back to the iso source. If neither source provides valid data, it returns the
+     * default value from AdministrativeVersion.Sources.GADM_3_6.
+     *
+     * @returns {{provider: string, version: string}} An object containing the provider and version of the source,
+     *   or the default source if neither admin nor iso has valid information.
+     */
+    gatherSourceInfo() {
+        const { provider: adminProvider, version: adminVersion } = this.areaModel.admin?.source?.toObject() ?? {};
+        const { provider: isoProvider, version: isoVersion } = this.areaModel.iso?.source?.toObject() ?? {};
+
+        if (adminProvider && adminVersion) {
+            return { provider: adminProvider, version: adminVersion };
+        }
+
+        if (isoProvider && isoVersion) {
+            return { provider: isoProvider, version: isoVersion };
+        }
+
+        return AdministrativeVersion.Sources.GADM_3_6;
+    }
+
+    /**
      * Build and add (or update) an AdministrativeVersion entry in `areaModel.adminVersions`.
-     * Will only proceed if the area is an administrative boundary.
+     *
+     * This method only proceeds if the area is an administrative boundary. It gathers source
+     * information from the area model (prioritizing the `admin` source over the `iso` source),
+     * then builds a new AdministrativeVersion entry using the area's geostore, administrative names,
+     * administrative IDs, and the retrieved source information.
+     *
+     * **Important:** If the source information indicates GADM 4.1, the AdminLookupService is not used.
+     * This is done to prevent potentially overwriting data that a client has explicitly saved.
+     *
+     * @async
+     * @returns {Promise<void>}
      */
     async populateAdminVersions() {
         if (!this.isAdministrativeBoundary()) return;
+
+        const sourceInfo = this.gatherSourceInfo();
 
         const adminVersion = AdministrativeVersion.build(
             this.areaModel.geostore,
             this.gatherAdministrativeNames(),
             this.gatherAdministrativeIds(),
+            sourceInfo,
         );
 
         this.addAdminVersion(adminVersion);
 
-        const gadm41AdminVersionMatches = await AdminLookupService.findMatch(adminVersion);
-        if (gadm41AdminVersionMatches?.length === 1) {
-            this.addAdminVersion(gadm41AdminVersionMatches.pop());
+        if (!isEqual(sourceInfo, AdministrativeVersion.Sources.GADM_4_1)) {
+            const gadm41AdminVersionMatches = await AdminLookupService.findMatch(adminVersion);
+            if (gadm41AdminVersionMatches?.length === 1) {
+                this.addAdminVersion(gadm41AdminVersionMatches.pop());
+            }
         }
     }
 
@@ -128,16 +171,20 @@ class AreaEntity {
      *
      * This function:
      *  1. Checks if the current area represents an administrative boundary; returns early if not.
-     *  2. Searches `areaModel.adminVersions` for an entry matching the provided `adminVersion`.
-     *  3. If found, sets:
-     *     - `areaModel.iso` with `{ country, region, subregion }`.
-     *     - `areaModel.admin` with `{ adm0, adm1, adm2 }`.
+     *  2. If `areaModel.adminVersions` is missing or empty:
+     *     - If `areaModel.iso` has a `country`, sets `areaModel.iso.source` to `{ provider: 'gadm', version: '3.6' }`.
+     *     - If `areaModel.admin` has an `adm0`, sets `areaModel.admin.source` to `{ provider: 'gadm', version: '3.6' }`.
+     *     - Returns early.
+     *  3. Otherwise, searches `areaModel.adminVersions` for an entry matching the provided `adminVersion`.
+     *  4. If found, sets:
+     *     - `areaModel.iso` with `{ country, region, subregion }` and associated source information.
+     *     - `areaModel.admin` with `{ adm0, adm1, adm2 }` and associated source information.
      *     - `areaModel.geostore`.
      *     - `areaModel.name` using subregion, region, and country names.
      *       - Note: In **some** test and production data scenarios where subregion or region is present
      *         but no country, the name intentionally ends with a trailing comma (e.g. `"Subregion, Region,"`).
      *         This behavior is required by existing tests and cannot be omitted without breaking them.
-     *  4. If not found, the function returns without making changes.
+     *  5. If no matching entry is found, the function returns without making further changes.
      *
      * @param {Object} adminVersion - The administrative version object used to find a matching entry
      *                                in `areaModel.adminVersions`.
@@ -149,16 +196,34 @@ class AreaEntity {
             return;
         }
 
+        if (!this.areaModel.adminVersions || this.areaModel.adminVersions.length === 0) { // no adminVersions history!
+            if (this.areaModel.iso?.country) {
+                this.areaModel.iso.source = {
+                    provider: 'gadm',
+                    version: '3.6',
+                };
+            }
+
+            if (this.areaModel.admin?.adm0) {
+                this.areaModel.admin.source = {
+                    provider: 'gadm',
+                    version: '3.6',
+                };
+            }
+
+            return;
+        }
+
         const adminInfo = this.areaModel.adminVersions.find(
             (v) => adminVersion.equals(new AdministrativeVersion(v))
         );
 
-        if (!adminInfo) { // didn't find the requested version
+        if (!adminInfo) { // didn't find the requested version but there are others
             return;
         }
 
         const {
-            country, region, subregion, geostore
+            provider, version, country, region, subregion, geostore
         } = adminInfo;
 
         this.areaModel.geostore = geostore;
@@ -167,12 +232,20 @@ class AreaEntity {
             country: country?.id,
             region: region?.id,
             subregion: subregion?.id,
+            source: {
+                provider,
+                version,
+            },
         };
 
         this.areaModel.admin = {
             adm0: country?.id,
             adm1: region?.id,
             adm2: subregion?.id,
+            source: {
+                provider,
+                version,
+            },
         };
 
         const nameParts = [];

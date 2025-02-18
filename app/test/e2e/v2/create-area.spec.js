@@ -33,6 +33,173 @@ describe('V2 - Create area', () => {
         sinon.stub(MailService, 'sendMail').returns(new Promise((resolve) => resolve()));
     });
 
+    describe('Explicitly Create A GADM 4.1 Administrative Area', () => {
+        it('considers the `iso` source provider and version in the payload', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const response = await requester
+                .post(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    iso: {
+                        country: 'createdCountryIso',
+                        region: 'createdRegionIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    },
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.should.have.property('id');
+            response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+            response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+            response.body.data.attributes.should.have.property('iso').and.deep.equal({
+                country: 'createdCountryIso',
+                region: 'createdRegionIso',
+                source: {
+                    provider: 'gadm',
+                    version: '4.1',
+                }
+            });
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            new Date(response.body.data.attributes.updatedAt).should.closeToTime(new Date(response.body.data.attributes.createdAt), 5);
+        });
+
+        it('considers the `admin` source provider and version in the payload', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const response = await requester
+                .post(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    admin: {
+                        adm0: 'createdCountryIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    },
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.should.have.property('id');
+            response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+            response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+            response.body.data.attributes.should.have.property('admin').and.deep.equal({
+                adm0: 'createdCountryIso',
+                source: {
+                    provider: 'gadm',
+                    version: '4.1',
+                }
+            });
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            new Date(response.body.data.attributes.updatedAt).should.closeToTime(new Date(response.body.data.attributes.createdAt), 5);
+        });
+    });
+
+    describe('Explicitly Create A GADM 3.6 Administrative Area', () => {
+        it('considers the source provider and version in the payload', async () => {
+            nock('https://data-api.globalforestwatch.org')
+                .get('/political/id-lookup')
+                .query({
+                    admin_version: '4.1',
+                    country: 'Portugal area',
+                })
+                .reply(200, {
+                    data: {
+                        adminSource: 'GADM',
+                        adminVersion: '4.1',
+                        matches: []
+                    },
+                    status: 'success'
+                });
+
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const response = await requester
+                .post(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    iso: {
+                        country: 'createdCountryIso',
+                        region: 'createdRegionIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '3.6',
+                        }
+                    },
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.should.have.property('id');
+            response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+            response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+            response.body.data.attributes.should.have.property('iso').and.deep.equal({
+                country: 'createdCountryIso',
+                region: 'createdRegionIso',
+                source: {
+                    provider: 'gadm',
+                    version: '3.6',
+                }
+            });
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            new Date(response.body.data.attributes.updatedAt).should.closeToTime(new Date(response.body.data.attributes.createdAt), 5);
+        });
+
+        it('considers the `admin` source provider and version in the payload', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const response = await requester
+                .post(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    admin: {
+                        adm0: 'createdCountryIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '3.6',
+                        }
+                    },
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.should.have.property('type').and.equal('area');
+            response.body.data.should.have.property('id');
+            response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
+            response.body.data.attributes.should.have.property('userId').and.equal(USERS.USER.id);
+            response.body.data.attributes.should.have.property('admin').and.deep.equal({
+                adm0: 'createdCountryIso',
+                source: {
+                    provider: 'gadm',
+                    version: '3.6',
+                }
+            });
+            response.body.data.attributes.should.have.property('createdAt');
+            response.body.data.attributes.should.have.property('updatedAt');
+            new Date(response.body.data.attributes.updatedAt).should.closeToTime(new Date(response.body.data.attributes.createdAt), 5);
+        });
+    });
+
     it('Creating an area without being logged in should return a 401 - "Not logged" error', async () => {
         mockValidateRequestWithApiKey({});
 

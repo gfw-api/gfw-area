@@ -22,17 +22,17 @@ describe('Area Serializer V2', () => {
                 adm1: 8,
                 adm2: 4,
             },
-        adminVersions: [
-            {
-                provider: 'gadm',
-                version: '3.6',
-                geostore: 'abcf7041e2fbc5e8e7774178157ababe',
-                country: { id: 'HND', name: 'Honduras' },
-                region: { id: '8', name: 'Francisco Morazán' },
-                subregion: { id: '4', name: 'Distrito Central' },
-            }
-        ]
-    };
+            adminVersions: [
+                {
+                    provider: 'gadm',
+                    version: '3.6',
+                    geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                    country: { id: 'HND', name: 'Honduras' },
+                    region: { id: '8', name: 'Francisco Morazán' },
+                    subregion: { id: '4', name: 'Distrito Central' },
+                }
+            ]
+        };
 
         it('should include the name of the Area', () => {
             const result = areaSerializerV2.serialize(new AreaModel(area));
@@ -242,11 +242,10 @@ describe('Area Serializer V2', () => {
             sandbox.restore();
         });
 
-        it('returns the Area admin attributes to their original values', () => {
+        it('returns the Area admin attributes to their original values', async () => {
             sandbox.stub(logger, 'error');
             sandbox.stub(AreaEntity.prototype, 'populateAdminInfo').throws(new Error('Test Error'));
             const result = areaSerializerV2.serialize(new AreaModel(area));
-
             expect(result.data.attributes).to.deep.include({
                 name: 'Distrito Central, Francisco Morazán, Honduras',
                 geostore: 'abcf7041e2fbc5e8e7774178157ababe',
@@ -254,13 +253,11 @@ describe('Area Serializer V2', () => {
                     country: 'HND',
                     region: '8',
                     subregion: '4',
-                    source: { provider: 'gadm', version: '3.6' },
                 },
                 admin: {
                     adm0: 'HND',
                     adm1: 8,
                     adm2: 4,
-                    source: { provider: 'gadm', version: '3.6' },
                 }
             });
         });
