@@ -424,6 +424,141 @@ describe('V2 - Get area by id tests', () => {
         });
     });
 
+    context('Administrative Boundaries', () => {
+        describe('Specifying An Administrative Boundary Version', () => {
+            context('When An Area Has Two Admin Versions', () => {
+                it('returns the version requested', async () => {
+                    nock('https://data-api.globalforestwatch.org')
+                        .get('/political/id-lookup')
+                        .query(() => true)
+                        .reply(200, {
+                            data: {
+                                adminSource: 'GADM',
+                                adminVersion: '4.1',
+                                matches: []
+                            },
+                            status: 'success'
+                        });
+
+                    mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+                    const area = await new Area(createArea({
+                        userId: USERS.USER.id,
+                        public: true,
+                        name: 'Altamira, Pará, Brazil',
+                        admin: {
+                            adm0: 'BRA',
+                            adm1: 14,
+                            adm2: 8,
+                            source: {
+                                provider: 'gadm',
+                                version: '3.6',
+                            }
+                        },
+                        adminVersions: [
+                            {
+                                provider: 'gadm',
+                                version: '3.6',
+                                country: { id: 'BRA', name: 'Brazil' },
+                                region: { id: 14, name: 'Pará' },
+                                subregion: { id: 8, name: 'Altamira' },
+                            },
+                            {
+                                provider: 'gadm',
+                                version: '4.1',
+                                country: { id: 'BRA', name: 'Brazil' },
+                                region: { id: 15, name: 'Pará' },
+                                subregion: { id: 9, name: 'Altamira' },
+                            }
+                        ]
+                    })).save();
+
+                    const response = await requester
+                        .get(`/api/v2/area/${area.id}?source[provider]=gadm&source[version]=4.1`)
+                        .set('Authorization', 'Bearer abcd')
+                        .set('x-api-key', 'api-key-test');
+
+                    response.status.should.equal(200);
+                    response.body.should.have.property('data').and.be.an('object');
+
+                    response.body.data.should.have.property('type').and.equal('area');
+                    response.body.data.should.have.property('id').and.equal(area.id);
+                    response.body.data.should.have.property('attributes').and.be.an('object');
+
+                    response.body.data.attributes.should.have.property('name').and.equal('Altamira, Pará, Brazil');
+                    response.body.data.attributes.should.have.property('iso').and.be.an('object');
+                    response.body.data.attributes.should.have.property('iso').and.deep.equal({
+                        country: 'BRA',
+                        region: '15',
+                        subregion: '9',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    });
+
+                    response.body.data.attributes.should.have.property('admin').and.be.an('object');
+                    response.body.data.attributes.should.have.property('admin').and.deep.equal({
+                        adm0: 'BRA',
+                        adm1: 15,
+                        adm2: 9,
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    });
+                });
+            });
+            context('When An Area Only has a GADM 3.6 Version but a GADM 4.1 Version is Requested', () => {
+                it('returns a `406 Not Accepted` because the requested version is not available', async () => {
+                    nock('https://data-api.globalforestwatch.org')
+                        .get('/political/id-lookup')
+                        .query(() => true)
+                        .reply(200, {
+                            data: {
+                                adminSource: 'GADM',
+                                adminVersion: '4.1',
+                                matches: []
+                            },
+                            status: 'success'
+                        });
+                    mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+                    const area = await new Area(createArea({
+                        userId: USERS.USER.id,
+                        public: true,
+                        name: 'Altamira, Pará, Brazil',
+                        admin: {
+                            adm0: 'BRA',
+                            adm1: 14,
+                            adm2: 8,
+                            source: {
+                                provider: 'gadm',
+                                version: '3.6',
+                            }
+                        },
+                        adminVersions: [
+                            {
+                                provider: 'gadm',
+                                version: '3.6',
+                                country: { id: 'BRA', name: 'Brazil' },
+                                region: { id: 14, name: 'Pará' },
+                                subregion: { id: 8, name: 'Altamira' },
+                            },
+                        ]
+                    })).save();
+
+                    const response = await requester
+                        .get(`/api/v2/area/${area.id}?source[provider]=gadm&source[version]=4.1`)
+                        .set('Authorization', 'Bearer abcd')
+                        .set('x-api-key', 'api-key-test');
+
+                    response.status.should.equal(406);
+                    response.body.should.have.property('errors').and.be.an('array');
+                    response.body.errors[0].should.have.property('detail').and.equal('Requested administrative boundary provider or version is not available');
+                });
+            });
+        });
+    });
+
     afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);

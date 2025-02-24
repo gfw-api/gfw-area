@@ -413,6 +413,70 @@ describe('V2 - Get areas', () => {
         response.body.data.map((area) => area.id).should.have.members(sortedAreaIds.slice(0, 3));
     });
 
+    describe('Filtering by Administrative Boundary Version', () => {
+        it('adds the admin boundary filter to the links', async () => {
+            const areaOne = await new Area(createArea({ userId: USERS.USER.id })).save();
+            const areaTwo = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const response = await requester
+                .get(`/api/v2/area?source[provider]=gadm&source[version]=3.6`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(2);
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaTwo.id].sort());
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?source[provider]=gadm&source[version]=3.6&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?source[provider]=gadm&source[version]=3.6&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?source[provider]=gadm&source[version]=3.6&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?source[provider]=gadm&source[version]=3.6&page[number]=1&page[size]=300`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v2/area?source[provider]=gadm&source[version]=3.6&page[number]=1&page[size]=300`);
+        });
+
+        it('only includes administrative boundary areas that match the provider and version', async () => {
+            const areaOne = await new Area(createArea({
+                userId: USERS.USER.id,
+                iso: {
+                    country: 'HND',
+                    source: {
+                        provider: 'gadm',
+                        version: '3.6',
+                    }
+                }
+            })).save();
+
+            // won't be included because it's 4.1
+            await new Area(createArea({
+                userId: USERS.USER.id,
+                iso: {
+                    country: 'HND',
+                    source: {
+                        provider: 'gadm',
+                        version: '4.1',
+                    }
+                }
+            })).save();
+
+            const areaCustom = await new Area(createArea({ userId: USERS.USER.id })).save();
+
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const response = await requester
+                .get(`/api/v2/area?source[provider]=gadm&source[version]=3.6`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test');
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').with.lengthOf(2);
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([areaOne.id, areaCustom.id].sort());
+        });
+    });
+
     describe('Filtering by environments', () => {
         it('Getting areas without an env filter returns areas with env production', async () => {
             await new Area(createArea({ userId: USERS.USER.id, env: 'custom' })).save();
