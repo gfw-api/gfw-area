@@ -52,6 +52,16 @@ function getFilters(ctx) {
         filter.env = { $in: env.split(',').map((elem) => elem.trim()) };
     }
 
+    // find 1) all custom areas and 2) all administrative boundaries for the administrative provider and version requested
+    const provider = query['source[provider]'] ?? 'gadm';
+    const version = query['source[version]'] ?? '3.6';
+    filter.$or = [
+        { adminVersions: { $elemMatch: { provider, version } } }, // Matches provider & version
+        { adminVersions: { $exists: false } }, // Field does not exist
+        { adminVersions: null }, // Field is explicitly null
+        { adminVersions: { $size: 0 } } // Empty array
+    ];
+
     return filter;
 }
 
@@ -110,6 +120,9 @@ class AreaRouterV2 {
         const page = query['page[number]'] ? parseInt(query['page[number]'], 10) : 1;
         const limit = query['page[size]'] ? parseInt(query['page[size]'], 10) : 300;
 
+        const provider = query['source[provider]'] ?? 'gadm';
+        const version = query['source[version]'] ?? '3.6';
+
         const clonedQuery = { ...ctx.query };
         delete clonedQuery['page[size]'];
         delete clonedQuery['page[number]'];
@@ -122,7 +135,7 @@ class AreaRouterV2 {
         const areas = await AreaModel.paginate(filter, { page, limit, sort: filteredSort });
 
         await Promise.all(areas.docs.map((el) => SubscriptionService.mergeSubscriptionSpecificProps(el, ctx.request.headers['x-api-key'])));
-        ctx.body = AreaSerializerV2.serialize(areas, link);
+        ctx.body = AreaSerializerV2.serialize(areas, link, new AdministrativeVersion({ provider, version }));
     }
 
     static async get(ctx) {
@@ -132,9 +145,23 @@ class AreaRouterV2 {
             ctx.throw(404, 'Area not found');
         }
 
+        const provider = ctx.query['source[provider]'] ?? 'gadm';
+        const version = ctx.query['source[version]'] ?? '3.6';
+
         // 1. Check for area in areas
         let area = await AreaModel.findById(ctx.params.id);
         const areaExists = area !== null;
+
+        // Throws an error if the area is an administrative boundary but lacks the requested admin boundary provider and version
+        if (areaExists) {
+            const areaEntity = new AreaEntity(area);
+            const requestedVersion = new AdministrativeVersion({ provider, version });
+            const hasRequestedVersion = areaEntity.hasAdminVersion(requestedVersion);
+            const isAdministrativeBoundary = areaEntity.isAdministrativeBoundary();
+            if (isAdministrativeBoundary && !hasRequestedVersion) {
+                ctx.throw(406, 'Requested administrative boundary provider or version is not available');
+            }
+        }
 
         // 3. if area doesn't exist
         if (!areaExists) {
@@ -183,7 +210,7 @@ class AreaRouterV2 {
         }
 
         area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
-        ctx.body = AreaSerializerV2.serialize(area);
+        ctx.body = AreaSerializerV2.serialize(area, null, new AdministrativeVersion({ provider, version }));
     }
 
     static async save(ctx) {
@@ -560,9 +587,21 @@ class AreaRouterV2 {
 
     static async getByUserId(ctx) {
         logger.info(`Finding areas of user with id ${ctx.params.userId}`);
-        const userAreas = await AreaModel.find({ userId: { $eq: ctx.params.userId } }).exec();
+        const provider = ctx.query['source[provider]'] ?? 'gadm';
+        const version = ctx.query['source[version]'] ?? '3.6';
 
-        ctx.body = AreaSerializerV2.serialize(userAreas);
+        // find 1) all custom areas and 2) all administrative boundaries for the administrative provider and version requested
+        const userAreas = await AreaModel.find({
+            userId: { $eq: ctx.params.userId },
+            $or: [
+                { adminVersions: { $elemMatch: { provider, version } } }, // Matches provider & version
+                { adminVersions: { $exists: false } }, // Field does not exist
+                { adminVersions: null }, // Field is explicitly null
+                { adminVersions: { $size: 0 } } // Empty array
+            ]
+        }).exec();
+
+        ctx.body = AreaSerializerV2.serialize(userAreas, null, new AdministrativeVersion({ provider, version }));
     }
 
     static async deleteByUserId(ctx) {
