@@ -165,6 +165,12 @@ class AreaEntity {
         }
     }
 
+    hasAdminVersion(adminVersion) {
+        return Boolean(this.areaModel.adminVersions.find(
+            (v) => adminVersion.equals(new AdministrativeVersion(v))
+        ));
+    }
+
     /**
      * Populates administrative boundary information (ISO codes, admin hierarchy, geostore, and name)
      * on this instance's `areaModel` based on the provided adminVersion.
@@ -217,10 +223,6 @@ class AreaEntity {
         const adminInfo = this.areaModel.adminVersions.find(
             (v) => adminVersion.equals(new AdministrativeVersion(v))
         );
-
-        if (!adminInfo) { // didn't find the requested version but there are others
-            return;
-        }
 
         const {
             provider, version, country, region, subregion, geostore
