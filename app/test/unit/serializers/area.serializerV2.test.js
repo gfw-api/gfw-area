@@ -91,6 +91,63 @@ describe('Area Serializer V2', () => {
             });
         });
     });
+    context('Multiple Areas Are Passed And They Are Not Paginated', () => {
+        it('adds source information to each area', () => {
+            const areaOne = {
+                name: 'Distrito Central, Francisco Morazán, Honduras',
+                geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                iso: {
+                    country: 'HND',
+                    region: '8',
+                    subregion: '4',
+                },
+                admin: {
+                    adm0: 'HND',
+                    adm1: 8,
+                    adm2: 4,
+                },
+                adminVersions: [
+                    {
+                        provider: 'gadm',
+                        version: '3.6',
+                        geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                        country: { id: 'HND', name: 'Honduras' },
+                        region: { id: '8', name: 'Francisco Morazán' },
+                        subregion: { id: '4', name: 'Distrito Central' },
+                    }
+                ]
+            };
+
+            const areaTwo = {
+                name: 'Distrito Central, Francisco Morazán, Honduras',
+                geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                iso: {
+                    country: 'HND',
+                    region: '8',
+                    subregion: '4',
+                },
+                admin: {
+                    adm0: 'HND',
+                    adm1: 8,
+                    adm2: 4,
+                },
+                adminVersions: [
+                    {
+                        provider: 'gadm',
+                        version: '3.6',
+                        geostore: 'abcf7041e2fbc5e8e7774178157ababe',
+                        country: { id: 'HND', name: 'Honduras' },
+                        region: { id: '8', name: 'Francisco Morazán' },
+                        subregion: { id: '4', name: 'Distrito Central' },
+                    }
+                ]
+            };
+
+            const result = areaSerializerV2.serialize([new AreaModel(areaOne), new AreaModel(areaTwo)]);
+            expect(result.data[0].attributes.admin).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
+            expect(result.data[1].attributes.admin).to.deep.include({ source: { provider: 'gadm', version: '3.6' } });
+        });
+    });
     context('The Area\'s Admin Attributes are Different from the Admin Version\'s', () => {
         const area = {
             name: 'Distrito Central, Francisco Morazán, Honduras',

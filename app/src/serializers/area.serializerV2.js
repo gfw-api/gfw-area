@@ -47,7 +47,8 @@ class AreaSerializer {
 
     static serialize(data, link = null, adminVersion = AdministrativeVersion.Versions.GADM_3_6) {
 
-        const models = link !== null ? data.docs : [data];
+        // eslint-disable-next-line no-nested-ternary
+        const models = link !== null ? data.docs : (Array.isArray(data)) ? data : [data];
         models.forEach((areaModel) => {
             const original = new AreaModel(areaModel).toObject(); // ensure we have an new object built from a model
             try {
