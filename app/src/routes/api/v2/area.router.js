@@ -138,7 +138,7 @@ class AreaRouterV2 {
         await Promise.all(
             areas.docs.map(async (el, index) => {
                 // Introduce a delay that increases with each index
-                await delay(index * 50); // 50ms delay between each request's start
+                await delay(index * 25); // 25ms delay between each request's start
                 return SubscriptionService.mergeSubscriptionSpecificProps(
                     el,
                     ctx.request.headers['x-api-key']
