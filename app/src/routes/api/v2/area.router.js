@@ -134,17 +134,7 @@ class AreaRouterV2 {
 
         const areas = await AreaModel.paginate(filter, { page, limit, sort: filteredSort });
 
-        const delay = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
-        await Promise.all(
-            areas.docs.map(async (el, index) => {
-                // Introduce a delay that increases with each index
-                await delay(index * 50); // 50ms delay between each request's start
-                return SubscriptionService.mergeSubscriptionSpecificProps(
-                    el,
-                    ctx.request.headers['x-api-key']
-                );
-            })
-        );
+        await Promise.all(areas.docs.map((el) => SubscriptionService.mergeSubscriptionSpecificProps(el, ctx.request.headers['x-api-key'])));
         ctx.body = AreaSerializerV2.serialize(areas, link, new AdministrativeVersion({ provider, version }));
     }
 
