@@ -6,15 +6,21 @@ const AreaModel = require('models/area.modelV2');
 class SubscriptionsService {
 
     static async mergeSubscriptionSpecificProps(area, apiKey) {
-        // Set default values
-        area.confirmed = false;
+        try {
+            // Set default values
+            area.confirmed = false;
 
-        // Find any subscription only props (such as confirmed) and merge them to the area being returned
-        if (area.subscriptionId) {
-            const [sub] = await SubscriptionsService.findByIds([area.subscriptionId], apiKey);
-            return sub ? SubscriptionsService.mergeSubscriptionOverArea(area, { ...sub.attributes, id: sub.id }) : area;
+            // Find any subscription only props (such as confirmed) and merge them to the area being returned
+            if (area.subscriptionId) {
+                const [sub] = await SubscriptionsService.findByIds([area.subscriptionId], apiKey);
+                return sub ? SubscriptionsService.mergeSubscriptionOverArea(area, {
+                    ...sub.attributes,
+                    id: sub.id
+                }) : area;
+            }
+        } catch (e) {
+            logger.warn(`Error while finding and merging subscription with id ${area.id}.`, e);
         }
-
         return area;
     }
 
@@ -216,7 +222,7 @@ class SubscriptionsService {
             });
 
             return updatedSubscription.data.id;
-        } catch (e) {
+        } catch {
             logger.warn(`Error while updating subscription with id ${area.subscriptionId} associated with area with id ${area._id}.`);
             return null;
         }
@@ -231,7 +237,7 @@ class SubscriptionsService {
                     'x-api-key': apiKey
                 }
             });
-        } catch (e) {
+        } catch {
             logger.warn(`Error while deleting subscription with id ${id}.`);
         }
     }
