@@ -64,8 +64,7 @@ describe('V2 - Sync areas', () => {
         response3.body.errors[0].should.have.property('detail').and.equal(`Not authorized`);
     });
 
-    // temporarily pause
-    xit('Sync areas as an ADMIN updates the areas in the database with overwrite information from associated subscriptions, returning the number of synced areas', async () => {
+    it('Sync areas as an ADMIN updates the areas in the database with overwrite information from associated subscriptions, returning the number of synced areas', async () => {
         mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
@@ -99,8 +98,7 @@ describe('V2 - Sync areas', () => {
         getResponse.body.data.find((area) => area.id === area3.id).attributes.should.have.property('name').and.equal('Old Name 3');
     });
 
-    // temporarily pause
-    xit('Sync areas as an ADMIN creates new areas in the database with subscriptions that do not have a match with an existing area, returning the number of created areas', async () => {
+    it('Sync areas as an ADMIN creates new areas in the database with subscriptions that do not have a match with an existing area, returning the number of created areas', async () => {
         mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
