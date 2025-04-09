@@ -86,9 +86,7 @@ describe('V2 - Sync areas', () => {
         validateSyncSuccessResponse(response, 3, 0, 3, [area1.id, area2.id, area3.id]);
 
         // Getting the subscription now returns the synced information
-        mockSubscriptionFindByIds([subId1], { userId: USERS.USER.id });
-        mockSubscriptionFindByIds([subId2], { userId: USERS.USER.id });
-        mockSubscriptionFindByIds([subId3], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId1, subId2, subId3], { userId: USERS.USER.id });
         const getResponse = await requester.get(`/api/v2/area?all=true`).set('Authorization', 'Bearer abcd')
             .set('x-api-key', 'api-key-test');
         getResponse.status.should.equal(200);
@@ -120,9 +118,7 @@ describe('V2 - Sync areas', () => {
         validateSyncSuccessResponse(response, 0, 3, 3);
 
         // Getting the subscription now returns the synced information
-        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
-        mockSubscriptionFindByIds([id2], { userId: USERS.USER.id });
-        mockSubscriptionFindByIds([id3], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id1, id2, id3], { userId: USERS.USER.id });
         const getResponse = await requester.get(`/api/v2/area?all=true`).set('Authorization', 'Bearer abcd')
             .set('x-api-key', 'api-key-test');
         getResponse.status.should.equal(200);
