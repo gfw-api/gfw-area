@@ -5,23 +5,53 @@ const AreaModel = require('models/area.modelV2');
 
 class SubscriptionsService {
 
-    static async mergeSubscriptionSpecificProps(area, apiKey) {
+    /**
+     * Merges subscription-specific properties into corresponding area objects.
+     *
+     * This method:
+     * 1. Organizes areas by their subscriptionId
+     * 2. Marks all areas as unconfirmed (confirmed = false)
+     * 3. Fetches subscription data for all unique subscription IDs
+     * 4. Merges subscription attributes into their corresponding area objects
+     *
+     * @static
+     * @async
+     * @function mergeSubscriptionSpecificProps
+     * @param {Array<Object>} areas - Array of area objects to process. Each area may contain a subscriptionId.
+     * @param {string} apiKey - API key used for authenticating with the SubscriptionsService.
+     * @returns {Promise<Array<Object>>} The original areas array with subscription data merged where applicable.
+     */
+    static async mergeSubscriptionSpecificProps(areas, apiKey) {
         try {
-            // Set default values
-            area.confirmed = false;
+            const areasBySubscriptionId = {};
+            areas.forEach((area) => {
+                const subId = area.subscriptionId;
+                area.confirmed = false;
+                if (subId) {
+                    areasBySubscriptionId[subId] = area;
+                }
+            });
 
-            // Find any subscription only props (such as confirmed) and merge them to the area being returned
-            if (area.subscriptionId) {
-                const [sub] = await SubscriptionsService.findByIds([area.subscriptionId], apiKey);
-                return sub ? SubscriptionsService.mergeSubscriptionOverArea(area, {
-                    ...sub.attributes,
-                    id: sub.id
-                }) : area;
+            const subscriptionIds = Object.keys(areasBySubscriptionId);
+            if (subscriptionIds.length === 0) {
+                return areas;
             }
+
+            const subscriptions = await SubscriptionsService.findByIds(subscriptionIds, apiKey);
+            subscriptions?.forEach((subscription) => {
+                SubscriptionsService.mergeSubscriptionOverArea(
+                    areasBySubscriptionId[subscription.id],
+                    {
+                        ...subscription.attributes,
+                        id: subscription.id,
+                    }
+                );
+            });
         } catch (e) {
-            logger.warn(`Error while finding and merging subscription with id ${area.id}.`, e);
+            logger.warn('Error while batch finding and merging subscriptions.', e);
         }
-        return area;
+
+        return areas;
     }
 
     static getRequestBodyForSubscriptionFromArea(area) {

@@ -134,7 +134,7 @@ class AreaRouterV2 {
 
         const areas = await AreaModel.paginate(filter, { page, limit, sort: filteredSort });
 
-        await Promise.all(areas.docs.map((el) => SubscriptionService.mergeSubscriptionSpecificProps(el, ctx.request.headers['x-api-key'])));
+        await SubscriptionService.mergeSubscriptionSpecificProps(areas.docs, ctx.request.headers['x-api-key']);
         ctx.body = AreaSerializerV2.serialize(areas, link, new AdministrativeVersion({ provider, version }));
     }
 
@@ -178,12 +178,6 @@ class AreaRouterV2 {
                 ...subscription.attributes,
                 id: subscription.id
             });
-
-            // 2. If area exists
-            // if it has subscription get subscription also and merge props
-            // if it doesn't have subscription just return the area
-        } else if (area.subscriptionId) {
-            area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
         }
 
         const user = ctx.state.loggedUser || null;
@@ -209,7 +203,7 @@ class AreaRouterV2 {
             area.subscriptionId = null;
         }
 
-        area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
+        [area] = await SubscriptionService.mergeSubscriptionSpecificProps([area], ctx.request.headers['x-api-key']);
         ctx.body = AreaSerializerV2.serialize(area, null, new AdministrativeVersion({ provider, version }));
     }
 
@@ -351,7 +345,7 @@ class AreaRouterV2 {
             }
         }
 
-        area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
+        [area] = await SubscriptionService.mergeSubscriptionSpecificProps([area], ctx.request.headers['x-api-key']);
         const administrativeVersion = new AdministrativeVersion(new AreaEntity(area).gatherSourceInfo());
         ctx.body = AreaSerializerV2.serialize(area, null, administrativeVersion);
 
@@ -525,7 +519,7 @@ class AreaRouterV2 {
             area = await area.save();
         }
 
-        area = await SubscriptionService.mergeSubscriptionSpecificProps(area, ctx.request.headers['x-api-key']);
+        [area] = await SubscriptionService.mergeSubscriptionSpecificProps([area], ctx.request.headers['x-api-key']);
         const administrativeVersion = new AdministrativeVersion(new AreaEntity(area).gatherSourceInfo());
         ctx.body = AreaSerializerV2.serialize(area, null, administrativeVersion);
 
