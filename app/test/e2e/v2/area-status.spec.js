@@ -117,7 +117,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         // Mock the test area
-        mockSubscriptionFindByIds([id], { userId: USERS.USER.id, params: { wdpaid: '123' } }, 2);
+        mockSubscriptionFindByIds([id], { userId: USERS.USER.id, params: { wdpaid: '123' } });
         const response = await requester.get(`/api/v2/area/${testArea.id}`).set('Authorization', 'Bearer abcd')
             .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
@@ -140,7 +140,7 @@ describe('V2 - Area status', () => {
         })).save();
 
         // Mock the test area
-        mockSubscriptionFindByIds([subId], { userId: USERS.USER.id, params: { geostore: '123' } }, 2);
+        mockSubscriptionFindByIds([subId], { userId: USERS.USER.id, params: { geostore: '123' } });
         const response = await requester.get(`/api/v2/area/${testArea.id}`).set('Authorization', 'Bearer abcd')
             .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);

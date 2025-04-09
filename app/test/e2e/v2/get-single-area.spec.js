@@ -109,7 +109,7 @@ describe('V2 - Get single area', () => {
             userId: USERS.USER.id,
             name: 'Subscription name',
             confirmed: false,
-        }, 2);
+        });
 
         const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd')
             .set('x-api-key', 'api-key-test');
@@ -130,7 +130,7 @@ describe('V2 - Get single area', () => {
             userId: USERS.USER.id,
             subscriptionId: fakeId,
         })).save();
-        mockSubscriptionFindByIds([], {}, 2);
+        mockSubscriptionFindByIds([], {});
 
         const response = await requester.get(`/api/v2/area/${area.id}`).set('Authorization', 'Bearer abcd')
             .set('x-api-key', 'api-key-test');
