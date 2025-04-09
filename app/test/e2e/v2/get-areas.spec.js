@@ -17,6 +17,7 @@ chai.should();
 const { getTestServer } = require('../utils/test-server');
 const {
     mockSubscriptionFindAll,
+    mockSubscriptionFindByIds,
 } = require('../utils/helpers');
 
 nock.disableNetConnect();
@@ -143,6 +144,7 @@ describe('V2 - Get areas', () => {
         const area1 = await new Area(createArea({ userId: USERS.USER.id })).save();
         const area2 = await new Area(createArea({ userId: USERS.USER.id, subscriptionId: subId })).save();
 
+        mockSubscriptionFindByIds([subId], { userId: USERS.USER.id });
         const response = await requester.get('/api/v2/area').set('Authorization', 'Bearer abcd')
             .set('x-api-key', 'api-key-test');
         response.status.should.equal(200);
@@ -199,6 +201,10 @@ describe('V2 - Get areas', () => {
         response.body.should.have.property('data').and.be.an('object');
         response.body.data.should.have.property('syncedAreas').and.equal(1);
         response.body.data.should.have.property('createdAreas').and.equal(2);
+
+        mockSubscriptionFindByIds([subId1], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId2], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([subId3], { userId: USERS.USER.id });
 
         // Get all areas
         const getResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd')
@@ -324,6 +330,7 @@ describe('V2 - Get areas', () => {
         response.body.data.should.have.property('syncedAreas').and.equal(0);
         response.body.data.should.have.property('createdAreas').and.equal(3);
 
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id }, 3);
         const getResponse = await requester.get('/api/v2/area?all=true').set('Authorization', 'Bearer abcd')
             .set('x-api-key', 'api-key-test');
         getResponse.status.should.equal(200);
@@ -360,6 +367,7 @@ describe('V2 - Get areas', () => {
         syncResponse.body.data.should.have.property('createdAreas').and.equal(3);
 
         // Requesting all areas => should return 5 areas
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id }, 3);
         const response = await requester
             .get(`/api/v2/area?all=true`)
             .set('Authorization', 'Bearer abcd')
@@ -368,6 +376,9 @@ describe('V2 - Get areas', () => {
         response.body.should.have.property('data').and.be.an('array').and.have.length(5);
 
         // Requesting all areas with status saved => should return 1 area
+        mockSubscriptionFindByIds([id1], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id2], { userId: USERS.USER.id });
+        mockSubscriptionFindByIds([id3], { userId: USERS.USER.id });
         const savedResponse = await requester
             .get(`/api/v2/area?all=true&status=saved`)
             .set('Authorization', 'Bearer abcd')

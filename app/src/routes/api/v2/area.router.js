@@ -134,8 +134,7 @@ class AreaRouterV2 {
 
         const areas = await AreaModel.paginate(filter, { page, limit, sort: filteredSort });
 
-        // This is temporary. The mergeSubscriptionSpecification is spamming the subscription service. A batch design is needed
-        // await Promise.all(areas.docs.map((el) => SubscriptionService.mergeSubscriptionSpecificProps(el, ctx.request.headers['x-api-key'])));
+        await Promise.all(areas.docs.map((el) => SubscriptionService.mergeSubscriptionSpecificProps(el, ctx.request.headers['x-api-key'])));
         ctx.body = AreaSerializerV2.serialize(areas, link, new AdministrativeVersion({ provider, version }));
     }
 
