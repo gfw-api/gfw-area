@@ -18,7 +18,7 @@ class AreaValidatorV2 {
     static isArray(property) {
         if (property instanceof Array) {
             const invalid = property.filter((str) => {
-                const regex = RegExp(/^[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF_ ]*$/i);
+                const regex = /^[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF_ ]*$/i;
                 return (typeof str !== 'string' || !regex.test(str));
             });
             return (invalid.length === 0);
@@ -26,14 +26,53 @@ class AreaValidatorV2 {
         return false;
     }
 
+    /**
+     * Removes the geostore from the request body if the area is a GADM 4.1 administrative boundary.
+     *
+     * This function checks if either the ISO or admin fields in the request body specify a GADM 4.1 source.
+     * If so, it sets the geostore field to null so that arbitrary geostores cannot be used when actual
+     * administrative boundaries are specified.
+     *
+     * @param {Object} ctx - The Koa context object containing the request/response
+     * @param {Object} ctx.request.body - The request body payload
+     * @param {string|null} ctx.request.body.geostore - The existing geostore ID (optional)
+     * @param {Object} [ctx.request.body.iso] - ISO country data (optional)
+     * @param {Object} [ctx.request.body.iso.source] - ISO data source information
+     * @param {Object} [ctx.request.body.admin] - Admin area data (optional)
+     * @param {Object} [ctx.request.body.admin.source] - Admin area source information
+     *
+     * @example
+     * // When processing a GADM 4.1 admin area request:
+     * remove_geostore_from_admin_area(ctx);
+     * // ctx.request.body.geostore will be set to null
+     */
+    static remove_geostore_from_admin_area(ctx) {
+        if (!ctx.request.body.geostore) return;
+
+        const { iso, admin } = ctx.request.body;
+        const sourceIsGadm41 = (source) => source?.provider?.toLowerCase().trim() === 'gadm'
+            && source?.version?.toLowerCase().trim() === '4.1';
+
+        const isGadm41Area = sourceIsGadm41(iso?.source) || sourceIsGadm41(admin?.source);
+
+        if (isGadm41Area) {
+            ctx.request.body.geostore = null;
+        }
+    }
+
     static async create(ctx, next) {
         logger.debug('Validating body for create area');
         ctx.checkBody('name').notEmpty().len(1, 100);
         ctx.checkBody('application').optional().check((application) => AreaValidatorV2.notEmptyString(application), 'cannot be empty');
 
+        AreaValidatorV2.remove_geostore_from_admin_area(ctx);
+
         // Validate geostore field as hexadecimal only if present
         ctx.checkBody('geostore').optional();
-        if (ctx.request.body.geostore) { ctx.checkBody('geostore').isHexadecimal(); }
+        if (ctx.request.body.geostore) {
+            ctx.checkBody('geostore').isHexadecimal();
+        }
+
         ctx.checkBody('geostoreDataApi').optional();
 
         // Validate geostore and geostoreDataApi were not provided at the same time
@@ -88,6 +127,8 @@ class AreaValidatorV2 {
         logger.debug('Validating body for update area');
         ctx.checkBody('name').optional().len(2, 100);
         ctx.checkBody('application').optional().check((application) => AreaValidatorV2.notEmptyString(application), 'cannot be empty');
+
+        AreaValidatorV2.remove_geostore_from_admin_area(ctx);
 
         // Validate geostore field as hexadecimal only if present
         ctx.checkBody('geostore').optional();

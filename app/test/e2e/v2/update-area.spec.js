@@ -169,7 +169,7 @@ describe('V2 - Update area', () => {
             response.body.data.should.have.property('id').and.equal(testArea.id);
             response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
             response.body.data.attributes.should.have.property('application').and.equal('rw');
-            response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
+            response.body.data.attributes.should.have.property('geostore').and.equal(null);
             response.body.data.attributes.should.have.property('userId').and.equal(testArea.userId);
             response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
             response.body.data.attributes.should.have.property('use').and.deep.equal({
@@ -233,7 +233,7 @@ describe('V2 - Update area', () => {
             response.body.data.should.have.property('id').and.equal(testArea.id);
             response.body.data.attributes.should.have.property('name').and.equal('Portugal area');
             response.body.data.attributes.should.have.property('application').and.equal('rw');
-            response.body.data.attributes.should.have.property('geostore').and.equal('713899292fc118a915741728ef84a2a7');
+            response.body.data.attributes.should.have.property('geostore').and.equal(null);
             response.body.data.attributes.should.have.property('userId').and.equal(testArea.userId);
             response.body.data.attributes.should.have.property('wdpaid').and.equal(3);
             response.body.data.attributes.should.have.property('use').and.deep.equal({

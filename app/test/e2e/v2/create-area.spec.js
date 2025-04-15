@@ -107,6 +107,55 @@ describe('V2 - Create area', () => {
             response.body.data.attributes.should.have.property('updatedAt');
             new Date(response.body.data.attributes.updatedAt).should.closeToTime(new Date(response.body.data.attributes.createdAt), 5);
         });
+
+        it('sets the `geostore` to null if there is `admin` information', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const response = await requester
+                .post(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    geostore: '324748a3-dd57-4abe-8f03-6a5d7685680d',
+                    admin: {
+                        adm0: 'createdCountryIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    },
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.attributes.should.have.property('geostore').and.equal(null);
+        });
+
+        it('sets the `geostore` to null if there is `iso` information', async () => {
+            mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
+
+            const response = await requester
+                .post(`/api/v2/area`)
+                .set('Authorization', 'Bearer abcd')
+                .set('x-api-key', 'api-key-test')
+                .send({
+                    name: 'Portugal area',
+                    geostore: '324748a3-dd57-4abe-8f03-6a5d7685680d',
+                    iso: {
+                        country: 'createdCountryIso',
+                        region: 'createdRegionIso',
+                        source: {
+                            provider: 'gadm',
+                            version: '4.1',
+                        }
+                    },
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('object');
+            response.body.data.attributes.should.have.property('geostore').and.equal(null);
+        });
     });
 
     describe('Explicitly Create A GADM 3.6 Administrative Area', () => {
@@ -453,6 +502,7 @@ describe('V2 - Create area', () => {
             });
         });
 
+        // eslint-disable-next-line max-len
         it('Creating an area with custom env and with a file while being logged in as a user that owns the area should upload the image to S3 and return a 200 HTTP code and the created area object with the custom env', async () => {
             mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
